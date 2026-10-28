@@ -49,6 +49,15 @@ export function depthColor( range: [ number, number ] | null, target = new Color
 
 }
 
+// How far to raise the water surface for a depth bin: the top of the bin ("0.5m未満" → 0.5 m),
+// or its floor when it is open-ended ("3.0m以上" → 3 m). Unknown depth stays on the ground.
+export function surfaceHeight( range: [ number, number ] | null ): number {
+
+	if ( ! range ) return 0;
+	return Number.isFinite( range[ 1 ] ) ? range[ 1 ] : range[ 0 ];
+
+}
+
 // Pick the label a feature should be colored by: the municipality's own bin when present,
 // otherwise the standard PLATEAU rank.
 export function featureLabel( rankOrg: unknown, rank: unknown ): string {

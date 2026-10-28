@@ -29,7 +29,15 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 | `src/data/cities.json` | 対象 28 市町村のタイルセット URL・中心・ジオイド高（`scripts/build-catalog.mjs` が生成。手で編集しない） |
 | `src/types/3d-tiles-renderer.d.ts` | ライブラリに型が無い `TerrainRGBMeshPlugin` の型宣言 |
 
-ライブラリ: three 0.186、3d-tiles-renderer 0.5.3、Vite。UI フレームワークは使っていない（素の DOM）。
+ライブラリ: three 0.186、3d-tiles-renderer 0.5.3、three-mesh-bvh 0.9、Vite。UI フレームワークは使っていない（素の DOM）。
+
+レイキャスト（タップ・VR の指さし・VR の足元の高さ）は Quest で毎秒何度も走るので重さに注意する。
+浸水のメッシュには、読み込み時に BVH を作っている（`indexForRaycast`）。
+PLATEAU のタイルは、`group` ではなく `group.children`（表示中のタイル）に当てる（`raycastTargets`）。
+`group` に当てると、キャッシュ中の全タイルの木をたどるので遅い。
+地形だけは必ず `group` に当てる。地形のメッシュは平らで、起伏は GPU で付けている。
+起伏を反映した判定は、`group` 経由で呼ばれるプラグインの `raycastTile` だけが行う。
+`children` に直接当てると、平らな面に当たる。
 
 ## 座標と高さ（ここを崩すと全部ずれる）
 

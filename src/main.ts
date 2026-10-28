@@ -4,8 +4,9 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { TilesRenderer, WGS84_ELLIPSOID } from '3d-tiles-renderer/three';
 import { GLTFExtensionsPlugin } from '3d-tiles-renderer/three/plugins';
+import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 import catalog from './data/cities.json';
-import { depthColor, featureLabel, parseDepthLabel } from './flood';
+import { depthColor, featureLabel, parseDepthLabel, surfaceHeight } from './flood';
 import { BASE_MAPS, createTerrain, type BaseMapKey } from './terrain';
 import { initVR } from './vr';
 import './style.css';
@@ -16,6 +17,22 @@ const DEG = Math.PI / 180;
 const params = new URLSearchParams( location.search );
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
 const city: City = catalog.cities.find( c => c.code === params.get( 'city' ) ) ?? catalog.cities.find( c => c.code === '14204' )!;
+
+// Picking (tap, VR pointer) raycasts the dense flood meshes; without an index three.js tests every
+// triangle, which is too slow to do several times a second on a headset.
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
+function indexForRaycast<T extends TilesRenderer>( tiles: T ): T {
+
+	tiles.addEventListener( 'load-model', ( { scene: model }: { scene: THREE.Object3D } ) => model.traverse( obj => {
+
+		if ( ( obj as THREE.Mesh ).isMesh ) ( obj as THREE.Mesh ).geometry.computeBoundsTree();
+
+	} ) );
+	return tiles;
+
+}
 
 // ─── renderer / scene ───────────────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer( { antialias: true, logarithmicDepthBuffer: true } );
@@ -104,9 +121,30 @@ const floodMaterial = new THREE.MeshBasicMaterial( {
 	polygonOffsetUnits: - 8,
 } );
 
+// Raise each polygon by its depth so the layer reads as a water surface. Done in the vertex shader
+// (per-vertex `lift` in meters × `waterLevel` 0..1) so it can be toggled and animated cheaply.
+// Scene y is up, and the tiles are unscaled, so the scene's up turned into model space is the offset.
+const waterLevel = { value: 0 };
+let waterTarget = 0;
+floodMaterial.onBeforeCompile = shader => {
+
+	shader.uniforms.waterLevel = waterLevel;
+	shader.vertexShader = shader.vertexShader
+		.replace( '#include <common>', '#include <common>\nattribute float lift;\nuniform float waterLevel;' )
+		.replace( '#include <begin_vertex>', '#include <begin_vertex>\ntransformed += normalize( transpose( mat3( modelMatrix ) ) * vec3( 0.0, 1.0, 0.0 ) ) * lift * waterLevel;' );
+
+};
+
+function setWaterRaised( on: boolean ) {
+
+	waterTarget = on ? 1 : 0;
+	$<HTMLInputElement>( '#raise-water' ).checked = on;
+
+}
+
 const floods = city.floods.map( ( f, i ) => {
 
-	const tiles = plateauTiles( f.url );
+	const tiles = indexForRaycast( plateauTiles( f.url ) );
 	tiles.errorTarget = 4;
 	tiles.group.visible = i === 0;
 	tiles.group.renderOrder = 10;
@@ -119,6 +157,7 @@ const floods = city.floods.map( ( f, i ) => {
 		const rankOrg: unknown[] = table?.getPropertyArray( 'uro:rankOrg' ) ?? [];
 		const rank: unknown[] = table?.getPropertyArray( 'uro:rank' ) ?? [];
 		const colors: THREE.Color[] = [];
+		const lifts: number[] = [];
 		const featureLabels: string[] = [];
 		const count = Math.max( rankOrg.length, rank.length );
 		for ( let id = 0; id < count; id ++ ) {
@@ -128,6 +167,7 @@ const floods = city.floods.map( ( f, i ) => {
 			labels.set( label, range );
 			featureLabels.push( label );
 			colors.push( depthColor( range ) );
+			lifts.push( surfaceHeight( range ) );
 
 		}
 
@@ -139,14 +179,18 @@ const floods = city.floods.map( ( f, i ) => {
 			const ids = geom.getAttribute( '_batchid' );
 			const n = geom.getAttribute( 'position' ).count;
 			const buf = new Float32Array( n * 3 );
+			const lift = new Float32Array( n );
 			for ( let v = 0; v < n; v ++ ) {
 
-				const c = colors[ ids ? ids.getX( v ) : 0 ] ?? depthColor( null );
+				const id = ids ? ids.getX( v ) : 0;
+				const c = colors[ id ] ?? depthColor( null );
 				buf.set( [ c.r, c.g, c.b ], v * 3 );
+				lift[ v ] = lifts[ id ] ?? 0;
 
 			}
 
 			geom.setAttribute( 'color', new THREE.BufferAttribute( buf, 3 ) );
+			geom.setAttribute( 'lift', new THREE.BufferAttribute( lift, 1 ) );
 			mesh.material = floodMaterial;
 			mesh.renderOrder = 10;
 			mesh.userData.featureLabels = featureLabels;
@@ -240,6 +284,9 @@ function buildUI() {
 	const opacity = $<HTMLInputElement>( '#opacity' );
 	opacity.addEventListener( 'input', () => ( floodMaterial.opacity = Number( opacity.value ) ) );
 
+	const raise = $<HTMLInputElement>( '#raise-water' );
+	raise.addEventListener( 'change', () => setWaterRaised( raise.checked ) );
+
 	$( '#panel-toggle' ).addEventListener( 'click', () => document.body.classList.toggle( 'panel-closed' ) );
 	if ( window.innerWidth < 640 ) document.body.classList.add( 'panel-closed' );
 
@@ -272,8 +319,43 @@ function renderLegend() {
 
 }
 
+// What to raycast for a set of tilesets. For PLATEAU tiles, the tiles currently in the scene: the
+// group's own raycast walks the whole cached tile tree on every call. The terrain must go through its
+// group, though: its meshes are flat and displaced on the GPU, and only the terrain plugin's raycast
+// (reached via the group) applies the elevation.
+function raycastTargets( sets: TilesRenderer[] ) {
+
+	return sets.filter( t => t.group.visible ).flatMap( t => ( t === terrain ? [ t.group ] : t.group.children ) );
+
+}
+
+// What a ray points at: the distance to the first surface, and the flood polygon there, if any.
+// A flood behind a building doesn't count. The terrain is left out on purpose: in valleys the GSI
+// DEM sits a metre or more above the PLATEAU polygons, so from street level the ground would hide
+// every flood, and raycasting the GPU-displaced terrain costs several ms per ray.
+function pointAt( ray: THREE.Raycaster ) {
+
+	const floodHit = ray.intersectObjects( raycastTargets( floods ), true ).find( h => h.face );
+	const solidHit = ray.intersectObjects( raycastTargets( buildings ), true )[ 0 ];
+	const distance = Math.min( floodHit?.distance ?? Infinity, solidHit?.distance ?? Infinity );
+	if ( ! floodHit || ( solidHit && floodHit.distance > solidHit.distance + 1 ) ) {
+
+		return { distance, flood: null };
+
+	}
+
+	const mesh = floodHit.object as THREE.Mesh;
+	const ids = mesh.geometry.getAttribute( '_batchid' );
+	const label: string = mesh.userData.featureLabels?.[ ids ? ids.getX( floodHit.face!.a ) : 0 ] ?? '不明';
+	// The ray hits the polygon on the ground; put the point on the raised surface the user sees.
+	floodHit.point.y += surfaceHeight( parseDepthLabel( label ) ) * waterLevel.value;
+	return { distance, flood: { point: floodHit.point, label } };
+
+}
+
 // Tap / click a flood polygon to read its depth.
 const raycaster = new THREE.Raycaster();
+raycaster.firstHitOnly = true;
 const pointer = new THREE.Vector2();
 let downAt = { x: 0, y: 0 };
 renderer.domElement.addEventListener( 'pointerdown', e => ( downAt = { x: e.clientX, y: e.clientY } ) );
@@ -294,21 +376,10 @@ renderer.domElement.addEventListener( 'pointerup', e => {
 	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) return;
 	pointer.set( ( e.clientX / window.innerWidth ) * 2 - 1, - ( e.clientY / window.innerHeight ) * 2 + 1 );
 	raycaster.setFromCamera( pointer, camera );
-	const targets = floods.filter( t => t.group.visible ).map( t => t.group );
-	const hit = raycaster.intersectObjects( targets, true )[ 0 ];
+	const { flood } = pointAt( raycaster );
 	const info = $( '#info' );
-	if ( ! hit || ! hit.face ) {
-
-		info.hidden = true;
-		return;
-
-	}
-
-	const mesh = hit.object as THREE.Mesh;
-	const ids = mesh.geometry.getAttribute( '_batchid' );
-	const label = mesh.userData.featureLabels?.[ ids ? ids.getX( hit.face.a ) : 0 ] ?? '不明';
-	info.textContent = `想定浸水深: ${ label }`;
-	info.hidden = false;
+	info.hidden = ! flood;
+	if ( flood ) info.textContent = `想定浸水深: ${ flood.label }`;
 
 } );
 
@@ -327,13 +398,21 @@ if ( import.meta.env.DEV ) Object.assign( window, { app: { scene, world, camera,
 
 // ─── VR ─────────────────────────────────────────────────────────────────────
 document.body.appendChild( VRButton.createButton( renderer ) );
-const vr = initVR( { renderer, camera, rig, controls, groundTargets: () => [ terrain.group, ...buildings.map( t => t.group ) ] } );
+const vr = initVR( {
+	renderer, scene, camera, rig, controls, pointAt,
+	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
+	toggleWater: () => setWaterRaised( waterTarget === 0 ),
+} );
 
 // ─── loop ───────────────────────────────────────────────────────────────────
+const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
 renderer.setAnimationLoop( () => {
 
 	const dt = Math.min( clock.getDelta(), 0.1 );
+	const step = dt / WATER_RISE_TIME;
+	waterLevel.value = THREE.MathUtils.clamp( waterTarget, waterLevel.value - step, waterLevel.value + step );
+
 	const xr = renderer.xr;
 	if ( xr.isPresenting ) vr.update( dt );
 	else controls.update();
