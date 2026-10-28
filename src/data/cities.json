@@ -1,0 +1,895 @@
+{
+	"generatedAt": "2026-10-28T05:02:12.375Z",
+	"cities": [
+		{
+			"code": "03201",
+			"pref": "岩手県",
+			"city": "盛岡市",
+			"lat": 39.67194,
+			"lon": 141.144444,
+			"groundHeight": 149.3,
+			"geoidHeight": 41.505,
+			"bounds": [
+				141.109969,
+				39.631855,
+				141.178918,
+				39.712024
+			],
+			"floods": [
+				{
+					"id": "03201_ifld_02_1",
+					"name": "盛岡駅前及び合流式下水道区域",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/4a/3b4383-3980-426a-bdb5-b0d27b12f806/03201_morioka-shi_city_2024_citygml_1_op_ifld_02_1_3dtiles_no_texture/tileset.json"
+				},
+				{
+					"id": "03201_ifld_02_2",
+					"name": "盛南・仙北・都南地区国道４号周辺区域",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/3b/b1e6dc-7890-43c8-bf15-519b1ac99916/03201_morioka-shi_city_2024_citygml_1_op_ifld_02_2_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "盛岡市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/ac/74a1d2-b1ea-45ca-be28-ec8309e663e6/03201_morioka-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "07201",
+			"pref": "福島県",
+			"city": "福島市",
+			"lat": 37.749125,
+			"lon": 140.461625,
+			"groundHeight": 97.38,
+			"geoidHeight": 42.539,
+			"bounds": [
+				140.419,
+				37.661083,
+				140.50425,
+				37.837167
+			],
+			"floods": [
+				{
+					"id": "07201_ifld_07_1",
+					"name": "福島市内水ハザードマップ",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/df/24774c-704c-4e0d-b4ce-c9de36b04e72/07201_fukushima-shi_city_2025_citygml_1_op_ifld_07_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "福島市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/cd/54d857-d709-485a-be3a-6225ca790a09/07201_fukushima-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "07209",
+			"pref": "福島県",
+			"city": "相馬市",
+			"lat": 37.806677,
+			"lon": 140.925333,
+			"groundHeight": 41.84,
+			"geoidHeight": 42.26,
+			"bounds": [
+				140.875341,
+				37.770424,
+				140.975324,
+				37.84293
+			],
+			"floods": [
+				{
+					"id": "07209_ifld_07_1",
+					"name": "相馬市公共下水道　内水浸水想定区域図",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/ba/95e504-63c0-44c8-becf-ade276a8266f/07209_soma-shi_city_2023_citygml_2_op_ifld_07_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "相馬市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/68/be78b0-cc20-4d12-881a-761dad6b753d/07209_soma-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "11100",
+			"pref": "埼玉県",
+			"city": "さいたま市",
+			"lat": 35.915376,
+			"lon": 139.653598,
+			"groundHeight": 38.64,
+			"geoidHeight": 38.963,
+			"bounds": [
+				139.550004,
+				35.828669,
+				139.757192,
+				36.002083
+			],
+			"floods": [
+				{
+					"id": "11100_ifld_11_1",
+					"name": "さいたま市内水ハザードマップ",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/16/534962-f6e5-4f66-9f26-e3ce9d083d69/11100_saitama-shi_city_2025_citygml_1_op_ifld_11_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "西区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/e6/0f2355-9fb1-4f95-9e25-d35162886e96/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11101_nishi-ku_lod1/tileset.json"
+				},
+				{
+					"name": "北区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/79/1cbe42-c931-49e9-b87e-47d7a8434ae5/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11102_kita-ku_lod1/tileset.json"
+				},
+				{
+					"name": "大宮区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/3e/15c0d4-30df-4e7e-aea9-031acd9e2a1e/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11103_omiya-ku_lod1/tileset.json"
+				},
+				{
+					"name": "見沼区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/56/c73954-9c10-4220-a584-ae00e058cd10/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11104_minuma-ku_lod1/tileset.json"
+				},
+				{
+					"name": "中央区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/65/764a2b-72b3-4a0d-8005-265cf38f6698/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11105_chuo-ku_lod1/tileset.json"
+				},
+				{
+					"name": "桜区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/cc/7b691c-47c4-47f5-ba6e-ef56848b545d/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11106_sakura-ku_lod1/tileset.json"
+				},
+				{
+					"name": "浦和区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/ea/2102eb-ab6c-405e-9968-23b9a8b43491/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11107_urawa-ku_lod1/tileset.json"
+				},
+				{
+					"name": "南区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/13/907203-33d1-4cda-892e-c811af81e8f9/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11108_minami-ku_lod1/tileset.json"
+				},
+				{
+					"name": "緑区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/e8/f0b09c-871d-4ca5-8bfd-f8eaac87aa7f/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11109_midori-ku_lod1/tileset.json"
+				},
+				{
+					"name": "岩槻区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/45/06c81c-9561-4761-883d-8fe8555f9a18/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11110_iwatsuki-ku_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "11219",
+			"pref": "埼玉県",
+			"city": "上尾市",
+			"lat": 35.969063,
+			"lon": 139.592154,
+			"groundHeight": 48.44,
+			"geoidHeight": 39.501,
+			"bounds": [
+				139.536671,
+				35.929387,
+				139.647636,
+				36.008738
+			],
+			"floods": [
+				{
+					"id": "11219_ifld_11_1",
+					"name": "上尾市内水ハザードマップ",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/4c/fbc313-6aa4-40f8-b1a0-217a8d5e4ae2/11219_ageo-shi_pref_2025_citygml_1_op_ifld_11_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "上尾市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/35/8372d0-624f-42fb-adf5-736022d246b5/11219_ageo-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "11221",
+			"pref": "埼玉県",
+			"city": "草加市",
+			"lat": 35.838342,
+			"lon": 139.801443,
+			"groundHeight": 37.15,
+			"geoidHeight": 37.962,
+			"bounds": [
+				139.763962,
+				35.805214,
+				139.838925,
+				35.87147
+			],
+			"floods": [
+				{
+					"id": "11221_ifld_11_1",
+					"name": "草加市雨水出水浸水想定区域図",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/4d/d63e2e-134b-4adf-8aa3-4f7daf34ed6d/11221_soka-shi_pref_2025_citygml_1_op_ifld_11_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "草加市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/30/67dc09-79e8-468d-9243-b2a7253e416d/11221_soka-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "11222",
+			"pref": "埼玉県",
+			"city": "越谷市",
+			"lat": 35.906562,
+			"lon": 139.79188,
+			"groundHeight": 41.26,
+			"geoidHeight": 38.635,
+			"bounds": [
+				139.745005,
+				35.855,
+				139.838755,
+				35.958125
+			],
+			"floods": [
+				{
+					"id": "11222_ifld_11_1",
+					"name": "越谷市内水ハザードマップ",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/3e/715c4d-6a59-4041-9afa-ad7bb7df31bf/11222_koshigaya-shi_pref_2023_citygml_2_op_ifld_11_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "越谷市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/52/697228-ba16-4281-b194-4e7cd038ad38/11222_koshigaya-shi_pref_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "11223",
+			"pref": "埼玉県",
+			"city": "蕨市",
+			"lat": 35.824592,
+			"lon": 139.686958,
+			"groundHeight": 40.05,
+			"geoidHeight": 38.137,
+			"bounds": [
+				139.663657,
+				35.81343,
+				139.710259,
+				35.835754
+			],
+			"floods": [
+				{
+					"id": "11223_ifld_11_1",
+					"name": "蕨市内水ハザードマップ",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/35/3985f7-b2ec-4fff-bc35-611618a7d199/11223_warabi-shi_pref_2024_citygml_1_op_ifld_11_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "蕨市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/70/a3a85b-3a0c-488e-8d41-06de4c95fb8c/11223_warabi-shi_pref_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "11229",
+			"pref": "埼玉県",
+			"city": "和光市",
+			"lat": 35.78648,
+			"lon": 139.618738,
+			"groundHeight": 38.35,
+			"geoidHeight": 38.1,
+			"bounds": [
+				139.596833,
+				35.766729,
+				139.640644,
+				35.806231
+			],
+			"floods": [
+				{
+					"id": "11229_ifld_11_1",
+					"name": "和光市内水ハザードマップ",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/17/d05fdb-76c6-4023-b077-32e7fca0af8a/11229_wako-shi_pref_2025_citygml_1_op_ifld_11_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "和光市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/c0/1f4a3c-67dc-4101-a0bd-2c611562a995/11229_wako-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "11233",
+			"pref": "埼玉県",
+			"city": "北本市",
+			"lat": 36.027687,
+			"lon": 139.534219,
+			"groundHeight": 43.94,
+			"geoidHeight": 40.024,
+			"bounds": [
+				139.503375,
+				35.997792,
+				139.565063,
+				36.057583
+			],
+			"floods": [
+				{
+					"id": "11233_ifld_11_1",
+					"name": "北本市内水ハザードマップ",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/32/3c415f-c4bd-473f-bcd1-fe56e024f85c/11233_kitamoto-shi_pref_2025_citygml_1_op_ifld_11_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "北本市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/88/597f71-6ac0-45f5-bfa5-0fb1e0e754dd/11233_kitamoto-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "12100",
+			"pref": "千葉県",
+			"city": "千葉市",
+			"lat": 35.603979,
+			"lon": 140.157813,
+			"groundHeight": 30.59,
+			"geoidHeight": 34.665,
+			"bounds": [
+				140.021687,
+				35.493458,
+				140.293938,
+				35.7145
+			],
+			"floods": [
+				{
+					"id": "12100_ifld_12_1",
+					"name": "千葉市地震・風水害ハザードマップ（WEB版）",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/98/51f0b8-1e8c-4115-94c7-1853a2984dbc/12100_chiba-shi_city_2024_citygml_1_op_ifld_12_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "中央区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/9e/73e2df-8fe1-44a4-a57d-3f7c9886e5b2/12100_chiba-shi_city_2024_citygml_1_op_bldg_3dtiles_12101_chuo-ku_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "14204",
+			"pref": "神奈川県",
+			"city": "鎌倉市",
+			"lat": 35.334361,
+			"lon": 139.535567,
+			"groundHeight": 36.91,
+			"geoidHeight": 37.034,
+			"bounds": [
+				139.488767,
+				35.301586,
+				139.582367,
+				35.367136
+			],
+			"floods": [
+				{
+					"id": "14204_ifld_14_1",
+					"name": "鎌倉市雨水出水浸水想定区域図",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/25/5cc514-19b7-4731-a7fc-7af4ccdc1351/14204_kamakura-shi_city_2024_citygml_1_op_ifld_14_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "鎌倉市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/df/c163a1-13a3-4d1b-a8b0-4e07f949e091/14204_kamakura-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "14205",
+			"pref": "神奈川県",
+			"city": "藤沢市",
+			"lat": 35.363563,
+			"lon": 139.456251,
+			"groundHeight": 40.1,
+			"geoidHeight": 37.517,
+			"bounds": [
+				139.396314,
+				35.298293,
+				139.516188,
+				35.428834
+			],
+			"floods": [
+				{
+					"id": "14205_ifld_14_1",
+					"name": "藤沢市雨水出水浸水想定区域",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/36/491a3a-60cc-49c9-8180-50d19002a34b/14205_fujisawa-shi_city_2025_citygml_1_op_ifld_14_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "藤沢市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/ef/44cc4e-632e-4765-b7ca-5fa3f0929afc/14205_fujisawa-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "16202",
+			"pref": "富山県",
+			"city": "高岡市",
+			"lat": 36.743978,
+			"lon": 137.011036,
+			"groundHeight": 38.43,
+			"geoidHeight": 38.099,
+			"bounds": [
+				136.922692,
+				36.660083,
+				137.099379,
+				36.827874
+			],
+			"floods": [
+				{
+					"id": "16202_ifld_16_1",
+					"name": "16_1",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/4c/6ba0d5-ae2c-465e-9632-83cf3e04869b/16202_takaoka-shi_city_2024_citygml_1_op_ifld_16_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "高岡市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/87/de16b9-f897-4f93-a9fa-3d922737ce80/16202_takaoka-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "22130",
+			"pref": "静岡県",
+			"city": "浜松市",
+			"lat": 34.710729,
+			"lon": 137.708594,
+			"groundHeight": 38.74,
+			"geoidHeight": 39.78,
+			"bounds": [
+				137.666562,
+				34.674792,
+				137.750625,
+				34.746667
+			],
+			"floods": [
+				{
+					"id": "22130_ifld_22_1",
+					"name": "新川曳馬川流域内水浸水想定区域",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/45/3b6690-6e14-4366-aee4-65c5de2b68f1/22130_hamamatsu-shi_city_2023_citygml_2_op_ifld_22_1_3dtiles_no_texture/tileset.json"
+				},
+				{
+					"id": "22130_ifld_22_2",
+					"name": "高塚川流域内水浸水想定区域",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/ff/cd3831-a661-4e8d-9eb2-23e45857f471/22130_hamamatsu-shi_city_2023_citygml_2_op_ifld_22_2_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "中区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/8d/01deb7-3c29-4faf-9d15-818d79158d52/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22131_naka-ku_lod1/tileset.json"
+				},
+				{
+					"name": "東区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/b6/a0856d-d0c1-4d23-8ef9-b394fc6cb282/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22132_higashi-ku_lod1/tileset.json"
+				},
+				{
+					"name": "西区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/ae/ab773c-c81c-4f8f-a430-e322dbc99d32/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22133_nishi-ku_lod1/tileset.json"
+				},
+				{
+					"name": "南区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/27/147bc6-2af0-4c8e-961f-b6fc72369ea5/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22134_minami-ku_lod1/tileset.json"
+				},
+				{
+					"name": "北区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/e6/0624ae-ccaa-4ac0-ab10-24195af4668a/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22135_kita-ku_lod1/tileset.json"
+				},
+				{
+					"name": "浜北区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/40/904295-ce38-46e5-a5b7-c3f27999d88f/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22136_hamakita-ku_lod1/tileset.json"
+				},
+				{
+					"name": "天竜区",
+					"url": "https://assets.cms.plateau.reearth.io/assets/3d/a710d8-9e60-4935-8bf6-0d42aed3e26f/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22137_tenryu-ku_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "23201",
+			"pref": "愛知県",
+			"city": "豊橋市",
+			"lat": 34.734014,
+			"lon": 137.393859,
+			"groundHeight": 39.48,
+			"geoidHeight": 39.563,
+			"bounds": [
+				137.325281,
+				34.674998,
+				137.462437,
+				34.79303
+			],
+			"floods": [
+				{
+					"id": "23201_ifld_23_1",
+					"name": "豊橋市内水浸水想定",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/0c/cef35c-60cb-4309-9d3e-6691ac59f477/23201_toyohashi-shi_city_2024_citygml_2_op_ifld_23_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "豊橋市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/ab/4a7e2c-6565-46e0-a515-f8967267f87b/23201_toyohashi-shi_city_2024_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "23206",
+			"pref": "愛知県",
+			"city": "春日井市",
+			"lat": 35.272,
+			"lon": 136.998156,
+			"groundHeight": 50.01,
+			"geoidHeight": 38.8,
+			"bounds": [
+				136.925312,
+				35.217667,
+				137.071,
+				35.326333
+			],
+			"floods": [
+				{
+					"id": "23206_ifld_23_1",
+					"name": "春日井市雨水出水想定区域図【想定最大規模】",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/53/a54472-bbe7-4132-b4a3-4965cc4aca03/23206_kasugai-shi_city_2023_citygml_2_op_ifld_23_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "春日井市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/90/408437-4e7c-4009-ae6e-aa040569bc17/23206_kasugai-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "23211",
+			"pref": "愛知県",
+			"city": "豊田市",
+			"lat": 35.090437,
+			"lon": 137.129812,
+			"groundHeight": 44.84,
+			"geoidHeight": 39.404,
+			"bounds": [
+				137.038812,
+				34.999292,
+				137.220812,
+				35.181583
+			],
+			"floods": [
+				{
+					"id": "23211_ifld_23_1",
+					"name": "豊田市内水浸水想定区域図",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/60/af0cf7-b3db-4813-8c9b-39f3f14f2be5/23211_toyota-shi_city_2023_citygml_2_op_ifld_23_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "豊田市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/68/f420ee-ad56-4e56-aef9-8efe133235c0/23211_toyota-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "24202",
+			"pref": "三重県",
+			"city": "四日市市",
+			"lat": 34.968438,
+			"lon": 136.6245,
+			"groundHeight": 37.4,
+			"geoidHeight": 37.451,
+			"bounds": [
+				136.575125,
+				34.9025,
+				136.673875,
+				35.034375
+			],
+			"floods": [
+				{
+					"id": "24202_ifld_24_1",
+					"name": "四日市市内水氾濫想定区域図",
+					"year": 2022,
+					"url": "https://assets.cms.plateau.reearth.io/assets/7c/f0a9a6-56df-4fcf-b09e-a5bbe21dc2f7/24202_yokkaichi-shi_city_2022_citygml_4_op_ifld_24_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "四日市市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/10/6645ff-8a6d-4e50-bebc-9cc3c590835c/24202_yokkaichi-shi_city_2022_citygml_4_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "28201",
+			"pref": "兵庫県",
+			"city": "姫路市",
+			"lat": 34.801458,
+			"lon": 134.643437,
+			"groundHeight": 37.47,
+			"geoidHeight": 36.838,
+			"bounds": [
+				134.520312,
+				34.67,
+				134.766562,
+				34.932917
+			],
+			"floods": [
+				{
+					"id": "28201_ifld_28_1",
+					"name": "姫路市内水ハザードマップ（想定される最大規模の降雨）",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/60/7e914d-9264-49aa-a243-dc545ffa0731/28201_himeji-shi_city_2023_citygml_2_op_ifld_28_1_3dtiles_no_texture/tileset.json"
+				},
+				{
+					"id": "28201_ifld_28_2",
+					"name": "姫路市内水ハザードマップ（過去に発生した最大降雨）",
+					"year": 2023,
+					"url": "https://assets.cms.plateau.reearth.io/assets/c2/b0113f-d3ad-4505-b021-0909645d1074/28201_himeji-shi_city_2023_citygml_2_op_ifld_28_2_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "姫路市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/7e/feb981-bc38-4e5e-b6de-162d40d6bfe8/28201_himeji-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "33202",
+			"pref": "岡山県",
+			"city": "倉敷市",
+			"lat": 34.600536,
+			"lon": 133.774457,
+			"groundHeight": 35.42,
+			"geoidHeight": 36.097,
+			"bounds": [
+				133.705135,
+				34.533294,
+				133.84378,
+				34.667778
+			],
+			"floods": [
+				{
+					"id": "33202_ifld_33_1",
+					"name": "倉敷市内水浸水想定区域",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/1d/8c5bbb-7597-41f1-b865-73f09324d4c9/33202_kurashiki-shi_city_2024_citygml_1_op_ifld_33_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "倉敷市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/56/a12403-0cab-42f1-aa88-88dfa0dcae7a/33202_kurashiki-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "33423",
+			"pref": "岡山県",
+			"city": "早島町",
+			"lat": 34.601078,
+			"lon": 133.821661,
+			"groundHeight": 36.6,
+			"geoidHeight": 36.143,
+			"bounds": [
+				133.80535,
+				34.590498,
+				133.837972,
+				34.611657
+			],
+			"floods": [
+				{
+					"id": "33423_ifld_33_1",
+					"name": "早島町 内水ハザードマップ",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/8f/f4040d-b14f-42a6-8274-cf8ff23b8948/33423_hayashima-cho_city_2024_citygml_1_op_ifld_33_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "早島町",
+					"url": "https://assets.cms.plateau.reearth.io/assets/a6/f01341-2226-4040-9b5e-6f7f40590937/33423_hayashima-cho_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "34304",
+			"pref": "広島県",
+			"city": "海田町",
+			"lat": 34.371848,
+			"lon": 132.543808,
+			"groundHeight": 32.75,
+			"geoidHeight": 33.597,
+			"bounds": [
+				132.526755,
+				34.358627,
+				132.56086,
+				34.385068
+			],
+			"floods": [
+				{
+					"id": "34304_ifld_34_1",
+					"name": "内水浸水想定区域",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/8b/7d52e1-a34a-4a61-b45c-f559e7f156f6/34304_kaita-cho_city_2025_citygml_1_op_ifld_34_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "海田町",
+					"url": "https://assets.cms.plateau.reearth.io/assets/36/6767af-258b-4463-9830-b8c9b774dc06/34304_kaita-cho_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "36387",
+			"pref": "徳島県",
+			"city": "美波町",
+			"lat": 33.732014,
+			"lon": 134.530408,
+			"groundHeight": 38.25,
+			"geoidHeight": 37.198,
+			"bounds": [
+				134.521576,
+				33.720354,
+				134.53924,
+				33.743673
+			],
+			"floods": [
+				{
+					"id": "36387_ifld_36_1",
+					"name": "内水浸水想定区域",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/ac/de31e4-3e03-4a96-b43e-79abe093dbbd/36387_minami-cho_city_2025_citygml_1_op_ifld_36_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "美波町",
+					"url": "https://assets.cms.plateau.reearth.io/assets/2c/fec6dc-7def-4c66-9bdc-494146fdb294/36387_minami-cho_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "39386",
+			"pref": "高知県",
+			"city": "いの町",
+			"lat": 33.547924,
+			"lon": 133.44303,
+			"groundHeight": 48.98,
+			"geoidHeight": 36.494,
+			"bounds": [
+				133.419017,
+				33.535339,
+				133.467043,
+				33.560508
+			],
+			"floods": [
+				{
+					"id": "39386_ifld_39_1",
+					"name": "枝川地区内水ハザードマップ",
+					"year": 2024,
+					"url": "https://assets.cms.plateau.reearth.io/assets/ae/7e168a-fc8b-4534-8be1-71d43b79dc45/39386_ino-cho_city_2024_citygml_1_op_ifld_39_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "いの町",
+					"url": "https://assets.cms.plateau.reearth.io/assets/3a/3012f5-a12a-4db7-bb8e-3fbc44038a90/39386_ino-cho_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "41203",
+			"pref": "佐賀県",
+			"city": "鳥栖市",
+			"lat": 33.37175,
+			"lon": 130.502375,
+			"groundHeight": 37.91,
+			"geoidHeight": 32.749,
+			"bounds": [
+				130.454313,
+				33.326833,
+				130.550438,
+				33.416667
+			],
+			"floods": [
+				{
+					"id": "41203_ifld_41_1",
+					"name": "内水浸水想定（想定最大規模）",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/6f/c06685-a3a8-42de-9811-c8c63bf9274c/41203_tosu-shi_city_2025_citygml_1_op_ifld_41_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "鳥栖市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/31/df4ae2-f768-4dc2-b633-0f6074bebab9/41203_tosu-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "43213",
+			"pref": "熊本県",
+			"city": "宇城市",
+			"lat": 32.645889,
+			"lon": 130.682111,
+			"groundHeight": 33.53,
+			"geoidHeight": 32.912,
+			"bounds": [
+				130.657778,
+				32.629444,
+				130.706444,
+				32.662333
+			],
+			"floods": [
+				{
+					"id": "43213_ifld_43-1",
+					"name": "宇城市内水ハザードマップ",
+					"year": 2025,
+					"url": "https://assets.cms.plateau.reearth.io/assets/8e/16561a-469e-48cb-9fbf-6b7dbb7b017a/43213_uki-shi_city_2025_citygml_1_op_ifld_43-1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "宇城市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/26/45473e-ecea-4a07-aacc-02307d257121/43213_uki-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		},
+		{
+			"code": "44204",
+			"pref": "大分県",
+			"city": "日田市",
+			"lat": 33.328451,
+			"lon": 130.933649,
+			"groundHeight": 102.01,
+			"geoidHeight": 32.953,
+			"bounds": [
+				130.905164,
+				33.300879,
+				130.962133,
+				33.356023
+			],
+			"floods": [
+				{
+					"id": "44204_ifld_44_1",
+					"name": "日田市内水ハザードマップ",
+					"year": 2020,
+					"url": "https://assets.cms.plateau.reearth.io/assets/93/f5f9d3-6754-4cd6-a49c-1ee388479755/44204_hita-shi_city_2020_citygml_7_op_ifld_44_1_3dtiles_no_texture/tileset.json"
+				}
+			],
+			"buildings": [
+				{
+					"name": "日田市",
+					"url": "https://assets.cms.plateau.reearth.io/assets/1f/09b8fd-abf0-478a-ab2f-8ad72882906f/44204_hita-shi_city_2020_citygml_7_op_bldg_3dtiles_lod1/tileset.json"
+				}
+			]
+		}
+	]
+}

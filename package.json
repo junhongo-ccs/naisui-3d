@@ -1,0 +1,25 @@
+{
+  "name": "naisui-3d",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite",
+    "dev:https": "vite --mode https",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc",
+    "catalog": "node --use-system-ca scripts/build-catalog.mjs"
+  },
+  "description": "PLATEAU inland-flood (内水浸水想定区域) 3D viewer for PC, phone and Quest (WebXR)",
+  "dependencies": {
+    "3d-tiles-renderer": "^0.5.3",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  },
+  "private": true,
+  "type": "module"
+}
