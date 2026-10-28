@@ -277,8 +277,20 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 let downAt = { x: 0, y: 0 };
 renderer.domElement.addEventListener( 'pointerdown', e => ( downAt = { x: e.clientX, y: e.clientY } ) );
+
+// Show a grabbing hand while the view is being dragged (not on a plain click).
+// OrbitControls writes an inline cursor style, so set it inline too rather than via CSS.
+const setCursor = ( c: string ) => ( renderer.domElement.style.cursor = c );
+renderer.domElement.addEventListener( 'pointermove', e => {
+
+	if ( e.buttons && Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) setCursor( 'grabbing' );
+
+} );
+renderer.domElement.addEventListener( 'pointercancel', () => setCursor( 'auto' ) );
+
 renderer.domElement.addEventListener( 'pointerup', e => {
 
+	setCursor( 'auto' );
 	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) return;
 	pointer.set( ( e.clientX / window.innerWidth ) * 2 - 1, - ( e.clientY / window.innerHeight ) * 2 + 1 );
 	raycaster.setFromCamera( pointer, camera );

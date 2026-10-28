@@ -13,20 +13,21 @@ export function parseDepthLabel( label: string ): [ number, number ] | null {
 
 }
 
-// MLIT flood-depth palette (水害ハザードマップ作成の手引き), placed at the middle of each
-// standard bin so the standard ranks get the official colors and finer local bins fall between them.
+// Pale water blue for shallow → deep navy for deep, keyed on the middle of each bin.
+// Inland flooding is mostly under 3 m, so the stops are packed below that.
 const STOPS: Array<[ number, Color ]> = [
-	[ 0.25, new Color( '#f7f5a9' ) ],
-	[ 1.75, new Color( '#ffd8c0' ) ],
-	[ 4, new Color( '#ffb7b7' ) ],
-	[ 7.5, new Color( '#ff9191' ) ],
-	[ 15, new Color( '#f285c9' ) ],
-	[ 20, new Color( '#dc7adc' ) ],
+	[ 0.05, new Color( '#d4ecfb' ) ],
+	[ 0.25, new Color( '#a9d6f5' ) ],
+	[ 0.5, new Color( '#74b9ec' ) ],
+	[ 1, new Color( '#3f93dc' ) ],
+	[ 2, new Color( '#1f69c2' ) ],
+	[ 4, new Color( '#0d4597' ) ],
+	[ 8, new Color( '#082a66' ) ],
 ];
 
 export function depthColor( range: [ number, number ] | null, target = new Color() ): Color {
 
-	if ( ! range ) return target.set( '#9ecae1' );
+	if ( ! range ) return target.set( '#a0a0a0' );
 
 	const [ lo, hi ] = range;
 	const d = Number.isFinite( hi ) ? ( lo + hi ) / 2 : Math.max( lo * 1.25, lo + 0.5 );
