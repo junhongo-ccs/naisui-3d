@@ -26,28 +26,37 @@ class GSITerrainPlugin extends TerrainRGBMeshPlugin {
 
 }
 
-const DEM_URL = 'https://cyberjapandata.gsi.go.jp/xyz/dem_png/';
+const GSI_XYZ = 'https://cyberjapandata.gsi.go.jp/xyz/';
+const DEM_URL = `${ GSI_XYZ }dem_png/`;
 
-// GSI answers 404 for DEM tiles with no land (open sea, and all of z0). The terrain plugin fetches
-// with the global fetch, so swap those misses for a "no data" tile that decodes to sea level.
+// A 256 px PNG filled with one color.
+function solidTile( color: string ): Promise<Blob> {
+
+	const canvas = new OffscreenCanvas( 256, 256 );
+	const ctx = canvas.getContext( '2d' )!;
+	ctx.fillStyle = color;
+	ctx.fillRect( 0, 0, 256, 256 );
+	return canvas.convertToBlob( { type: 'image/png' } );
+
+}
+
+// GSI answers 404 (with an XML body) for tiles it doesn't have: DEM tiles with no land (open sea,
+// and all of z0), and z0–1 of the aerial photo and pale maps, plus their tiles out at sea. Either
+// miss fails the whole terrain tile, the root included, so nothing shows. The terrain plugin and
+// the overlay fetch with the global fetch, so swap the misses: DEM for a "no data" tile that decodes
+// to sea level, base maps for a plain light gray one (transparent would show black while the
+// finer tiles load).
 let noDataTile: Promise<Blob> | null = null;
+let blankTile: Promise<Blob> | null = null;
 const nativeFetch = window.fetch.bind( window );
 window.fetch = async ( input, init ) => {
 
 	const res = await nativeFetch( input, init );
 	const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-	if ( res.ok || ! url.startsWith( DEM_URL ) ) return res;
+	if ( res.ok || ! url.startsWith( GSI_XYZ ) ) return res;
 
-	noDataTile ??= ( () => {
-
-		const canvas = new OffscreenCanvas( 256, 256 );
-		const ctx = canvas.getContext( '2d' )!;
-		ctx.fillStyle = 'rgb(128,0,0)';
-		ctx.fillRect( 0, 0, 256, 256 );
-		return canvas.convertToBlob( { type: 'image/png' } );
-
-	} )();
-	return new Response( await noDataTile, { headers: { 'Content-Type': 'image/png' } } );
+	const tile = url.startsWith( DEM_URL ) ? ( noDataTile ??= solidTile( 'rgb(128,0,0)' ) ) : ( blankTile ??= solidTile( '#c9ccc4' ) );
+	return new Response( await tile, { headers: { 'Content-Type': 'image/png' } } );
 
 };
 
