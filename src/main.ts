@@ -464,7 +464,8 @@ buildUI();
 if ( import.meta.env.DEV ) {
 
 	Object.assign( window, { app: {
-		scene, world, camera, controls, legend,
+		renderer, scene, world, camera, controls, legend,
+		get vr() { return vr; },
 		get city() { return city; },
 		get terrain() { return terrain; },
 		get buildings() { return buildings; },

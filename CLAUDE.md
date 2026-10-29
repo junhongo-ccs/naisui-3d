@@ -17,7 +17,7 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 テストは無い。変更後は `npm run typecheck` と、ブラウザで実際に表示して確認する。
 `?city=<市区町村コード>&base=photo|pale|std` で市町村と背景地図を切り替えられる。
 画面からの市町村の切り替えはページを読み込み直さない（`switchCity`。VR を切らずに移れるように）。
-開発時は `window.app`（scene, world, camera, city, terrain, buildings, floods, legend）からコンソールで状態を見られる。
+開発時は `window.app`（renderer, scene, world, camera, controls, legend, vr, city, terrain, buildings, floods）からコンソールで状態を見られる。
 
 ## 構成
 
@@ -40,6 +40,9 @@ PLATEAU のタイルは、`group` ではなく `group.children`（表示中の�
 地形だけは必ず `group` に当てる。地形のメッシュは平らで、起伏は GPU で付けている。
 起伏を反映した判定は、`group` 経由で呼ばれるプラグインの `raycastTile` だけが行う。
 `children` に直接当てると、平らな面に当たる。
+
+VR で頭の位置・向きを取るときは `renderer.xr.getCamera()` ではなく `camera`（`rig` の子）を使う。
+XR カメラには親が無く、`getWorldPosition` などがリグ基準の値を返す。
 
 ## 座標と高さ（ここを崩すと全部ずれる）
 

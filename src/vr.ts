@@ -137,7 +137,10 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		}
 
-		const xrCam = renderer.xr.getCamera();
+		// The head pose in the world. Not renderer.xr.getCamera(): that camera has no parent, so its
+		// "world" position and direction are relative to the rig. three.js copies the headset pose
+		// onto `camera` (a child of the rig) every frame, so this one is right.
+		const headCam = camera;
 		if ( choose && menu.hoveredCode ) {
 
 			const code = menu.hoveredCode;
@@ -147,7 +150,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		} else if ( toggleMenu ) {
 
 			if ( menu.isOpen ) menu.close();
-			else menu.open( xrCam, rig, currentCity() );
+			else menu.open( headCam, rig, currentCity() );
 
 		}
 
@@ -161,7 +164,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		const height = Math.max( rig.position.y - groundY, 0 );
 		const speed = Math.max( MIN_SPEED, height ) * ( boost ? BOOST : 1 ) * dt;
-		xrCam.getWorldDirection( forward );
+		headCam.getWorldDirection( forward );
 		forward.y = 0;
 		forward.normalize();
 		right.crossVectors( forward, rig.up ).normalize();
@@ -172,7 +175,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		if ( Math.abs( turn ) > 0.7 && ! turnLatched ) {
 
 			// Turn around the head, not the rig origin, so the view doesn't slide.
-			xrCam.getWorldPosition( head );
+			headCam.getWorldPosition( head );
 			const angle = - Math.sign( turn ) * Math.PI / 4;
 			rig.position.sub( head ).applyAxisAngle( rig.up, angle ).add( head );
 			rig.rotateY( angle );
@@ -186,7 +189,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		// Point with where the hand is after this frame's move, not last frame's.
 		rig.updateMatrixWorld( true );
-		pointer.update( dt, xrCam );
+		pointer.update( dt, headCam );
 		help.update();
 
 	}
@@ -288,7 +291,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 	}
 
-	function update( dt: number, xrCam: THREE.Camera ) {
+	function update( dt: number, headCam: THREE.Camera ) {
 
 		const active = controllers.find( ( { c } ) => c.userData.handedness === 'right' );
 		controllers.forEach( ( { line } ) => ( line.visible = false ) );
@@ -328,7 +331,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 		// Keep the label the same apparent size however far away it is.
 		setText( flood.label );
-		const dist = xrCam.getWorldPosition( head ).distanceTo( flood.point );
+		const dist = headCam.getWorldPosition( head ).distanceTo( flood.point );
 		const h = dist * 0.05;
 		label.position.copy( flood.point );
 		label.scale.set( h * label.userData.aspect, h, 1 );

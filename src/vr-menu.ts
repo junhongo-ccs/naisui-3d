@@ -103,13 +103,13 @@ export function createCityMenu( cities: CityItem[] ) {
 	const forward = new THREE.Vector3();
 
 	// Put the panel in front of the head, facing it, and carry it along with the rig.
-	function open( xrCam: THREE.Camera, rig: THREE.Object3D, currentCode: string ) {
+	function open( headCam: THREE.Camera, rig: THREE.Object3D, currentCode: string ) {
 
 		current = currentCode;
 		hovered = - 1;
 		draw();
-		xrCam.getWorldPosition( head );
-		xrCam.getWorldDirection( forward );
+		headCam.getWorldPosition( head );
+		headCam.getWorldDirection( forward );
 		forward.y = 0;
 		forward.normalize();
 		mesh.removeFromParent();
