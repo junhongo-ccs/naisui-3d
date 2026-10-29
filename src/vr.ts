@@ -8,10 +8,14 @@ type PointAt = ( ray: THREE.Raycaster ) => { distance: number, flood: { point: T
 // so moving and turning are done by moving `rig`.
 //   left stick:   move along the gaze direction (horizontal)
 //   right stick:  X = 45° snap turn, Y = rise / sink
-//   trigger held: 10× speed
+//   trigger held: 5× speed
 //   right hand:   point at a flood polygon to float its depth over it (no button needed,
 //                 since the trigger is taken; works with hand tracking too)
 //   A button:     raise / lower the water surface
+//   B button:     leave VR (back to the map view)
+//   Y button:     back to where VR started
+// Speed scales with height above the ground, so crossing the city from the air isn't a crawl
+// and the street stays walkable. A card on the left controller lists these.
 export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, toggleWater }: {
 	renderer: THREE.WebGLRenderer,
 	scene: THREE.Scene,
@@ -23,16 +27,32 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	toggleWater: () => void,
 } ) {
 
-	const WALK = 6; // m/s
+	const MIN_SPEED = 15; // m/s at street level; above that, speed (m/s) = height above ground (m)
+	const BOOST = 5;
+	const GROUND_INTERVAL = 0.2; // s between ground-height raycasts (too heavy for every frame)
 	const saved = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() };
 	const raycaster = new THREE.Raycaster();
 	raycaster.firstHitOnly = true;
 	const forward = new THREE.Vector3();
 	const right = new THREE.Vector3();
 	const head = new THREE.Vector3();
+	const start = new THREE.Vector3();
 	let turnLatched = false;
-	let aWasPressed = false;
+	const wasPressed: Record<string, boolean> = {};
+	let groundY = 0;
+	let sinceGround = Infinity;
 	const pointer = createPointer( renderer, scene, rig, pointAt );
+	const help = createHelpCard( renderer, rig );
+
+	// True on the frame a button goes down.
+	function pressed( key: string, gp: Gamepad, index: number ): boolean {
+
+		const now = !! gp.buttons[ index ]?.pressed;
+		const edge = now && ! wasPressed[ key ];
+		wasPressed[ key ] = now;
+		return edge;
+
+	}
 
 	// Height of the ground (terrain or roof) under a point, in local meters.
 	function groundAt( x: number, z: number ): number {
@@ -51,6 +71,8 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		const { x, z } = controls.target;
 		rig.position.set( x, groundAt( x, z ), z );
 		rig.rotation.set( 0, 0, 0 );
+		start.copy( rig.position );
+		sinceGround = Infinity;
 
 	} );
 
@@ -82,10 +104,22 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 				turn = ax[ 0 ];
 				lift = - dz( ax[ 1 ] );
-				// xr-standard mapping: buttons[4] is A on the right Touch controller.
-				const a = !! gp.buttons[ 4 ]?.pressed;
-				if ( a && ! aWasPressed ) toggleWater();
-				aWasPressed = a;
+				// xr-standard mapping: buttons[4] / [5] are A / B (right) and X / Y (left).
+				if ( pressed( 'A', gp, 4 ) ) toggleWater();
+				if ( pressed( 'B', gp, 5 ) ) {
+
+					session.end();
+					return;
+
+				}
+
+			}
+
+			if ( src.handedness === 'left' && pressed( 'Y', gp, 5 ) ) {
+
+				rig.position.copy( start );
+				rig.rotation.set( 0, 0, 0 );
+				sinceGround = Infinity;
 
 			}
 
@@ -93,7 +127,16 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		}
 
-		const speed = WALK * ( boost ? 10 : 1 ) * dt;
+		sinceGround += dt;
+		if ( sinceGround >= GROUND_INTERVAL ) {
+
+			sinceGround = 0;
+			groundY = groundAt( rig.position.x, rig.position.z );
+
+		}
+
+		const height = Math.max( rig.position.y - groundY, 0 );
+		const speed = Math.max( MIN_SPEED, height ) * ( boost ? BOOST : 1 ) * dt;
 		const xrCam = renderer.xr.getCamera();
 		xrCam.getWorldDirection( forward );
 		forward.y = 0;
@@ -121,6 +164,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		// Point with where the hand is after this frame's move, not last frame's.
 		rig.updateMatrixWorld( true );
 		pointer.update( dt, xrCam );
+		help.update();
 
 	}
 
@@ -249,5 +293,79 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 	}
 
 	return { update, hide };
+
+}
+
+// A card above the left controller listing the controls.
+function createHelpCard( renderer: THREE.WebGLRenderer, rig: THREE.Group ) {
+
+	const lines = [
+		[ '左スティック', '移動' ],
+		[ '右スティック', '左右: 向きを変える　上下: 上昇・下降' ],
+		[ 'トリガー', '押している間 5 倍速' ],
+		[ '右手で指す', '想定浸水深を表示' ],
+		[ 'A', '水面を上げる・下げる' ],
+		[ 'Y', 'スタート地点に戻る' ],
+		[ 'B', 'VR を終了' ],
+	];
+	const canvas = document.createElement( 'canvas' );
+	const ctx = canvas.getContext( '2d' )!;
+	const pad = 36, row = 64, keyWidth = 300;
+	canvas.width = 1100;
+	canvas.height = pad * 2 + row * lines.length;
+	ctx.fillStyle = 'rgba(20, 26, 36, 0.88)';
+	ctx.beginPath();
+	ctx.roundRect( 0, 0, canvas.width, canvas.height, 32 );
+	ctx.fill();
+	ctx.textBaseline = 'middle';
+	lines.forEach( ( [ key, action ], i ) => {
+
+		const y = pad + row * ( i + 0.5 );
+		ctx.font = 'bold 40px system-ui, sans-serif';
+		ctx.fillStyle = '#9fd3ff';
+		ctx.fillText( key, pad, y );
+		ctx.font = '40px system-ui, sans-serif';
+		ctx.fillStyle = '#ffffff';
+		ctx.fillText( action, pad + keyWidth, y );
+
+	} );
+
+	const texture = new THREE.CanvasTexture( canvas );
+	texture.colorSpace = THREE.SRGBColorSpace;
+	const width = 0.2; // m
+	const card = new THREE.Mesh(
+		new THREE.PlaneGeometry( width, width * canvas.height / canvas.width ),
+		new THREE.MeshBasicMaterial( { map: texture, transparent: true, depthTest: false } ),
+	);
+	card.renderOrder = 1000;
+	// Above the controller, tilted back toward the face.
+	card.position.set( 0, 0.12, - 0.04 );
+	card.rotation.x = - Math.PI / 6;
+	card.visible = false;
+
+	const controllers = [ 0, 1 ].map( i => {
+
+		const c = renderer.xr.getController( i );
+		rig.add( c );
+		return c;
+
+	} );
+
+	function update() {
+
+		const left = controllers.find( c => c.userData.handedness === 'left' );
+		if ( ! left ) {
+
+			card.visible = false;
+			return;
+
+		}
+
+		if ( card.parent !== left ) left.add( card );
+		card.visible = true;
+
+	}
+
+	return { update };
 
 }
