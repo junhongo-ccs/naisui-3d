@@ -16,7 +16,8 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 
 テストは無い。変更後は `npm run typecheck` と、ブラウザで実際に表示して確認する。
 `?city=<市区町村コード>&base=photo|pale|std` で市町村と背景地図を切り替えられる。
-開発時は `window.app`（scene, world, camera, terrain, buildings, floods, legend）からコンソールで状態を見られる。
+画面からの市町村の切り替えはページを読み込み直さない（`switchCity`。VR を切らずに移れるように）。
+開発時は `window.app`（scene, world, camera, city, terrain, buildings, floods, legend）からコンソールで状態を見られる。
 
 ## 構成
 
@@ -25,7 +26,8 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 | `src/main.ts` | シーン、座標系、タイルセットの読み込み、浸水の色付け、UI、描画ループ |
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
 | `src/flood.ts` | 浸水深ラベルの解析と配色 |
-| `src/vr.ts` | Quest コントローラーでの移動 |
+| `src/vr.ts` | Quest コントローラーでの移動、ボタン操作、指さし、操作説明の板 |
+| `src/vr-menu.ts` | VR の市町村一覧パネル（右グリップで開き、右手で指してトリガーで選ぶ） |
 | `src/data/cities.json` | 対象 28 市町村のタイルセット URL・中心・ジオイド高（`scripts/build-catalog.mjs` が生成。手で編集しない） |
 | `src/types/3d-tiles-renderer.d.ts` | ライブラリに型が無い `TerrainRGBMeshPlugin` の型宣言 |
 

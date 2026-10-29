@@ -15,8 +15,9 @@ type City = ( typeof catalog.cities )[ number ];
 
 const DEG = Math.PI / 180;
 const params = new URLSearchParams( location.search );
+const $ = <T extends HTMLElement>( sel: string ) => document.querySelector( sel ) as T;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
-const city: City = catalog.cities.find( c => c.code === params.get( 'city' ) ) ?? catalog.cities.find( c => c.code === '14204' )!;
+let city: City = catalog.cities.find( c => c.code === params.get( 'city' ) ) ?? catalog.cities.find( c => c.code === '14204' )!;
 
 // Picking (tap, VR pointer) raycasts the dense flood meshes; without an index three.js tests every
 // triangle, which is too slow to do several times a second on a headset.
@@ -52,36 +53,54 @@ scene.add( sun );
 // the city: x = east, y = up, z = south (meters), with y = 0 at the lowest flood polygon.
 const world = new THREE.Group();
 world.matrixAutoUpdate = false;
-{
+scene.add( world );
+
+function placeWorld() {
 
 	const enu = new THREE.Matrix4();
 	WGS84_ELLIPSOID.getEastNorthUpFrame( city.lat * DEG, city.lon * DEG, city.groundHeight, enu );
 	world.matrix.makeRotationX( - Math.PI / 2 ).multiply( enu.invert() );
+	world.matrixWorldNeedsUpdate = true;
 
 }
 
-scene.add( world );
+placeWorld();
 
 const camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 2e6 );
 const rig = new THREE.Group();
 rig.add( camera );
 scene.add( rig );
 
-// Start looking down over the flood area from the south.
-const extent = Math.max(
-	( city.bounds[ 2 ] - city.bounds[ 0 ] ) * 111e3 * Math.cos( city.lat * DEG ),
-	( city.bounds[ 3 ] - city.bounds[ 1 ] ) * 111e3,
-);
-camera.position.set( 0, extent * 0.45, extent * 0.55 );
+// Size of the flood area in meters.
+function cityExtent() {
+
+	return Math.max(
+		( city.bounds[ 2 ] - city.bounds[ 0 ] ) * 111e3 * Math.cos( city.lat * DEG ),
+		( city.bounds[ 3 ] - city.bounds[ 1 ] ) * 111e3,
+	);
+
+}
 
 const controls = new OrbitControls( camera, renderer.domElement );
-controls.target.set( 0, 0, 0 );
 controls.enableDamping = true;
 controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 20;
-controls.maxDistance = extent * 4;
 controls.screenSpacePanning = false;
-controls.update();
+
+// Look down over the flood area from the south.
+let framedCity = '';
+function frameCity() {
+
+	const extent = cityExtent();
+	camera.position.set( 0, extent * 0.45, extent * 0.55 );
+	controls.target.set( 0, 0, 0 );
+	controls.maxDistance = extent * 4;
+	controls.update();
+	framedCity = city.code;
+
+}
+
+frameCity();
 
 // ─── tilesets ───────────────────────────────────────────────────────────────
 let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : 'photo';
@@ -98,13 +117,8 @@ function plateauTiles( url: string ) {
 
 }
 
-const buildings = city.buildings.map( b => {
-
-	const tiles = plateauTiles( b.url );
-	tiles.errorTarget = 8;
-	return tiles;
-
-} );
+let buildings: TilesRenderer[] = [];
+let floods: TilesRenderer[] = [];
 
 // Per-dataset legend: depth label → parsed range.
 const legend = new Map<string, Map<string, [ number, number ] | null>>();
@@ -142,7 +156,7 @@ function setWaterRaised( on: boolean ) {
 
 }
 
-const floods = city.floods.map( ( f, i ) => {
+function floodTiles( f: City[ 'floods' ][ number ], i: number ) {
 
 	const tiles = indexForRaycast( plateauTiles( f.url ) );
 	tiles.errorTarget = 4;
@@ -203,7 +217,58 @@ const floods = city.floods.map( ( f, i ) => {
 
 	return tiles;
 
-} );
+}
+
+function loadCityTiles() {
+
+	const showBuildings = $<HTMLInputElement>( '#show-buildings' ).checked;
+	buildings = city.buildings.map( b => {
+
+		const tiles = plateauTiles( b.url );
+		tiles.errorTarget = 8;
+		tiles.group.visible = showBuildings;
+		return tiles;
+
+	} );
+	floods = city.floods.map( floodTiles );
+
+}
+
+loadCityTiles();
+
+// Swap in another city without reloading the page, so a VR session survives it.
+function switchCity( code: string ) {
+
+	const next = catalog.cities.find( c => c.code === code );
+	if ( ! next || next === city ) return;
+	city = next;
+	for ( const t of allTiles() ) {
+
+		world.remove( t.group );
+		t.dispose();
+
+	}
+
+	legend.clear();
+	placeWorld();
+	terrain = addTiles( createTerrain( city.geoidHeight, baseMap ) );
+	loadCityTiles();
+	renderCityUI();
+	renderLegend();
+	$( '#info' ).hidden = true;
+	if ( renderer.xr.isPresenting ) {
+
+		// Arrive above the flood area, south of its center, facing north.
+		const extent = cityExtent();
+		vr.arrive( new THREE.Vector3( 0, THREE.MathUtils.clamp( extent * 0.1, 100, 400 ), extent * 0.3 ) );
+
+	} else {
+
+		frameCity();
+
+	}
+
+}
 
 function addTiles( tiles: TilesRenderer ) {
 
@@ -231,7 +296,6 @@ function setBaseMap( key: BaseMapKey ) {
 }
 
 // ─── UI ─────────────────────────────────────────────────────────────────────
-const $ = <T extends HTMLElement>( sel: string ) => document.querySelector( sel ) as T;
 
 function syncURL() {
 
@@ -249,34 +313,11 @@ function buildUI() {
 
 	}
 
-	citySel.addEventListener( 'change', () => {
-
-		location.search = new URLSearchParams( { city: citySel.value, base: baseMap } ).toString();
-
-	} );
+	citySel.addEventListener( 'change', () => switchCity( citySel.value ) );
 
 	const baseSel = $<HTMLSelectElement>( '#base' );
 	for ( const [ key, b ] of Object.entries( BASE_MAPS ) ) baseSel.add( new Option( b.label, key, false, key === baseMap ) );
 	baseSel.addEventListener( 'change', () => setBaseMap( baseSel.value as BaseMapKey ) );
-
-	const list = $( '#floods' );
-	city.floods.forEach( ( f, i ) => {
-
-		const row = document.createElement( 'label' );
-		row.className = 'check';
-		const box = document.createElement( 'input' );
-		box.type = 'checkbox';
-		box.checked = floods[ i ].group.visible;
-		box.addEventListener( 'change', () => {
-
-			floods[ i ].group.visible = box.checked;
-			renderLegend();
-
-		} );
-		row.append( box, ` ${ f.name }（${ f.year }）` );
-		list.append( row );
-
-	} );
 
 	const bldg = $<HTMLInputElement>( '#show-buildings' );
 	bldg.addEventListener( 'change', () => buildings.forEach( t => ( t.group.visible = bldg.checked ) ) );
@@ -290,7 +331,32 @@ function buildUI() {
 	$( '#panel-toggle' ).addEventListener( 'click', () => document.body.classList.toggle( 'panel-closed' ) );
 	if ( window.innerWidth < 640 ) document.body.classList.add( 'panel-closed' );
 
+	renderCityUI();
+
+}
+
+// The parts of the panel that depend on the city.
+function renderCityUI() {
+
+	$<HTMLSelectElement>( '#city' ).value = city.code;
 	$( '#title' ).textContent = `${ city.pref } ${ city.city }`;
+	$( '#floods' ).replaceChildren( ...city.floods.map( ( f, i ) => {
+
+		const row = document.createElement( 'label' );
+		row.className = 'check';
+		const box = document.createElement( 'input' );
+		box.type = 'checkbox';
+		box.checked = floods[ i ].group.visible;
+		box.addEventListener( 'change', () => {
+
+			floods[ i ].group.visible = box.checked;
+			renderLegend();
+
+		} );
+		row.append( box, ` ${ f.name }（${ f.year }）` );
+		return row;
+
+	} ) );
 	syncURL();
 
 }
@@ -394,7 +460,18 @@ window.addEventListener( 'resize', () => {
 buildUI();
 
 // Handles for poking at the scene from the dev-tools console.
-if ( import.meta.env.DEV ) Object.assign( window, { app: { scene, world, camera, controls, terrain, buildings, floods, legend } } );
+// Getters, since switching cities replaces the tilesets.
+if ( import.meta.env.DEV ) {
+
+	Object.assign( window, { app: {
+		scene, world, camera, controls, legend,
+		get city() { return city; },
+		get terrain() { return terrain; },
+		get buildings() { return buildings; },
+		get floods() { return floods; },
+	} } );
+
+}
 
 // ─── VR ─────────────────────────────────────────────────────────────────────
 document.body.appendChild( VRButton.createButton( renderer ) );
@@ -402,6 +479,16 @@ const vr = initVR( {
 	renderer, scene, camera, rig, controls, pointAt,
 	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
 	toggleWater: () => setWaterRaised( waterTarget === 0 ),
+	cities: catalog.cities.map( c => ( { code: c.code, pref: c.pref, city: c.city } ) ),
+	currentCity: () => city.code,
+	selectCity: switchCity,
+} );
+
+// A city picked in VR is framed for the map view on the way out.
+renderer.xr.addEventListener( 'sessionend', () => {
+
+	if ( framedCity !== city.code ) frameCity();
+
 } );
 
 // ─── loop ───────────────────────────────────────────────────────────────────

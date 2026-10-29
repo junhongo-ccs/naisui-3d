@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { depthColor, parseDepthLabel } from './flood';
+import { createCityMenu, type CityItem } from './vr-menu';
 
 type PointAt = ( ray: THREE.Raycaster ) => { distance: number, flood: { point: THREE.Vector3, label: string } | null };
 
@@ -14,9 +15,10 @@ type PointAt = ( ray: THREE.Raycaster ) => { distance: number, flood: { point: T
 //   A button:     raise / lower the water surface
 //   B button:     leave VR (back to the map view)
 //   Y button:     back to where VR started
+//   right grip:   open / close the city list; point at a city and pull the trigger to go there
 // Speed scales with height above the ground, so crossing the city from the air isn't a crawl
 // and the street stays walkable. A card on the left controller lists these.
-export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, toggleWater }: {
+export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, toggleWater, cities, currentCity, selectCity }: {
 	renderer: THREE.WebGLRenderer,
 	scene: THREE.Scene,
 	camera: THREE.PerspectiveCamera,
@@ -25,6 +27,9 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	groundTargets: () => THREE.Object3D[],
 	pointAt: PointAt,
 	toggleWater: () => void,
+	cities: CityItem[],
+	currentCity: () => string,
+	selectCity: ( code: string ) => void,
 } ) {
 
 	const MIN_SPEED = 15; // m/s at street level; above that, speed (m/s) = height above ground (m)
@@ -41,7 +46,8 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	const wasPressed: Record<string, boolean> = {};
 	let groundY = 0;
 	let sinceGround = Infinity;
-	const pointer = createPointer( renderer, scene, rig, pointAt );
+	const menu = createCityMenu( cities );
+	const pointer = createPointer( renderer, scene, rig, pointAt, menu );
 	const help = createHelpCard( renderer, rig );
 
 	// True on the frame a button goes down.
@@ -79,6 +85,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	renderer.xr.addEventListener( 'sessionend', () => {
 
 		pointer.hide();
+		menu.close();
 		rig.position.set( 0, 0, 0 );
 		rig.rotation.set( 0, 0, 0 );
 		camera.position.copy( saved.position );
@@ -92,7 +99,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		const session = renderer.xr.getSession();
 		if ( ! session ) return;
 
-		let move = [ 0, 0 ], turn = 0, lift = 0, boost = false;
+		let move = [ 0, 0 ], turn = 0, lift = 0, boost = false, toggleMenu = false, choose = false;
 		for ( const src of session.inputSources ) {
 
 			const gp = src.gamepad;
@@ -106,6 +113,9 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 				lift = - dz( ax[ 1 ] );
 				// xr-standard mapping: buttons[4] / [5] are A / B (right) and X / Y (left).
 				if ( pressed( 'A', gp, 4 ) ) toggleWater();
+				if ( pressed( 'grip', gp, 1 ) ) toggleMenu = true;
+				// With the list open, the right trigger picks a city instead of speeding up.
+				if ( pressed( 'trigger', gp, 0 ) && menu.isOpen ) choose = true;
 				if ( pressed( 'B', gp, 5 ) ) {
 
 					session.end();
@@ -123,7 +133,21 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 			}
 
-			if ( gp.buttons[ 0 ]?.pressed ) boost = true;
+			if ( gp.buttons[ 0 ]?.pressed && ! ( menu.isOpen && src.handedness === 'right' ) ) boost = true;
+
+		}
+
+		const xrCam = renderer.xr.getCamera();
+		if ( choose && menu.hoveredCode ) {
+
+			const code = menu.hoveredCode;
+			menu.close();
+			selectCity( code );
+
+		} else if ( toggleMenu ) {
+
+			if ( menu.isOpen ) menu.close();
+			else menu.open( xrCam, rig, currentCity() );
 
 		}
 
@@ -137,7 +161,6 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		const height = Math.max( rig.position.y - groundY, 0 );
 		const speed = Math.max( MIN_SPEED, height ) * ( boost ? BOOST : 1 ) * dt;
-		const xrCam = renderer.xr.getCamera();
 		xrCam.getWorldDirection( forward );
 		forward.y = 0;
 		forward.normalize();
@@ -168,12 +191,23 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 	}
 
-	return { update };
+	// Place the user somewhere new (after switching cities); Y returns here.
+	function arrive( position: THREE.Vector3 ) {
+
+		rig.position.copy( position );
+		rig.rotation.set( 0, 0, 0 );
+		start.copy( position );
+		sinceGround = Infinity;
+
+	}
+
+	return { update, arrive };
 
 }
 
 // A ray from the right controller (or right hand) and a depth label at the flood polygon it hits.
-function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: THREE.Group, pointAt: PointAt ) {
+// With the city list open, the ray points at the list instead.
+function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: THREE.Group, pointAt: PointAt, menu: ReturnType<typeof createCityMenu> ) {
 
 	const RAY_MAX = 300; // m, drawn length when the ray hits nothing
 	const PICK_INTERVAL = 0.05; // s; raycasting the tiles every frame is too heavy for the headset
@@ -265,6 +299,18 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 		}
 
+		active.line.visible = true;
+		if ( menu.isOpen ) {
+
+			label.visible = dot.visible = false;
+			ray.setFromXRController( active.c );
+			active.line.scale.z = Math.min( menu.hover( ray ) ?? RAY_MAX, RAY_MAX );
+			hit = null;
+			sinceLastPick = Infinity;
+			return;
+
+		}
+
 		sinceLastPick += dt;
 		if ( sinceLastPick >= PICK_INTERVAL ) {
 
@@ -274,7 +320,6 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 		}
 
-		active.line.visible = true;
 		active.line.scale.z = Math.min( hit?.distance ?? RAY_MAX, RAY_MAX );
 
 		const flood = hit?.flood;
@@ -305,6 +350,7 @@ function createHelpCard( renderer: THREE.WebGLRenderer, rig: THREE.Group ) {
 		[ 'トリガー', '押している間 5 倍速' ],
 		[ '右手で指す', '想定浸水深を表示' ],
 		[ 'A', '水面を上げる・下げる' ],
+		[ 'グリップ（右）', '市町村を選ぶ' ],
 		[ 'Y', 'スタート地点に戻る' ],
 		[ 'B', 'VR を終了' ],
 	];
