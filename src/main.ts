@@ -9,6 +9,7 @@ import catalog from './data/cities.json';
 import { depthColor, featureLabel, parseDepthLabel, surfaceHeight } from './flood';
 import { BASE_MAPS, createTerrain, type BaseMapKey } from './terrain';
 import { initVR } from './vr';
+import { createLoadingIndicator } from './loading';
 import './style.css';
 
 type City = ( typeof catalog.cities )[ number ];
@@ -475,7 +476,24 @@ if ( import.meta.env.DEV ) {
 }
 
 // ─── VR ─────────────────────────────────────────────────────────────────────
-document.body.appendChild( VRButton.createButton( renderer ) );
+const vrButton = VRButton.createButton( renderer ) as HTMLButtonElement;
+document.body.appendChild( vrButton );
+
+// Keep the VR button shut until the city has first loaded: entering on half-loaded tiles shows
+// blank or crumbling ground. VRButton writes 'ENTER VR' once it knows VR is supported; only then
+// is there anything to hold back. A slow connection can take long to load everything, so the
+// button opens after VR_GATE_MAX regardless (the VR loading indicator still shows the rest).
+const VR_GATE_MAX = 30; // s
+let vrGateOpen = false;
+function gateVRButton( settled: boolean ) {
+
+	if ( vrGateOpen || ( vrButton.textContent !== 'ENTER VR' && ! vrButton.disabled ) ) return;
+	const open = settled || performance.now() / 1000 >= VR_GATE_MAX;
+	vrButton.disabled = ! open;
+	vrButton.textContent = open ? 'ENTER VR' : '読み込み中…';
+	vrGateOpen = open;
+
+}
 const vr = initVR( {
 	renderer, scene, camera, rig, controls, pointAt,
 	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
@@ -495,6 +513,7 @@ renderer.xr.addEventListener( 'sessionend', () => {
 // ─── loop ───────────────────────────────────────────────────────────────────
 const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
+const loading = createLoadingIndicator( camera );
 renderer.setAnimationLoop( () => {
 
 	const dt = Math.min( clock.getDelta(), 0.1 );
@@ -520,6 +539,8 @@ renderer.setAnimationLoop( () => {
 		active.updateMatrixWorld();
 
 	}
+
+	let busy = false;
 	for ( const t of allTiles() ) {
 
 		if ( ! t.hasCamera( active ) ) {
@@ -532,8 +553,12 @@ renderer.setAnimationLoop( () => {
 		if ( xr.isPresenting ) t.setResolution( active, 1800, 1800 );
 		else t.setResolutionFromRenderer( camera, renderer );
 		t.update();
+		busy ||= t.loadProgress < 1;
 
 	}
+
+	loading.update( dt, busy, xr.isPresenting );
+	gateVRButton( loading.settled );
 
 	renderer.render( scene, camera );
 

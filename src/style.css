@@ -124,3 +124,51 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 @media (max-width: 640px) {
 	#legend { bottom: 76px; }
 }
+
+#loading {
+	position: fixed;
+	top: max(12px, env(safe-area-inset-top));
+	left: 50%;
+	transform: translateX(-50%);
+	display: grid;
+	grid-template-columns: auto auto;
+	align-items: center;
+	gap: 4px 8px;
+	background: var(--panel-bg);
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	padding: 8px 14px;
+	font-size: 13px;
+	pointer-events: none;
+}
+#loading[hidden] { display: none; }
+#loading .spinner {
+	width: 16px;
+	height: 16px;
+	border: 2px solid var(--line);
+	border-top-color: var(--accent);
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+}
+#loading .loading-bar {
+	grid-column: 1 / -1;
+	width: 160px;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--line);
+	overflow: hidden;
+}
+/* No percentage to show (see loading.ts), so a segment sweeps across. */
+#loading .loading-bar > span {
+	display: block;
+	width: 40%;
+	height: 100%;
+	border-radius: 2px;
+	background: var(--accent);
+	animation: sweep 1.2s ease-in-out infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@media (prefers-reduced-motion: reduce) {
+	#loading .spinner, #loading .loading-bar > span { animation-duration: 3s; }
+}
