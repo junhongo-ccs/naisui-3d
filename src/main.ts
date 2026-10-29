@@ -507,7 +507,19 @@ renderer.setAnimationLoop( () => {
 
 	scene.updateMatrixWorld();
 	const active = xr.isPresenting ? xr.getCamera() : camera;
-	active.updateMatrixWorld();
+	if ( xr.isPresenting ) {
+
+		// The XR camera holds the head pose relative to the rig and has no parent, so
+		// updateMatrixWorld() would leave it near the origin and the tiles would be culled and
+		// refined for the wrong place. Put it in the world through the rig.
+		active.matrixWorld.multiplyMatrices( rig.matrixWorld, active.matrix );
+		active.matrixWorldInverse.copy( active.matrixWorld ).invert();
+
+	} else {
+
+		active.updateMatrixWorld();
+
+	}
 	for ( const t of allTiles() ) {
 
 		if ( ! t.hasCamera( active ) ) {
