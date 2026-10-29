@@ -27,6 +27,7 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
 | `src/flood.ts` | 浸水深ラベルの解析と配色 |
 | `src/vr.ts` | Quest コントローラーでの移動、ボタン操作、指さし、操作説明の板 |
+| `src/vr-debug.ts` | VR の診断ボード（X ボタン。エラー、入力、指さしの状態を左手の上に出す。エラーが出ると自動で開く） |
 | `src/vr-menu.ts` | VR の市町村一覧パネル（右グリップで開き、右手で指してトリガーで選ぶ） |
 | `src/data/cities.json` | 対象 28 市町村のタイルセット URL・中心・ジオイド高（`scripts/build-catalog.mjs` が生成。手で編集しない） |
 | `src/types/3d-tiles-renderer.d.ts` | ライブラリに型が無い `TerrainRGBMeshPlugin` の型宣言 |

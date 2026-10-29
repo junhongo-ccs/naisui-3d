@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { depthColor, parseDepthLabel } from './flood';
 import { createCityMenu, type CityItem } from './vr-menu';
+import { createDebugBoard } from './vr-debug';
 
 type PointAt = ( ray: THREE.Raycaster ) => { distance: number, flood: { point: THREE.Vector3, label: string } | null };
 
@@ -16,6 +17,8 @@ type PointAt = ( ray: THREE.Raycaster ) => { distance: number, flood: { point: T
 //   B button:     leave VR (back to the map view)
 //   Y button:     back to where VR started
 //   right grip:   open / close the city list; point at a city and pull the trigger to go there
+//   X button:     diagnostics board (errors, inputs, pointer state) in place of the controls card;
+//                 it also opens by itself when an error happens
 // Speed scales with height above the ground, so crossing the city from the air isn't a crawl
 // and the street stays walkable. A card on the left controller lists these.
 export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, toggleWater, cities, currentCity, selectCity }: {
@@ -48,7 +51,13 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	let sinceGround = Infinity;
 	const menu = createCityMenu( cities );
 	const pointer = createPointer( renderer, scene, rig, pointAt, menu );
-	const help = createHelpCard( renderer, rig );
+	const debug = createDebugBoard();
+	let showDebug = false;
+	debug.onError = () => ( showDebug = true );
+	const help = createHelpCard( renderer, rig, debug.mesh );
+	let fps = 0;
+	let sinceStatus = Infinity;
+	let lastHeight = 0;
 
 	// True on the frame a button goes down.
 	function pressed( key: string, gp: Gamepad, index: number ): boolean {
@@ -96,8 +105,58 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 	function update( dt: number ) {
 
-		const session = renderer.xr.getSession();
-		if ( ! session ) return;
+		if ( ! renderer.xr.getSession() ) return;
+		// Report a failing frame on the board instead of losing it to a console nobody can see.
+		try {
+
+			step( dt );
+
+		} catch ( e ) {
+
+			const err = e as Error;
+			debug.error( `VR の更新: ${ err?.message ?? err } ${ err?.stack?.split( '\n' )[ 1 ]?.trim() ?? '' }` );
+
+		}
+
+		fps = fps ? fps * 0.9 + 0.1 / Math.max( dt, 1e-3 ) : 1 / Math.max( dt, 1e-3 );
+		sinceStatus += dt;
+		if ( showDebug && sinceStatus >= 0.25 ) {
+
+			sinceStatus = 0;
+			debug.setStatus( statusLines() );
+
+		}
+
+		help.update( showDebug );
+		debug.update();
+
+	}
+
+	function statusLines(): string[] {
+
+		const f = ( v: number ) => v.toFixed( 1 );
+		const p = rig.position;
+		const info = renderer.info.render;
+		const lines = [
+			`${ Math.round( fps ) } fps　描画 ${ info.calls } 回　${ Math.round( info.triangles / 1000 ) }k 三角形`,
+			`${ cities.find( c => c.code === currentCity() )?.city ?? currentCity() }　位置 ${ f( p.x ) }, ${ f( p.y ) }, ${ f( p.z ) }　地面から ${ f( lastHeight ) } m　一覧 ${ menu.isOpen ? '開' : '閉' }`,
+		];
+		for ( const src of renderer.xr.getSession()?.inputSources ?? [] ) {
+
+			const gp = src.gamepad;
+			const down = gp ? gp.buttons.flatMap( ( b, i ) => ( b.pressed ? [ i ] : [] ) ) : [];
+			const state = gp ? `押下[${ down }] 軸[${ gp.axes.map( a => a.toFixed( 1 ) ) }]` : 'gamepad なし';
+			lines.push( `入力 ${ src.handedness } ${ src.hand ? '手' : 'コントローラー' } ${ state }` );
+
+		}
+
+		return lines.concat( pointer.status() );
+
+	}
+
+	function step( dt: number ) {
+
+		const session = renderer.xr.getSession()!;
 
 		let move = [ 0, 0 ], turn = 0, lift = 0, boost = false, toggleMenu = false, choose = false;
 		for ( const src of session.inputSources ) {
@@ -125,6 +184,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 			}
 
+			if ( src.handedness === 'left' && pressed( 'X', gp, 4 ) ) showDebug = ! showDebug;
 			if ( src.handedness === 'left' && pressed( 'Y', gp, 5 ) ) {
 
 				rig.position.copy( start );
@@ -163,6 +223,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		}
 
 		const height = Math.max( rig.position.y - groundY, 0 );
+		lastHeight = height;
 		const speed = Math.max( MIN_SPEED, height ) * ( boost ? BOOST : 1 ) * dt;
 		headCam.getWorldDirection( forward );
 		forward.y = 0;
@@ -190,7 +251,6 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		// Point with where the hand is after this frame's move, not last frame's.
 		rig.updateMatrixWorld( true );
 		pointer.update( dt, headCam );
-		help.update();
 
 	}
 
@@ -340,12 +400,27 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 	}
 
-	return { update, hide };
+	// One line per controller, then what the ray is on, for the diagnostics board.
+	function status(): string[] {
+
+		const lines = controllers.map( ( { c, line }, i ) => {
+
+			const ray = line.visible ? `○ ${ line.scale.z.toFixed( 1 ) } m` : '×';
+			return `手${ i } ${ c.userData.handedness ?? '未接続' }　姿勢${ c.visible ? '○' : '×' }　光線${ ray }${ c.parent ? '' : '（シーン外）' }`;
+
+		} );
+		const target = ! hit ? '-' : hit.flood ? hit.flood.label : hit.distance === Infinity ? 'なし' : `${ hit.distance.toFixed( 0 ) } m 先の建物`;
+		return lines.concat( `指す先: ${ target }` );
+
+	}
+
+	return { update, hide, status };
 
 }
 
-// A card above the left controller listing the controls.
-function createHelpCard( renderer: THREE.WebGLRenderer, rig: THREE.Group ) {
+// A card above the left controller listing the controls. The diagnostics board takes its place
+// when shown.
+function createHelpCard( renderer: THREE.WebGLRenderer, rig: THREE.Group, debugBoard: THREE.Object3D ) {
 
 	const lines = [
 		[ '左スティック', '移動' ],
@@ -354,6 +429,7 @@ function createHelpCard( renderer: THREE.WebGLRenderer, rig: THREE.Group ) {
 		[ '右手で指す', '想定浸水深を表示' ],
 		[ 'A', '水面を上げる・下げる' ],
 		[ 'グリップ（右）', '市町村を選ぶ' ],
+		[ 'X', '診断を表示' ],
 		[ 'Y', 'スタート地点に戻る' ],
 		[ 'B', 'VR を終了' ],
 	];
@@ -391,6 +467,9 @@ function createHelpCard( renderer: THREE.WebGLRenderer, rig: THREE.Group ) {
 	card.position.set( 0, 0.12, - 0.04 );
 	card.rotation.x = - Math.PI / 6;
 	card.visible = false;
+	debugBoard.position.set( 0, 0.17, - 0.07 );
+	debugBoard.rotation.x = - Math.PI / 6;
+	debugBoard.visible = false;
 
 	const controllers = [ 0, 1 ].map( i => {
 
@@ -400,18 +479,15 @@ function createHelpCard( renderer: THREE.WebGLRenderer, rig: THREE.Group ) {
 
 	} );
 
-	function update() {
+	function update( showDebug: boolean ) {
 
 		const left = controllers.find( c => c.userData.handedness === 'left' );
-		if ( ! left ) {
+		for ( const [ panel, on ] of [ [ card, ! showDebug ], [ debugBoard, showDebug ] ] as const ) {
 
-			card.visible = false;
-			return;
+			if ( left && panel.parent !== left ) left.add( panel );
+			panel.visible = !! left && on;
 
 		}
-
-		if ( card.parent !== left ) left.add( card );
-		card.visible = true;
 
 	}
 
