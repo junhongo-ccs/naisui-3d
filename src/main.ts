@@ -502,6 +502,26 @@ function buildUI() {
 
 	offerInstall();
 
+	// The folded credits line on a phone (style.css) opens on a tap; the first tap only opens it,
+	// rather than following a link it happened to land on.
+	const credits = $( '#attribution' );
+	const folded = matchMedia( '(max-width: 640px), (max-height: 500px)' );
+	credits.addEventListener( 'click', e => {
+
+		if ( ! folded.matches ) return;
+		if ( ! credits.classList.contains( 'open' ) ) {
+
+			e.preventDefault();
+			credits.classList.add( 'open' );
+
+		} else if ( ! ( e.target as HTMLElement ).closest( 'a' ) ) {
+
+			credits.classList.remove( 'open' );
+
+		}
+
+	} );
+
 	// Phones are asked to turn sideways (see #rotate in style.css). Where the browser can lock the
 	// orientation (Android, in full screen), a button does it.
 	// With the phone's rotation lock on, turning it doesn't turn the page, so the prompt can also
@@ -780,7 +800,7 @@ function updateGoogleAttribution( dt: number ) {
 	if ( sinceAttribution < 1 ) return;
 	sinceAttribution = 0;
 	const text = terrain.getAttributions().filter( a => a.type === 'string' ).map( a => a.value ).join( ' ' );
-	$( '#google-attribution' ).textContent = `／ 地面・建物の 3D: Google Maps${ text ? `（${ text }）` : '' }`;
+	$( '#google-attribution' ).textContent = `地面・建物の 3D: Google Maps${ text ? `（${ text }）` : '' } ／ `;
 
 }
 

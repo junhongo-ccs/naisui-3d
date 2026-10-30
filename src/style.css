@@ -20,6 +20,12 @@
 
 * { box-sizing: border-box; }
 
+html {
+	/* iPhone's Safari enlarges text when the phone is held sideways; keep the sizes set here. */
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
 html, body {
 	margin: 0;
 	height: 100%;
@@ -120,6 +126,21 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 	border-radius: 4px;
 }
 #attribution a { color: inherit; }
+
+/* On a phone the credits are one small line, cut off with "…"; a tap opens them in full (Google's
+   terms allow a "data sources" control where space is short, as long as "Google Maps" shows, which
+   is why it comes first). */
+@media (max-width: 640px), (max-height: 500px) {
+	#attribution {
+		left: 8px;
+		font-size: 10px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		cursor: pointer;
+	}
+	#attribution.open { white-space: normal; cursor: auto; }
+}
 
 @media (max-width: 640px) {
 	#legend { bottom: 76px; }
