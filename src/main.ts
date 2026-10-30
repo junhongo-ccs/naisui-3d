@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { TilesRenderer, WGS84_ELLIPSOID } from '3d-tiles-renderer/three';
+import { OBB, TilesRenderer, WGS84_ELLIPSOID } from '3d-tiles-renderer/three';
 import { GLTFExtensionsPlugin } from '3d-tiles-renderer/three/plugins';
 import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 import catalog from './data/cities.json';
@@ -104,6 +104,17 @@ function cityBounds() {
 
 let bounds = cityBounds();
 
+// Where the terrain loads: the VR bounds and some more, so the ground runs out a little past
+// where the user can go. In ECEF, the tiles' own frame.
+const TERRAIN_MARGIN = 700; // m beyond the VR bounds
+function terrainArea() {
+
+	const box = bounds.clone().expandByVector( new THREE.Vector3( TERRAIN_MARGIN, 0, TERRAIN_MARGIN ) );
+	box.min.y = - 500;
+	return new OBB( box, world.matrix.clone().invert() );
+
+}
+
 const camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 2e6 );
 const rig = new THREE.Group();
 rig.add( camera );
@@ -142,7 +153,7 @@ frameCity();
 
 // ─── tilesets ───────────────────────────────────────────────────────────────
 let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : 'photo';
-let terrain = addTiles( createTerrain( city.geoidHeight, baseMap ) );
+let terrain = addTiles( createTerrain( city.geoidHeight, baseMap, terrainArea() ) );
 
 // PLATEAU b3dm tiles are Draco-compressed glTF with CESIUM_RTC centers.
 const dracoLoader = new DRACOLoader().setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/' );
@@ -304,7 +315,7 @@ function switchCity( code: string ) {
 	legend.clear();
 	placeWorld();
 	bounds = cityBounds();
-	terrain = addTiles( createTerrain( city.geoidHeight, baseMap ) );
+	terrain = addTiles( createTerrain( city.geoidHeight, baseMap, terrainArea() ) );
 	loadCityTiles();
 	loadPlaces();
 	renderCityUI();
@@ -344,7 +355,7 @@ function setBaseMap( key: BaseMapKey ) {
 	baseMap = key;
 	world.remove( terrain.group );
 	terrain.dispose();
-	terrain = addTiles( createTerrain( city.geoidHeight, key ) );
+	terrain = addTiles( createTerrain( city.geoidHeight, key, terrainArea() ) );
 	syncURL();
 
 }
