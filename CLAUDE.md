@@ -75,6 +75,6 @@ XR カメラには親が無く、`getWorldPosition` などがリグ基準の値�
 
 ## 方針
 
-- API キーが要るデータ（Cesium Ion、Google Photorealistic 3D Tiles）は使わない。誰でも URL を開くだけで見られることを優先する。
+- API キーが要らないこと（誰でも URL を開くだけで見られること）を優先してきたが、PLATEAU の建物が重すぎて Quest で出ないため、`google-3d` ブランチで Google Photorealistic 3D Tiles を試している（`VITE_GOOGLE_MAPS_API_KEY` が `.env` にあるときだけ。無ければ地理院＋PLATEAU）。キーは自分で扱わない（ユーザーが `.env` に書く。中身を表示・コピーしない）。Google を使うときは、表示中のタイルの提供元を画面の出典に出す。
 - 浸水想定は自治体のシミュレーション結果。画面や文書で「実際の浸水」「予報」のように書かない。
 - 出典表記（PLATEAU、地理院タイル）を画面から消さない。

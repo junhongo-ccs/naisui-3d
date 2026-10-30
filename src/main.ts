@@ -7,7 +7,7 @@ import { GLTFExtensionsPlugin } from '3d-tiles-renderer/three/plugins';
 import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 import catalog from './data/cities.json';
 import { depthColor, featureLabel, parseDepthLabel, surfaceHeight } from './flood';
-import { BASE_MAPS, createTerrain, type BaseMapKey } from './terrain';
+import { BASE_MAPS, createGoogleTiles, createTerrain, type BaseMapKey } from './terrain';
 import { initVR } from './vr';
 import { createLoadingIndicator } from './loading';
 import { ONLY_CITY } from './config';
@@ -20,6 +20,10 @@ type City = ( typeof catalog.cities )[ number ];
 const DEG = Math.PI / 180;
 const params = new URLSearchParams( location.search );
 const $ = <T extends HTMLElement>( sel: string ) => document.querySelector( sel ) as T;
+// With a Google Map Tiles API key (in .env, never committed), Google's photorealistic 3D tiles
+// stand in for the GSI terrain and the PLATEAU buildings; without one, those are used.
+const GOOGLE_KEY: string | undefined = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || undefined;
+
 const cities = ONLY_CITY ? catalog.cities.filter( c => c.code === ONLY_CITY ) : catalog.cities;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
 let city: City = cities.find( c => c.code === params.get( 'city' ) ) ?? cities.find( c => c.code === '14204' ) ?? cities[ 0 ];
@@ -152,11 +156,18 @@ function frameCity() {
 frameCity();
 
 // ─── tilesets ───────────────────────────────────────────────────────────────
-let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : 'photo';
-let terrain = addTiles( createTerrain( city.geoidHeight, baseMap, terrainArea() ) );
-
-// PLATEAU b3dm tiles are Draco-compressed glTF with CESIUM_RTC centers.
+// PLATEAU b3dm tiles are Draco-compressed glTF with CESIUM_RTC centers. Google's tiles are Draco too.
 const dracoLoader = new DRACOLoader().setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/' );
+
+let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : 'photo';
+// The ground: GSI terrain, or Google's 3D tiles (ground and buildings in one).
+function createGround() {
+
+	return GOOGLE_KEY ? createGoogleTiles( GOOGLE_KEY, terrainArea(), dracoLoader ) : createTerrain( city.geoidHeight, baseMap, terrainArea() );
+
+}
+
+let terrain = addTiles( createGround() );
 
 function plateauTiles( url: string ) {
 
@@ -271,7 +282,8 @@ function floodTiles( f: City[ 'floods' ][ number ], i: number ) {
 function loadCityTiles() {
 
 	const showBuildings = $<HTMLInputElement>( '#show-buildings' ).checked;
-	buildings = city.buildings.map( b => {
+	// Google's tiles have the buildings already.
+	buildings = GOOGLE_KEY ? [] : city.buildings.map( b => {
 
 		const tiles = plateauTiles( b.url );
 		tiles.errorTarget = 8;
@@ -315,7 +327,7 @@ function switchCity( code: string ) {
 	legend.clear();
 	placeWorld();
 	bounds = cityBounds();
-	terrain = addTiles( createTerrain( city.geoidHeight, baseMap, terrainArea() ) );
+	terrain = addTiles( createGround() );
 	loadCityTiles();
 	loadPlaces();
 	renderCityUI();
@@ -382,6 +394,9 @@ function buildUI() {
 	citySel.addEventListener( 'change', () => switchCity( citySel.value ) );
 
 	const baseSel = $<HTMLSelectElement>( '#base' );
+	baseSel.closest( 'label' )!.hidden = !! GOOGLE_KEY;
+	$( '#show-buildings' ).closest( 'label' )!.hidden = !! GOOGLE_KEY;
+	$( '#google-attribution' ).hidden = ! GOOGLE_KEY;
 	for ( const [ key, b ] of Object.entries( BASE_MAPS ) ) baseSel.add( new Option( b.label, key, false, key === baseMap ) );
 	baseSel.addEventListener( 'change', () => setBaseMap( baseSel.value as BaseMapKey ) );
 
@@ -457,7 +472,7 @@ function renderLegend() {
 // (reached via the group) applies the elevation.
 function raycastTargets( sets: TilesRenderer[] ) {
 
-	return sets.filter( t => t.group.visible ).flatMap( t => ( t === terrain ? [ t.group ] : t.group.children ) );
+	return sets.filter( t => t.group.visible ).flatMap( t => ( t === terrain && ! GOOGLE_KEY ? [ t.group ] : t.group.children ) );
 
 }
 
@@ -588,6 +603,18 @@ renderer.xr.addEventListener( 'sessionend', () => {
 
 } );
 
+// Google's terms: show the data providers of the tiles in view, along with Google's name.
+let sinceAttribution = Infinity;
+function updateGoogleAttribution( dt: number ) {
+
+	sinceAttribution += dt;
+	if ( sinceAttribution < 1 ) return;
+	sinceAttribution = 0;
+	const text = terrain.getAttributions().filter( a => a.type === 'string' ).map( a => a.value ).join( ' ' );
+	$( '#google-attribution' ).textContent = `／ 3D: Google${ text ? `（${ text }）` : '' }`;
+
+}
+
 // ─── loop ───────────────────────────────────────────────────────────────────
 const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
@@ -637,6 +664,7 @@ renderer.setAnimationLoop( () => {
 	}
 
 	pins.update( camera.getWorldPosition( eye ) );
+	if ( GOOGLE_KEY ) updateGoogleAttribution( dt );
 	loading.update( dt, busy, xr.isPresenting );
 	gateVRButton( loading.settled );
 

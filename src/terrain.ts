@@ -1,5 +1,7 @@
 import { TilesRenderer, type OBB } from '3d-tiles-renderer/three';
-import { LoadRegionPlugin, OBBRegion, TerrainRGBMeshPlugin, XYZTilesOverlay } from '3d-tiles-renderer/three/plugins';
+import type { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/core/plugins';
+import { GLTFExtensionsPlugin, LoadRegionPlugin, OBBRegion, TerrainRGBMeshPlugin, XYZTilesOverlay } from '3d-tiles-renderer/three/plugins';
 
 // GSI elevation PNG tiles (https://maps.gsi.go.jp/development/demtile.html).
 // Encoding: x = R·2^16 + G·2^8 + B; h = x·0.01 m, two's complement at 2^23, and 2^23 = no data (sea).
@@ -68,18 +70,24 @@ export const BASE_MAPS = {
 
 export type BaseMapKey = keyof typeof BASE_MAPS;
 
-// Terrain is loaded only inside `area` (an OBB in ECEF, the frame the tiles are in). Unbounded,
-// a view toward the horizon asks for thousands of DEM and map tiles out to the edge of the globe;
+// Load and show only the tiles inside `area` (an OBB in ECEF, the frame the tiles are in).
+// Unbounded, a view toward the horizon asks for thousands of tiles out to the edge of the globe;
 // decoding them ties up the parse queue that the buildings and floods share, so those never
 // load. It also keeps the view to the one city. The region's error target is infinite so that
 // only the camera decides how fine to load; the region just masks.
+function maskTo( tiles: TilesRenderer, area: OBB ) {
+
+	const region = new LoadRegionPlugin();
+	region.addRegion( new OBBRegion( { obb: area, mask: true, errorTarget: Infinity } ) );
+	tiles.registerPlugin( region );
+
+}
+
 export function createTerrain( geoidHeight: number, baseMap: BaseMapKey, area: OBB ): TilesRenderer {
 
 	const { url, levels } = BASE_MAPS[ baseMap ];
 	const tiles = new TilesRenderer();
-	const region = new LoadRegionPlugin();
-	region.addRegion( new OBBRegion( { obb: area, mask: true, errorTarget: Infinity } ) );
-	tiles.registerPlugin( region );
+	maskTo( tiles, area );
 	tiles.registerPlugin( new GSITerrainPlugin( {
 		url: `${ DEM_URL }{z}/{x}/{y}.png`,
 		maxZoom: 14,
@@ -87,6 +95,20 @@ export function createTerrain( geoidHeight: number, baseMap: BaseMapKey, area: O
 		overlay: new XYZTilesOverlay( { url, levels } ),
 		applyOverlayTexture: true,
 	} ) );
+	return tiles;
+
+}
+
+// Google Photorealistic 3D Tiles: ground, buildings and trees as one textured mesh, in place of
+// the GSI terrain and the PLATEAU buildings. Its tiles go from coarse to fine with distance, so a
+// view over the city loads far less than the PLATEAU buildings do. Needs a Map Tiles API key; the
+// page must show the tiles' attributions (getAttributions).
+export function createGoogleTiles( apiKey: string, area: OBB, dracoLoader: DRACOLoader ): TilesRenderer {
+
+	const tiles = new TilesRenderer();
+	tiles.registerPlugin( new GoogleCloudAuthPlugin( { apiToken: apiKey, autoRefreshToken: true } ) );
+	tiles.registerPlugin( new GLTFExtensionsPlugin( { dracoLoader } ) );
+	maskTo( tiles, area );
 	return tiles;
 
 }

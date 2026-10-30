@@ -20,6 +20,25 @@ PC・スマホのブラウザで動き、Meta Quest のブラウザでは VR に
 対象の市は `src/config.ts` の `ONLY_CITY` で決めます。`null` にすると、PLATEAU に内水浸水想定区域モデルがある **28 市町村** すべてを選べます（目印・避難所のピンは、データを作った市だけ）。
 API キーやアカウントは要りません。
 
+### Google 3D で見る（試験中、`google-3d` ブランチ）
+
+Google Map Tiles API のキーがあると、地形と PLATEAU の建物の代わりに、Google の Photorealistic 3D Tiles（地面・建物・木が一つになった写真の 3D）を読みます。浸水・ピン・VR の操作は同じです。
+PLATEAU の建物は遠くから見ても細かいタイルを読むので重く、鎌倉市の最初の画面で 60 秒たっても読み終わりません（建物だけで 60 MB 以上）。Google は粗いタイルから読むので、約 20 秒・7 MB で読み終わります（2026-10-30、同じ回線での比較）。
+
+`.env`（git に入らない）にキーを書きます。キーが無ければ、今までどおり地理院の地形と PLATEAU の建物で動きます。
+
+```
+VITE_GOOGLE_MAPS_API_KEY=...
+```
+
+キーの扱い（[kosugi_3Dmap](https://github.com/junhongo-ccs/kosugi_3Dmap) と同じ方針）:
+
+- キーは公開ページの JavaScript に入るので、見られる前提で扱う。`.env` はコミットしない
+- 本番用と開発用でキーを分ける。本番用は公開 URL、開発用は `localhost` の HTTP リファラーだけを許可する
+- キーで使える API は Map Tiles API に絞る
+- Google Cloud で予算アラートとクォータ上限を設定する
+- 画面の出典に、表示中のタイルの提供元（Google と各データ提供者）を出す（`getAttributions()`）
+
 浸水深の色は「水害ハザードマップ作成の手引き」の配色に合わせています。
 自治体独自の区分（`uro:rankOrg`、例: 0.2m以上0.3m未満）がある場合はそちらで色分けし、標準区分の色の間を補間します。
 

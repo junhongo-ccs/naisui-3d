@@ -141,7 +141,7 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 	font-size: 13px;
 	pointer-events: none;
 }
-#loading[hidden], .field[hidden] { display: none; }
+#loading[hidden], .field[hidden], .check[hidden] { display: none; }
 #loading .spinner {
 	width: 16px;
 	height: 16px;
