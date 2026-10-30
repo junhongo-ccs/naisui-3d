@@ -31,6 +31,7 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 | `src/places.ts` | 目印・避難所・解説のピン（距離によらず同じ見かけの大きさ、他の物の手前に描く）と説明の札（× で閉じる） |
 | `src/billboard.ts` | ピンのラベル・札・VR の浸水深ラベルに使う板。いつも直立し、目の位置の方を向く（Sprite と違い、頭を傾けても一緒に回らない。VR で見やすくするため） |
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
+| `src/install.ts` | スマホでホーム画面に追加する案内（Android は `beforeinstallprompt`、iPhone は Safari の手順を表示）。設定は `public/manifest.webmanifest`（全画面・横向き）とアイコン `public/icons/`。Service Worker は使っていない（Google のタイルの通信をすべて経由させたくないため） |
 | `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込み（VR の出発点から見た建物も含む）が終わるまで VR ボタンを止める（時間の上限なし） |
 | `src/flood.ts` | 浸水深ラベルの解析と配色 |
 | `src/vr.ts` | Quest コントローラーでの移動、ボタン操作、指さし、操作説明の板 |

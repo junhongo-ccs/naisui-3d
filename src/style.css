@@ -143,6 +143,35 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 }
 #loading[hidden], .field[hidden], .check[hidden], .hint[hidden], #rotate button[hidden] { display: none; }
 
+/* The offer to add the viewer to a phone's home screen (src/install.ts). */
+#install {
+	position: fixed;
+	top: max(12px, env(safe-area-inset-top));
+	right: 12px;
+	z-index: 5;
+	display: grid;
+	grid-template-columns: auto 32px;
+	gap: 6px;
+	max-width: min(240px, calc(100vw - 24px));
+	background: var(--panel-bg);
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	padding: 6px;
+	font-size: 13px;
+}
+#install[hidden], #install p[hidden] { display: none; }
+#install button {
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	padding: 6px 10px;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+}
+#install-go { background: var(--accent) !important; color: #ffffff !important; border-color: var(--accent) !important; font-weight: bold !important; }
+#install p { grid-column: 1 / -1; margin: 2px 4px; color: var(--muted); line-height: 1.5; }
+#install-close { padding: 0 !important; }
+
 /* Phones held upright: the 3D view is cramped, so ask to turn sideways. Only on touch screens
    narrow enough to be a phone, so a desktop window that happens to be tall isn't blocked. */
 #rotate { display: none; }

@@ -4,6 +4,14 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 		<title>naisui-3d 内水浸水 3D ビューア</title>
+		<!-- Installable on a phone's home screen, to open full screen and sideways. -->
+		<link rel="manifest" href="/manifest.webmanifest" />
+		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+		<meta name="theme-color" content="#14243a" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-title" content="内水3D" />
 	</head>
 	<body>
 		<aside id="panel">
@@ -37,6 +45,12 @@
 				<p id="vr-hint" class="hint" hidden>VR: 左スティックで移動、右スティック左右で向きを変える、上下で高さ、トリガーで加速。右手で浸水域を指すと想定浸水深、ピンを指して右トリガーで説明（× で閉じる）。A／B を押している間、水面が上がる／下がる。左手の地図の点を指して右トリガーでそこへ移動。X で診断、Y で出発点。Meta ボタン長押しで終了</p>
 			</div>
 		</aside>
+
+		<div id="install" hidden>
+			<button id="install-go" type="button" title="ホーム画面から開くと、全画面で見られます">ホーム画面に追加</button>
+			<button id="install-close" type="button" aria-label="閉じる">×</button>
+			<p id="install-ios" hidden>Safari の共有ボタン（□に↑）から「ホーム画面に追加」を選んでください</p>
+		</div>
 
 		<div id="rotate" role="dialog" aria-label="横向きにしてください">
 			<div class="rotate-phone" aria-hidden="true"></div>

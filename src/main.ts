@@ -13,6 +13,7 @@ import { createLoadingIndicator } from './loading';
 import { AREA, ONLY_CITY, VR_START } from './config';
 import { createPins, placesFor } from './places';
 import { createMinimap } from './vr-minimap';
+import { offerInstall } from './install';
 import './style.css';
 
 type City = ( typeof catalog.cities )[ number ];
@@ -459,6 +460,8 @@ function buildUI() {
 	$( '#panel-toggle' ).addEventListener( 'click', () => document.body.classList.toggle( 'panel-closed' ) );
 	// On a phone (narrow, or held sideways and so short) the panel starts folded, to leave the map.
 	if ( window.innerWidth < 640 || window.innerHeight < 500 ) document.body.classList.add( 'panel-closed' );
+
+	offerInstall();
 
 	// Phones are asked to turn sideways (see #rotate in style.css). Where the browser can lock the
 	// orientation (Android, in full screen), a button does it.
