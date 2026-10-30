@@ -606,7 +606,7 @@ document.body.appendChild( vrButton );
 // blank or crumbling ground. VRButton writes 'ENTER VR' once it knows VR is supported; only then
 // is there anything to hold back. A slow connection can take long to load everything, so the
 // button opens after VR_GATE_MAX regardless (the VR loading indicator still shows the rest).
-const VR_GATE_MAX = 30; // s
+const VR_GATE_MAX = 60; // s (the start point's street-level tiles take ~40 s on a fast line)
 let vrGateOpen = false;
 function gateVRButton( settled: boolean ) {
 
@@ -665,6 +665,22 @@ function updateGoogleAttribution( dt: number ) {
 
 }
 
+// The headset's view at the VR start point (config VR_START), roughly: eye height, the headset's
+// field of view and resolution.
+const XR_RESOLUTION = 1800; // px per eye, for picking the tiles' detail in VR
+const EYE_HEIGHT = 1.6; // m
+const startEye = new THREE.PerspectiveCamera( 100, 1, 0.1, 2e6 );
+function placeStartEye() {
+
+	const pose = vrStartPose();
+	if ( ! pose ) return false;
+	startEye.position.copy( pose.position ).setY( pose.position.y + EYE_HEIGHT );
+	startEye.rotation.set( 0, pose.yaw, 0 );
+	startEye.updateMatrixWorld();
+	return true;
+
+}
+
 // ─── loop ───────────────────────────────────────────────────────────────────
 const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
@@ -696,18 +712,22 @@ renderer.setAnimationLoop( () => {
 
 	}
 
+	// Outside VR, also look from the VR start point, so its street-level tiles are loaded (and the
+	// VR button held back) before the user steps in, instead of popping in after.
+	const eyes = xr.isPresenting ? [ active ] : placeStartEye() ? [ camera, startEye ] : [ camera ];
 	let busy = false;
 	for ( const t of allTiles() ) {
 
-		if ( ! t.hasCamera( active ) ) {
+		if ( t.cameras.length !== eyes.length || ! eyes.every( c => t.hasCamera( c ) ) ) {
 
 			t.cameras.slice().forEach( c => t.deleteCamera( c ) );
-			t.setCamera( active );
+			eyes.forEach( c => t.setCamera( c ) );
 
 		}
 
-		if ( xr.isPresenting ) t.setResolution( active, 1800, 1800 );
+		if ( xr.isPresenting ) t.setResolution( active, XR_RESOLUTION, XR_RESOLUTION );
 		else t.setResolutionFromRenderer( camera, renderer );
+		if ( eyes.includes( startEye ) ) t.setResolution( startEye, XR_RESOLUTION, XR_RESOLUTION );
 		t.update();
 		busy ||= t.loadProgress < 1;
 
