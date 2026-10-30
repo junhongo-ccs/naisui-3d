@@ -322,7 +322,7 @@ export function createPins() {
 
 	}
 
-	return { group, setPlaces, update, pick, pickCard, hoverPart, startDrag, dragTo, endDrag, get dragging() { return !! drag; }, hover, toggle, close };
+	return { group, setPlaces, update, pick, pickCard, hoverPart, startDrag, dragTo, endDrag, get dragging() { return !! drag; }, get isOpen() { return !! opened; }, hover, toggle, close };
 
 }
 
@@ -501,8 +501,10 @@ function drawStoryCard( place: Place, story: Story, photo: HTMLImageElement | nu
 	rows.push( { font: SOURCE, color: '#9fb3c8', text: '出典', height: 40 } );
 	ctx.font = SOURCE;
 	for ( const src of story.sources ) for ( const line of wrap( ctx, `・${ src.label }`, TEXT ) ) rows.push( { font: SOURCE, color: '#9fb3c8', text: line, height: 36 } );
+	rows[ rows.length - 1 ].height += 12;
+	rows.push( { font: HINT_FONT, color: HINT_COLOR, text: CLOSE_HINT, height: 40 } );
 
-	const height = ( rs: Row[] ) => rs.reduce( ( h, r ) => h + r.height, 0 );
+	const height =( rs: Row[] ) => rs.reduce( ( h, r ) => h + r.height, 0 );
 	canvas.width = W;
 	canvas.height = PAD * 2 + Math.max( height( rows ), height( photoRows ) );
 	ctx.fillStyle = 'rgba(20, 26, 36, 0.94)';
@@ -572,6 +574,10 @@ type CardLayout = { width: number, height: number, close: { x: number, y: number
 // A round × button in the card's top right corner, and a bar along the top middle that marks the
 // strip to drag the card by; each lit while pointed at.
 const CLOSE_SIZE = 76; // px
+// While a card is open the user can turn but not move (src/vr.ts, src/main.ts); the card says so.
+const CLOSE_HINT = '× で閉じると移動できます';
+const HINT_FONT = 'bold 28px system-ui, sans-serif';
+const HINT_COLOR = '#fcd34d';
 const GRAB_HEIGHT = 120; // px from the top: the strip that drags the card
 function drawCardControls( ctx: CanvasRenderingContext2D, width: number, hovered: CardPart | null ) {
 
@@ -606,7 +612,7 @@ function drawCard( place: Place, cityName: string, hovered: CardPart | null ) {
 	const W = 900, PAD = 36;
 	const canvas = document.createElement( 'canvas' );
 	canvas.width = W;
-	canvas.height = PAD * 2 + 76 + lines.length * 52 + ( notes.length ? 16 + notes.length * 40 : 0 );
+	canvas.height = PAD * 2 + 76 + lines.length * 52 + ( notes.length ? 16 + notes.length * 40 : 0 ) + 56;
 	const ctx = canvas.getContext( '2d' )!;
 	ctx.fillStyle = 'rgba(20, 26, 36, 0.92)';
 	ctx.beginPath();
@@ -644,6 +650,9 @@ function drawCard( place: Place, cityName: string, hovered: CardPart | null ) {
 
 	}
 
+	ctx.font = HINT_FONT;
+	ctx.fillStyle = HINT_COLOR;
+	ctx.fillText( CLOSE_HINT, PAD, canvas.height - PAD - 30 );
 	return { canvas, layout: { width: W, height: canvas.height, ...drawCardControls( ctx, W, hovered ), widthScale: 1 } };
 
 }

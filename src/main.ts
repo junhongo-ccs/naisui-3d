@@ -756,6 +756,9 @@ renderer.setAnimationLoop( () => {
 	if ( xr.isPresenting ) vr.update( dt );
 	else {
 
+		// As in VR, an open card holds the view in place: it can turn around, but not pan or zoom
+		// away until the card is closed.
+		controls.enablePan = controls.enableZoom = ! pins.isOpen;
 		controls.update();
 		keepAboveGround( dt );
 

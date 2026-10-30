@@ -240,7 +240,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 			}
 
 			if ( src.handedness === 'left' && pressed( 'X', gp, 4 ) ) showDebug = ! showDebug;
-			if ( src.handedness === 'left' && pressed( 'Y', gp, 5 ) ) {
+			if ( src.handedness === 'left' && pressed( 'Y', gp, 5 ) && ! pins.isOpen ) {
 
 				arrive( start.clone(), startYaw );
 
@@ -248,6 +248,15 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 			const rightTriggerTaken = menu.isOpen || pointer.hoveredPlace || pointer.onCard || pins.dragging;
 			if ( gp.buttons[ 0 ]?.pressed && ! ( rightTriggerTaken && src.handedness === 'right' ) ) boost = true;
+
+		}
+
+		// While a card is open the user stays put (turning is still allowed), so the card can be read
+		// without drifting away from it; closing the card frees them.
+		if ( pins.isOpen ) {
+
+			move = [ 0, 0 ];
+			lift = 0;
 
 		}
 
