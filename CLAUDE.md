@@ -30,7 +30,7 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 | `src/main.ts` | シーン、座標系、タイルセットの読み込み、浸水の色付け、UI、描画ループ |
 | `src/places.ts` | 目印・避難所のピン（距離によらず同じ見かけの大きさ、他の物の手前に描く）と説明の札 |
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
-| `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込み（VR の出発点から見た分も含む）が終わるまで VR ボタンを止める（最長 60 秒） |
+| `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込み（VR の出発点から見た建物も含む）が終わるまで VR ボタンを止める（時間の上限なし） |
 | `src/flood.ts` | 浸水深ラベルの解析と配色 |
 | `src/vr.ts` | Quest コントローラーでの移動、ボタン操作、指さし、操作説明の板 |
 | `src/vr-debug.ts` | VR の診断ボード（X ボタン。エラー、入力、指さしの状態を左手の上に出す。エラーが出ると自動で開く） |

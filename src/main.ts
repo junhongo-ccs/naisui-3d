@@ -602,19 +602,18 @@ if ( import.meta.env.DEV ) {
 const vrButton = VRButton.createButton( renderer ) as HTMLButtonElement;
 document.body.appendChild( vrButton );
 
-// Keep the VR button shut until the city has first loaded: entering on half-loaded tiles shows
-// blank or crumbling ground. VRButton writes 'ENTER VR' once it knows VR is supported; only then
-// is there anything to hold back. A slow connection can take long to load everything, so the
-// button opens after VR_GATE_MAX regardless (the VR loading indicator still shows the rest).
-const VR_GATE_MAX = 60; // s (the start point's street-level tiles take ~40 s on a fast line)
+// Keep the VR button shut until the city, and the buildings at the VR start point, have first
+// loaded: entering on half-loaded tiles shows a flat photo where the buildings should be. There
+// is no time limit; on a slow line the wait is long (~40 s on a fast one), but it ends. Failed
+// tiles stop loading too, so they don't hold it shut. VRButton writes 'ENTER VR' once it knows
+// VR is supported; only then is there anything to hold back.
 let vrGateOpen = false;
 function gateVRButton( settled: boolean ) {
 
 	if ( vrGateOpen || ( vrButton.textContent !== 'ENTER VR' && ! vrButton.disabled ) ) return;
-	const open = settled || performance.now() / 1000 >= VR_GATE_MAX;
-	vrButton.disabled = ! open;
-	vrButton.textContent = open ? 'ENTER VR' : '読み込み中…';
-	vrGateOpen = open;
+	vrButton.disabled = ! settled;
+	vrButton.textContent = settled ? 'ENTER VR' : '読み込み中…';
+	vrGateOpen = settled;
 
 }
 const vr = initVR( {
