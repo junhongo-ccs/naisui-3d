@@ -46,7 +46,7 @@ export function createDebugBoard() {
 
 	const canvas = document.createElement( 'canvas' );
 	canvas.width = 1200;
-	canvas.height = 1000;
+	canvas.height = 1150;
 	const ctx = canvas.getContext( '2d' )!;
 	const texture = new THREE.CanvasTexture( canvas );
 	texture.colorSpace = THREE.SRGBColorSpace;
@@ -105,6 +105,9 @@ export function createDebugBoard() {
 
 		ctx.font = 'bold 30px system-ui, sans-serif';
 		put( '診断（X で閉じる）', '#9fd3ff' );
+		ctx.font = '26px system-ui, sans-serif';
+		put( 'スクリーンショット: 右手の Meta ボタン（丸く平らなボタン）を押したまま、右トリガーを引く。写真はヘッドセットの「ファイル」アプリか、スマホの Meta Horizon アプリで見られる', '#9fb3c8' );
+		y += LINE / 2;
 		ctx.font = '28px ui-monospace, monospace';
 		status.forEach( s => put( s, '#ffffff' ) );
 		y += LINE / 2;
