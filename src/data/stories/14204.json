@@ -1,0 +1,76 @@
+{
+	"note": "解説スポット（手で書く）。想定（シミュレーション）と記録（実際の被害）を分けて書き、出典を付ける。",
+	"stories": [
+		{
+			"name": "鎌倉の中心部と浸水",
+			"lat": 35.3230,
+			"lon": 139.5543,
+			"town": "雪ノ下一丁目",
+			"elevation": 9.1,
+			"sections": [
+				{ "kind": "terrain", "text": "三方を山、南を海に囲まれています。山あいの谷（谷戸）に降った雨は、標高 10 m 以下の低い平地に集まります。過去に浸水した所も、この低地に集中しています。" },
+				{ "kind": "mechanism", "text": "雨水は下水道の管で川や海へ流します。管が流しきれない雨が降ったり、出口の川の水位が高かったりすると、水があふれて街が水につかります（内水氾濫）。" },
+				{ "kind": "simulation", "text": "市が想定した最大規模の雨（1 時間 153 mm）での浸水のシミュレーションです。実際の浸水や予報ではありません。" },
+				{ "kind": "record", "text": "1990 年の台風 20 号では、市内で床上浸水 167 戸・床下浸水 539 戸。2004 年の台風 22 号では 1 時間 78.5 mm（市の記録で最大）の雨が降り、床上 93 戸・床下 229 戸が浸水しました。" }
+			],
+			"sources": [
+				{ "label": "鎌倉市 下水道計画「基礎調査」", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/kisochousa_1.pdf" },
+				{ "label": "鎌倉市「雨水管理総合計画の策定について」（2024 年 10 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_1-1.pdf" },
+				{ "label": "鎌倉市「雨水管理総合計画」（2026 年 3 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf" }
+			]
+		},
+		{
+			"name": "若宮大路・小町",
+			"lat": 35.31883,
+			"lon": 139.55193,
+			"town": "小町一丁目",
+			"elevation": 5.2,
+			"sections": [
+				{ "kind": "record", "text": "2025 年 9 月の台風 15 号（鎌倉消防署で 1 時間 60.5 mm）では、小町で床上浸水が 12 件ありました。2026 年 9 月の台風 25 号では、若宮大路が横須賀線の高架下などで冠水し、車が水没しました（報道）。" },
+				{ "kind": "mechanism", "text": "下水道は、1 時間 57.1 mm の雨を流せるように作られています。2025 年の雨は、これを超えていました。" },
+				{ "kind": "plan", "text": "このあたりを含む御谷川排水区は、市の評価で浸水のリスクが最も高い「重点対策地区」です。若宮大路の地下に雨水をためる管（貯留管）を作る計画です（中期〜長期、おおむね 20〜30 年）。計画の雨も、気候変動を見込んで 1 時間 59.7 mm に引き上げます。" }
+			],
+			"sources": [
+				{ "label": "鎌倉市下水道事業運営審議会「雨水管理総合計画について」（2025 年 10 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_3_1.pdf" },
+				{ "label": "鎌倉市「雨水管理総合計画」（2026 年 3 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf" },
+				{ "label": "毎日新聞「鎌倉の目抜き通りが冠水 車両水没も」（2026 年 9 月）", "url": "https://news.yahoo.co.jp/articles/18854f8b762febaf82b67702c139310c8c9f075f" },
+				{ "label": "タウンニュース鎌倉版（2026 年 10 月 2 日）", "url": "https://www.townnews.co.jp/0602/2026/10/02/855379.html" }
+			]
+		},
+		{
+			"name": "由比ガ浜の海沿い",
+			"lat": 35.3108,
+			"lon": 139.5478,
+			"town": "由比ガ浜二丁目",
+			"elevation": 5.1,
+			"sections": [
+				{ "kind": "terrain", "text": "海沿いが少し高く（標高 7〜11 m）、その内側に低い所（3〜4 m）があります。雨水はこの低い所に集まります。" },
+				{ "kind": "mechanism", "text": "雨水の出口は海や滑川です。台風で潮位や川の水位が上がると、管から水が出ていきにくくなり、管の中を押し戻されることもあります（外水位の影響）。" },
+				{ "kind": "record", "text": "2026 年 9 月の台風 25 号では、市が防潮扉を 4 か所閉めました（報道）。" },
+				{ "kind": "plan", "text": "このあたりを含む佐助川排水区（鎌倉駅の西側〜由比ガ浜）も「重点対策地区」です。ゲートポンプや、御成小学校の調整池などを作る計画です（長期、おおむね 30 年）。" }
+			],
+			"sources": [
+				{ "label": "国土地理院 標高 API（地点の標高）", "url": "https://maps.gsi.go.jp/development/elevation_s.html" },
+				{ "label": "鎌倉市「雨水管理総合計画」（2026 年 3 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf" },
+				{ "label": "タウンニュース鎌倉版（2026 年 10 月 2 日）", "url": "https://www.townnews.co.jp/0602/2026/10/02/855379.html" }
+			]
+		},
+		{
+			"name": "長谷・稲瀬川",
+			"lat": 35.3116,
+			"lon": 139.5368,
+			"town": "長谷二丁目",
+			"elevation": 3.7,
+			"sections": [
+				{ "kind": "terrain", "text": "稲瀬川が海に注ぐ、低い所です（標高 4〜5 m）。" },
+				{ "kind": "record", "text": "2004 年の台風 22 号では、長谷駅の北、県道（藤沢鎌倉線）沿いで床上浸水がありました。" },
+				{ "kind": "plan", "text": "稲瀬川排水区では、下水道の管を作り直す（改築）計画です（短期、おおむね 10 年）。市のシミュレーションでは、対策後も浸水する面積は 1.31 ha から 1.06 ha に減る見込みで、ゼロにはなりません。計画を超える雨には、ハザードマップや避難などで備えます。" }
+			],
+			"sources": [
+				{ "label": "鎌倉市「雨水管理総合計画（素案）の概要」（稲瀬川ブロック対策図）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/1_1120.pdf" },
+				{ "label": "鎌倉市「雨水管理総合計画」（2026 年 3 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf" },
+				{ "label": "国土地理院 標高 API（地点の標高）", "url": "https://maps.gsi.go.jp/development/elevation_s.html" }
+			]
+		}
+	]
+}

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { SHELTER_COLOR, type Place } from './places';
+import { SHELTER_COLOR, STORY_COLOR, type Place } from './places';
 
 const TILE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
 const TILE = 256;
@@ -100,7 +100,7 @@ export function createMinimap() {
 			const { x, y } = toCanvas( p.lat, p.lon );
 			ctx.beginPath();
 			ctx.arc( x, y, p.kind === 'shelter' ? 9 : 7, 0, Math.PI * 2 );
-			ctx.fillStyle = p.kind === 'shelter' ? SHELTER_COLOR : '#1d2733';
+			ctx.fillStyle = p.kind === 'shelter' ? SHELTER_COLOR : p.kind === 'story' ? STORY_COLOR : '#1d2733';
 			ctx.fill();
 			ctx.strokeStyle = '#ffffff';
 			ctx.lineWidth = 3;

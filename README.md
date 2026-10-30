@@ -15,6 +15,7 @@ PC・スマホのブラウザで動き、Meta Quest のブラウザでは VR に
 | 背景地図 | 地理院タイル（航空写真・淡色地図・標準地図） | XYZ タイル |
 | 目印（駅・寺社・海岸など） | 国土地理院 地名検索 | ピン |
 | 避難所 | 国土地理院 指定避難所データ | ピン |
+| 解説（地形、浸水のしくみ、過去の被害、市の対策） | 鎌倉市の下水道計画・雨水管理総合計画、報道、国土地理院の標高 | ピン（青い i） |
 
 今の公開版は **鎌倉市の中心部だけ**（北鎌倉・円覚寺〜材木座、長谷・大仏〜鎌倉宮）を表示します（VR で迷い出ないように）。
 対象の市は `src/config.ts` の `ONLY_CITY`、市の中で見せる範囲は `AREA`、VR の出発点は `VR_START` で決めます。`null` にすると、PLATEAU に内水浸水想定区域モデルがある **28 市町村** すべてを選べます（目印・避難所のピンは、データを作った市だけ）。
@@ -78,7 +79,7 @@ VR に入ると、若宮大路（小町二丁目のあたり）の道路に立�
 | 右スティック 上下 | 上昇・下降 |
 | トリガー（押しながら） | 5 倍速 |
 | 右手で浸水域を指す | その地点の上に想定浸水深を表示（ボタン不要。ハンドトラッキングでも可） |
-| 右手でピンを指して右トリガー | 目印・避難所の説明を開く・閉じる（ピンを指している間、右トリガーは加速にならない） |
+| 右手でピンを指して右トリガー | 目印・避難所・解説の札を開く・閉じる（ピンを指している間、右トリガーは加速にならない） |
 | A ボタン | 水面を想定浸水深まで上げる／戻す（パネルの「水面を想定浸水深まで上げる」と同じ） |
 | 右グリップ | 市町村の一覧（`ONLY_CITY` が `null` のときだけ。指してトリガーで移動） |
 | X ボタン | 診断ボード（エラー、入力、指している先、地面のタイルの表示数と読み込み待ち）。エラーが出ると自動で開く |
@@ -101,6 +102,9 @@ npm run catalog
 node --use-system-ca scripts/build-places.mjs 14204
 ```
 
+解説のピン（青い i）は `src/data/stories/<市区町村コード>.json` に手で書きます。今は鎌倉市の4か所（中心部の地形、若宮大路・小町、由比ガ浜の海沿い、長谷・稲瀬川）です。
+札は「地形」「しくみ」「この色（想定）」「実際の被害（記録）」「これからの対策」に分け、シミュレーションの結果と実際にあった被害を混ぜないようにしています。どの札にも出典を入れます。
+
 ## 注意
 
 - 内水浸水想定区域は、自治体が想定した雨（多くは想定最大規模降雨）での**シミュレーション結果**です。実際の浸水や、今の雨での予測ではありません。
@@ -113,4 +117,5 @@ node --use-system-ca scripts/build-places.mjs 14204
 - 地形・背景地図：[地理院タイル](https://maps.gsi.go.jp/development/ichiran.html)
 - 避難所：[指定緊急避難場所・指定避難所データ（国土地理院）](https://www.gsi.go.jp/bousaichiri/hinanbasho.html)
 - 目印の位置・町名・標高：国土地理院 地名検索・逆ジオコーダー・標高 API
+- 解説：鎌倉市 [下水道計画「基礎調査」](https://www.city.kamakura.kanagawa.jp/gesui/documents/kisochousa_1.pdf)、[雨水管理総合計画（2026 年 3 月）](https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf)、[同 素案の概要](https://www.city.kamakura.kanagawa.jp/gesui/documents/1_1120.pdf)、[策定について（2024 年 10 月）](https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_1-1.pdf)、[下水道事業運営審議会資料（2025 年 10 月）](https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_3_1.pdf)、[タウンニュース鎌倉版（2026 年 10 月 2 日）](https://www.townnews.co.jp/0602/2026/10/02/855379.html)、[毎日新聞（2026 年 9 月）](https://news.yahoo.co.jp/articles/18854f8b762febaf82b67702c139310c8c9f075f)
 - ジオイド高：[国土地理院 ジオイド計算 API](https://vldb.gsi.go.jp/sokuchi/surveycalc/main.html)

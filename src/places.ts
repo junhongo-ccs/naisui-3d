@@ -1,31 +1,54 @@
 import * as THREE from 'three';
 
 export type Place = {
-	kind: 'landmark' | 'shelter',
+	kind: 'landmark' | 'shelter' | 'story',
 	name: string,
 	town: string,
 	address?: string,
 	lat: number,
 	lon: number,
 	elevation: number, // m above the geoid
+	story?: Story,
 };
 
-// src/data/places/<city code>.json, written by scripts/build-places.mjs.
+// What a story spot explains, in parts kept apart by kind: above all, the simulation (what the
+// colors show) apart from the record (what actually happened).
+type StoryKind = 'terrain' | 'mechanism' | 'simulation' | 'record' | 'plan';
+type Story = {
+	sections: { kind: StoryKind, text: string }[],
+	sources: { label: string, url: string }[],
+};
+
+// src/data/places/<city code>.json, written by scripts/build-places.mjs, and
+// src/data/stories/<city code>.json, written by hand.
 const files = import.meta.glob<{ landmarks: Place[], shelters: Place[] }>( './data/places/*.json', { import: 'default', eager: true } );
+const storyFiles = import.meta.glob<{ stories: ( Omit<Place, 'kind' | 'story'> & Story )[] }>( './data/stories/*.json', { import: 'default', eager: true } );
 
 export function placesFor( code: string ): Place[] {
 
 	const f = files[ `./data/places/${ code }.json` ];
-	return f ? [ ...f.landmarks, ...f.shelters ] : [];
+	const stories = ( storyFiles[ `./data/stories/${ code }.json` ]?.stories ?? [] ).map( ( { sections, sources, ...where } ): Place => ( {
+		...where, kind: 'story', story: { sections, sources },
+	} ) );
+	return [ ...( f ? [ ...f.landmarks, ...f.shelters ] : [] ), ...stories ];
 
 }
 
 export const SHELTER_COLOR = '#15803d';
+export const STORY_COLOR = '#1d4ed8';
+const STORY_LABELS: Record<StoryKind, { label: string, color: string }> = {
+	terrain: { label: '地形', color: '#64748b' },
+	mechanism: { label: 'しくみ', color: '#0f766e' },
+	simulation: { label: 'この色（想定）', color: '#2563eb' },
+	record: { label: '実際の被害（記録）', color: '#c2410c' },
+	plan: { label: 'これからの対策', color: '#15803d' },
+};
 const LANDMARK_BG = 'rgba(20, 26, 36, 0.86)';
 
 // Apparent sizes, as a fraction of the distance from the eye (≈ radians).
 const LABEL_SIZE = 0.028;
-const CARD_SIZE = 0.16;
+const CARD_WIDTH = 0.5;
+const STORY_CARD_WIDTH = 0.5; // about 30° tall: fits the PC view (55°) and reads in VR
 const PICK_ANGLE = 0.03;
 const SHELTER_NAME_RANGE = 2500; // m; farther shelters show the icon only
 const NAME_SCALE = 0.8; // shelter name height / icon height
@@ -49,7 +72,7 @@ export function createPins() {
 		head: THREE.Vector3,
 		stem: THREE.Line,
 		icon: THREE.Sprite,
-		name: THREE.Sprite | null, // shelters: the name next to the icon, shown when near
+		name: THREE.Sprite | null, // shelters and stories: the name next to the icon
 	};
 	let pins: Pin[] = [];
 	let hovered: Pin | null = null;
@@ -98,9 +121,9 @@ export function createPins() {
 			);
 			stem.position.copy( base );
 			stem.renderOrder = 1001;
-			const isShelter = place.kind === 'shelter';
-			const icon = sprite( isShelter ? shelterIcon() : textLabel( place.name, LANDMARK_BG ), 0.5 );
-			const name = isShelter ? sprite( textLabel( place.name, SHELTER_COLOR ), 0 ) : null;
+			const color = place.kind === 'shelter' ? SHELTER_COLOR : STORY_COLOR;
+			const icon = sprite( place.kind === 'landmark' ? textLabel( place.name, LANDMARK_BG ) : place.kind === 'shelter' ? shelterIcon() : storyIcon(), 0.5 );
+			const name = place.kind === 'landmark' ? null : sprite( textLabel( place.kind === 'story' ? `解説: ${ place.name }` : place.name, color ), 0 );
 			// To the right of the round icon (as wide as it is tall), centered on it vertically.
 			// Sprite centers are fractions of the sprite's own size.
 			name?.center.set( - 0.55 / ( NAME_SCALE * name.userData.aspect ), - ( 1 - NAME_SCALE ) / 2 / NAME_SCALE );
@@ -125,7 +148,7 @@ export function createPins() {
 			p.icon.scale.set( h * p.icon.userData.aspect, h, 1 );
 			if ( p.name ) {
 
-				p.name.visible = d < SHELTER_NAME_RANGE || p === hovered || p === opened;
+				p.name.visible = p.place.kind === 'story' || d < SHELTER_NAME_RANGE || p === hovered || p === opened;
 				p.name.position.copy( p.head );
 				p.name.scale.set( h * NAME_SCALE * p.name.userData.aspect, h * NAME_SCALE, 1 );
 
@@ -135,10 +158,13 @@ export function createPins() {
 
 		if ( opened ) {
 
+			// A story's card is tall, so it is centered on the pin's label (about eye level) rather
+			// than above it, where it would mean looking far up.
 			const d = eye.distanceTo( opened.head );
-			const h = d * CARD_SIZE;
+			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH : CARD_WIDTH );
+			card.center.set( 0.5, opened.place.kind === 'story' ? 0.5 : - 0.08 );
 			card.position.copy( opened.head ).setY( opened.head.y + d * LABEL_SIZE * 1.4 );
-			card.scale.set( h * card.userData.aspect, h, 1 );
+			card.scale.set( w, w / card.userData.aspect, 1 );
 
 		}
 
@@ -182,7 +208,7 @@ export function createPins() {
 		const pin = pins.find( p => p.place === place ) ?? null;
 		opened = opened === pin ? null : pin;
 		card.visible = !! opened;
-		if ( opened ) drawCard( card, opened.place, cityName );
+		if ( opened ) ( opened.place.story ? drawStoryCard( card, opened.place, opened.place.story ) : drawCard( card, opened.place, cityName ) );
 
 	}
 
@@ -247,6 +273,28 @@ function shelterIcon() {
 
 }
 
+// A white "i" on a blue disc.
+function storyIcon() {
+
+	const canvas = document.createElement( 'canvas' );
+	canvas.width = canvas.height = 96;
+	const ctx = canvas.getContext( '2d' )!;
+	ctx.fillStyle = STORY_COLOR;
+	ctx.beginPath();
+	ctx.arc( 48, 48, 44, 0, Math.PI * 2 );
+	ctx.fill();
+	ctx.strokeStyle = '#ffffff';
+	ctx.lineWidth = 5;
+	ctx.stroke();
+	ctx.fillStyle = '#ffffff';
+	ctx.font = 'bold 64px Georgia, serif';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	ctx.fillText( 'i', 48, 52 );
+	return canvas;
+
+}
+
 // What the card says about a place.
 export function describePlace( place: Place, cityName: string ): { title: string, lines: string[], notes: string[] } {
 
@@ -260,6 +308,108 @@ export function describePlace( place: Place, cityName: string ): { title: string
 		'出典: 指定避難所データ（国土地理院）',
 	] : [];
 	return { title: place.name, lines, notes };
+
+}
+
+// Break text into lines no wider than `width` (Japanese has no spaces, so by character). Closing
+// punctuation stays on the line before, even if it runs a little over, as Japanese typesetting does.
+const NO_LINE_START = '、。，．）」』〕・ー';
+function wrap( ctx: CanvasRenderingContext2D, text: string, width: number ): string[] {
+
+	const lines: string[] = [];
+	let line = '';
+	for ( const ch of text ) {
+
+		if ( line && ! NO_LINE_START.includes( ch ) && ctx.measureText( line + ch ).width > width ) {
+
+			lines.push( line );
+			line = '';
+
+		}
+
+		line += ch;
+
+	}
+
+	if ( line ) lines.push( line );
+	return lines;
+
+}
+
+// A story's card: title, then each part under a colored tag, then the sources.
+function drawStoryCard( card: THREE.Sprite, place: Place, story: Story ) {
+
+	const W = 1100, PAD = 40, TEXT = W - PAD * 2 - 36; // room for punctuation that hangs over
+	const TITLE = 'bold 54px system-ui, sans-serif', TAG = 'bold 30px system-ui, sans-serif';
+	const BODY = '36px system-ui, sans-serif', SOURCE = '25px system-ui, sans-serif';
+	const canvas = document.createElement( 'canvas' );
+	const ctx = canvas.getContext( '2d' )!;
+
+	// Lay out first, to know the height.
+	type Row = { font: string, color: string, text: string, height: number, tag?: string };
+	const rows: Row[] = [ { font: TITLE, color: '#ffffff', text: place.name, height: 80 } ];
+	rows.push( { font: SOURCE, color: '#9fb3c8', text: `${ place.town }　標高 約 ${ Math.round( place.elevation ) } m`, height: 52 } );
+	for ( const s of story.sections ) {
+
+		const { label, color } = STORY_LABELS[ s.kind ];
+		rows.push( { font: TAG, color: '#ffffff', text: label, height: 58, tag: color } );
+		ctx.font = BODY;
+		for ( const line of wrap( ctx, s.text, TEXT ) ) rows.push( { font: BODY, color: '#e5edf5', text: line, height: 50 } );
+		rows[ rows.length - 1 ].height += 14;
+
+	}
+
+	rows.push( { font: SOURCE, color: '#9fb3c8', text: '出典', height: 40 } );
+	ctx.font = SOURCE;
+	for ( const src of story.sources ) for ( const line of wrap( ctx, `・${ src.label }`, TEXT ) ) rows.push( { font: SOURCE, color: '#9fb3c8', text: line, height: 36 } );
+
+	canvas.width = W;
+	canvas.height = PAD * 2 + rows.reduce( ( h, r ) => h + r.height, 0 );
+	ctx.fillStyle = 'rgba(20, 26, 36, 0.94)';
+	ctx.beginPath();
+	ctx.roundRect( 0, 0, W, canvas.height, 28 );
+	ctx.fill();
+	ctx.fillStyle = STORY_COLOR;
+	ctx.fillRect( 0, 24, 12, canvas.height - 48 );
+
+	ctx.textBaseline = 'top';
+	let y = PAD;
+	for ( const r of rows ) {
+
+		ctx.font = r.font;
+		if ( r.tag ) {
+
+			const w = ctx.measureText( r.text ).width + 28;
+			ctx.fillStyle = r.tag;
+			ctx.beginPath();
+			ctx.roundRect( PAD, y + 4, w, 44, 10 );
+			ctx.fill();
+			ctx.fillStyle = r.color;
+			ctx.fillText( r.text, PAD + 14, y + 11 );
+
+		} else {
+
+			ctx.fillStyle = r.color;
+			ctx.fillText( r.text, PAD, y );
+
+		}
+
+		y += r.height;
+
+	}
+
+	setCardTexture( card, canvas );
+
+}
+
+function setCardTexture( card: THREE.Sprite, canvas: HTMLCanvasElement ) {
+
+	const mat = card.material;
+	mat.map?.dispose();
+	mat.map = new THREE.CanvasTexture( canvas );
+	mat.map.colorSpace = THREE.SRGBColorSpace;
+	mat.needsUpdate = true;
+	card.userData.aspect = canvas.width / canvas.height;
 
 }
 
@@ -307,11 +457,6 @@ function drawCard( card: THREE.Sprite, place: Place, cityName: string ) {
 
 	}
 
-	const mat = card.material;
-	mat.map?.dispose();
-	mat.map = new THREE.CanvasTexture( canvas );
-	mat.map.colorSpace = THREE.SRGBColorSpace;
-	mat.needsUpdate = true;
-	card.userData.aspect = canvas.width / canvas.height;
+	setCardTexture( card, canvas );
 
 }

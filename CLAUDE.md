@@ -38,6 +38,7 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 | `src/vr-minimap.ts` | VR の左手の地図（淡色地図に目印と避難所、現在地の矢印） |
 | `src/data/cities.json` | 対象 28 市町村のタイルセット URL・中心・ジオイド高（`scripts/build-catalog.mjs` が生成。手で編集しない） |
 | `src/data/places/<コード>.json` | 目印と指定避難所（町名・標高付き。`scripts/build-places.mjs` が生成。手で編集しない） |
+| `src/data/stories/<コード>.json` | 解説スポット（手で書く）。地形・しくみ・想定・記録・対策に分けた文と出典 |
 | `src/types/3d-tiles-renderer.d.ts` | ライブラリに型が無い `TerrainRGBMeshPlugin` の型宣言 |
 
 ライブラリ: three 0.186、3d-tiles-renderer 0.5.3、three-mesh-bvh 0.9、Vite。UI フレームワークは使っていない（素の DOM）。
@@ -52,6 +53,8 @@ PLATEAU のタイルは、`group` ではなく `group.children`（表示中の�
 
 ピンの指さしは、レイキャストではなく、光線とラベルの中心のなす角で判定している（`pins.pick`。ピンは他の物の手前に描くので、建物の陰でも選べる）。
 避難所の説明には、国土地理院が求める注意（最新でない場合がある、市町村に確認、指定緊急避難場所とは別）と出典を必ず入れる。
+解説の札では、想定（PLATEAU のシミュレーション）と記録（実際にあった被害）を別の項目に書き、どちらにも出典を付ける。報道だけが出典のことは「（報道）」と書く。
+写真は、許可の取れたものか自分で撮ったものだけ使う（鎌倉市のサイトの写真は無断転載不可。報道の写真も不可）。
 
 VR で頭の位置・向きを取るときは `renderer.xr.getCamera()` ではなく `camera`（`rig` の子）を使う。
 XR カメラには親が無く、`getWorldPosition` などがリグ基準の値を返す。
