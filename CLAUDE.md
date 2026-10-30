@@ -28,7 +28,8 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 |---|---|
 | `src/config.ts` | 表示する市（`ONLY_CITY`）、範囲（`AREA`）、VR の出発点（`VR_START`） |
 | `src/main.ts` | シーン、座標系、タイルセットの読み込み、浸水の色付け、UI、描画ループ |
-| `src/places.ts` | 目印・避難所のピン（距離によらず同じ見かけの大きさ、他の物の手前に描く）と説明の札 |
+| `src/places.ts` | 目印・避難所・解説のピン（距離によらず同じ見かけの大きさ、他の物の手前に描く）と説明の札（× で閉じる） |
+| `src/billboard.ts` | ピンのラベル・札・VR の浸水深ラベルに使う板。いつも直立し、目の位置の方を向く（Sprite と違い、頭を傾けても一緒に回らない。VR で見やすくするため） |
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
 | `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込み（VR の出発点から見た建物も含む）が終わるまで VR ボタンを止める（時間の上限なし） |
 | `src/flood.ts` | 浸水深ラベルの解析と配色 |

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { billboard, disposeBillboard, pose, setTexture, type Billboard } from './billboard';
 
 export type Place = {
 	kind: 'landmark' | 'shelter' | 'story',
@@ -59,23 +60,27 @@ const NAME_SCALE = 0.8; // shelter name height / icon height
 // Pins over a city: landmark names, so the user can tell where they are, and shelters. Each pin is
 // a stem standing on the ground with a label on top, kept the same apparent size at any distance
 // and drawn over the scene, so a landmark behind a hill still shows which way it is.
-// Pointing at a pin and clicking (or pulling the trigger in VR) opens a card describing it.
+// Pointing at a pin and clicking (or pulling the trigger in VR) opens a card describing it; the
+// card's × button (or the pin again) closes it.
 export function createPins() {
 
 	const group = new THREE.Group();
-	const card = new THREE.Sprite( new THREE.SpriteMaterial( { depthTest: false, transparent: true } ) );
-	card.center.set( 0.5, - 0.08 );
-	card.renderOrder = 1002;
-	card.visible = false;
-	group.add( card );
+	const card = billboard( null, 0.5, - 0.08, 1002 );
+	card.obj.visible = false;
+	group.add( card.obj );
+	// Where the card's close button is on its canvas, and how much wider than a plain text card it
+	// is (a story card with a photo has a second column).
+	let cardLayout: CardLayout = { width: 1, height: 1, close: { x: 0, y: 0, size: 0 }, widthScale: 1 };
+	let closeHovered = false;
 
 	type Pin = {
 		place: Place,
 		base: THREE.Vector3,
 		head: THREE.Vector3,
 		stem: THREE.Line,
-		icon: THREE.Sprite,
-		name: THREE.Sprite | null, // shelters and stories: the name next to the icon
+		icon: Billboard,
+		name: Billboard | null, // shelters and stories: the name next to the icon
+		height: number, // of the icon, as last drawn
 	};
 	let pins: Pin[] = [];
 	let hovered: Pin | null = null;
@@ -83,38 +88,21 @@ export function createPins() {
 	let cityName = '';
 	const stemMaterial = new THREE.LineBasicMaterial( { color: '#ffffff', transparent: true, opacity: 0.85, depthTest: false } );
 
-	function sprite( canvas: HTMLCanvasElement, centerX: number ) {
-
-		const texture = new THREE.CanvasTexture( canvas );
-		texture.colorSpace = THREE.SRGBColorSpace;
-		const s = new THREE.Sprite( new THREE.SpriteMaterial( { map: texture, depthTest: false, transparent: true } ) );
-		s.center.set( centerX, 0 );
-		s.renderOrder = 1001;
-		s.userData.aspect = canvas.width / canvas.height;
-		return s;
-
-	}
-
 	// `places` in `city`, positioned by `toLocal` (lat, lon, height above the geoid → scene meters).
 	function setPlaces( city: string, places: Place[], toLocal: ( lat: number, lon: number, elevation: number ) => THREE.Vector3 ) {
 
 		cityName = city;
 		for ( const p of pins ) {
 
-			for ( const s of [ p.icon, p.name ] ) {
-
-				s?.material.map?.dispose();
-				s?.material.dispose();
-
-			}
-
+			disposeBillboard( p.icon );
+			if ( p.name ) disposeBillboard( p.name );
 			p.stem.geometry.dispose();
-			group.remove( p.stem, p.icon, ...( p.name ? [ p.name ] : [] ) );
+			group.remove( p.stem, p.icon.obj, ...( p.name ? [ p.name.obj ] : [] ) );
 
 		}
 
 		hovered = opened = null;
-		card.visible = false;
+		card.obj.visible = false;
 		pins = places.map( place => {
 
 			const base = toLocal( place.lat, place.lon, place.elevation );
@@ -125,35 +113,34 @@ export function createPins() {
 			stem.position.copy( base );
 			stem.renderOrder = 1001;
 			const color = place.kind === 'shelter' ? SHELTER_COLOR : STORY_COLOR;
-			const icon = sprite( place.kind === 'landmark' ? textLabel( place.name, LANDMARK_BG ) : place.kind === 'shelter' ? shelterIcon() : storyIcon(), 0.5 );
-			const name = place.kind === 'landmark' ? null : sprite( textLabel( place.kind === 'story' ? `解説: ${ place.name }` : place.name, color ), 0 );
+			const icon = billboard( place.kind === 'landmark' ? textLabel( place.name, LANDMARK_BG ) : place.kind === 'shelter' ? shelterIcon() : storyIcon(), 0.5, 0, 1001 );
+			const name = place.kind === 'landmark' ? null : billboard( textLabel( place.kind === 'story' ? `解説: ${ place.name }` : place.name, color ), 0, 0, 1001 );
 			// To the right of the round icon (as wide as it is tall), centered on it vertically.
-			// Sprite centers are fractions of the sprite's own size.
-			name?.center.set( - 0.55 / ( NAME_SCALE * name.userData.aspect ), - ( 1 - NAME_SCALE ) / 2 / NAME_SCALE );
-			group.add( stem, icon, ...( name ? [ name ] : [] ) );
-			return { place, base, head: base.clone(), stem, icon, name };
+			// Centers are fractions of the label's own size.
+			name?.center.set( - 0.55 / ( NAME_SCALE * name.aspect ), - ( 1 - NAME_SCALE ) / 2 / NAME_SCALE );
+			group.add( stem, icon.obj, ...( name ? [ name.obj ] : [] ) );
+			return { place, base, head: base.clone(), stem, icon, name, height: 0 };
 
 		} );
 
 	}
 
-	// Resize the pins for the eye's distance. Call every frame before rendering.
+	// Resize the pins for the eye's distance and turn them to face it. Call every frame before
+	// rendering.
 	function update( eye: THREE.Vector3 ) {
 
 		for ( const p of pins ) {
 
 			const d = eye.distanceTo( p.base );
-			const h = Math.max( d * LABEL_SIZE, 0.05 ) * ( p === hovered ? 1.3 : 1 );
+			p.height = Math.max( d * LABEL_SIZE, 0.05 ) * ( p === hovered ? 1.3 : 1 );
 			const stemHeight = THREE.MathUtils.clamp( d * 0.05, 3, 400 );
 			p.stem.scale.y = stemHeight;
 			p.head.copy( p.base ).setY( p.base.y + stemHeight );
-			p.icon.position.copy( p.head );
-			p.icon.scale.set( h * p.icon.userData.aspect, h, 1 );
+			pose( p.icon, p.head, p.height, eye );
 			if ( p.name ) {
 
-				p.name.visible = p.place.kind === 'story' || d < SHELTER_NAME_RANGE || p === hovered || p === opened;
-				p.name.position.copy( p.head );
-				p.name.scale.set( h * NAME_SCALE * p.name.userData.aspect, h * NAME_SCALE, 1 );
+				p.name.obj.visible = p.place.kind === 'story' || d < SHELTER_NAME_RANGE || p === hovered || p === opened;
+				pose( p.name, p.head, p.height * NAME_SCALE, eye );
 
 			}
 
@@ -164,14 +151,15 @@ export function createPins() {
 			// A story's card is tall, so it is centered on the pin's label (about eye level) rather
 			// than above it, where it would mean looking far up.
 			const d = eye.distanceTo( opened.head );
-			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH * card.userData.widthScale : CARD_WIDTH );
+			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH * cardLayout.widthScale : CARD_WIDTH );
 			card.center.set( 0.5, opened.place.kind === 'story' ? 0.5 : - 0.08 );
-			card.position.copy( opened.head ).setY( opened.head.y + d * LABEL_SIZE * 1.4 );
-			card.scale.set( w, w / card.userData.aspect, 1 );
+			pose( card, cardAnchor.copy( opened.head ).setY( opened.head.y + d * LABEL_SIZE * 1.4 ), w / card.aspect, eye );
 
 		}
 
 	}
+
+	const cardAnchor = new THREE.Vector3();
 
 	// The pin a ray points at (within a small angle of its label), nearest first.
 	const toHead = new THREE.Vector3();
@@ -181,7 +169,7 @@ export function createPins() {
 		for ( const p of pins ) {
 
 			// Aim at the middle of the label, not its bottom edge.
-			toHead.copy( p.head ).setY( p.head.y + p.icon.scale.y / 2 ).sub( ray.origin );
+			toHead.copy( p.head ).setY( p.head.y + p.height / 2 ).sub( ray.origin );
 			const along = toHead.dot( ray.direction );
 			if ( along <= 0 ) continue;
 			const angle = Math.sqrt( Math.max( toHead.lengthSq() - along * along, 0 ) ) / along;
@@ -199,6 +187,36 @@ export function createPins() {
 
 	}
 
+	// Whether a ray hits the open card, and if so whether on its close button. The card is drawn
+	// over everything, so it takes the ray before pins and the flood behind it.
+	const cardRaycaster = new THREE.Raycaster();
+	const hits: THREE.Intersection[] = [];
+	function pickCard( ray: THREE.Ray ): { part: 'close' | 'card', distance: number } | null {
+
+		if ( ! opened ) return null;
+		cardRaycaster.ray.copy( ray );
+		hits.length = 0;
+		card.mesh.raycast( cardRaycaster, hits );
+		const hit = hits[ 0 ];
+		if ( ! hit?.uv ) return null;
+		const x = hit.uv.x * cardLayout.width, y = ( 1 - hit.uv.y ) * cardLayout.height;
+		const { close } = cardLayout;
+		// A little larger than drawn, to be easy to hit with a wavering hand.
+		const slack = close.size * 0.25;
+		const onClose = x >= close.x - slack && x <= close.x + close.size + slack && y >= close.y - slack && y <= close.y + close.size + slack;
+		return { part: onClose ? 'close' : 'card', distance: hit.distance };
+
+	}
+
+	// Light up the close button while it is pointed at (VR).
+	function hoverClose( on: boolean ) {
+
+		if ( on === closeHovered ) return;
+		closeHovered = on;
+		if ( opened ) draw();
+
+	}
+
 	function hover( place: Place | null ) {
 
 		hovered = pins.find( p => p.place === place ) ?? null;
@@ -210,25 +228,32 @@ export function createPins() {
 
 		const pin = pins.find( p => p.place === place ) ?? null;
 		opened = opened === pin ? null : pin;
-		card.visible = !! opened;
+		card.obj.visible = !! opened;
+		closeHovered = false;
+		if ( opened ) draw();
+
+	}
+
+	function draw() {
+
 		if ( ! opened ) return;
 		const story = opened.place.story;
 		if ( ! story ) {
 
-			drawCard( card, opened.place, cityName );
+			show( drawCard( opened.place, cityName, closeHovered ) );
 			return;
 
 		}
 
 		// Photos load when first opened; the card shows without it until then.
 		const photo = story.photo && loadPhoto( story.photo.src );
-		drawStoryCard( card, opened.place, story, photo?.complete ? photo : null );
+		show( drawStoryCard( opened.place, story, photo?.complete ? photo : null, closeHovered ) );
 		if ( photo && ! photo.complete ) {
 
 			const shown = opened;
 			photo.addEventListener( 'load', () => {
 
-				if ( opened === shown ) drawStoryCard( card, shown.place, story, photo );
+				if ( opened === shown ) draw();
 
 			}, { once: true } );
 
@@ -236,14 +261,22 @@ export function createPins() {
 
 	}
 
-	function close() {
+	function show( { canvas, layout }: { canvas: HTMLCanvasElement, layout: CardLayout } ) {
 
-		opened = null;
-		card.visible = false;
+		setTexture( card, canvas );
+		cardLayout = layout;
 
 	}
 
-	return { group, setPlaces, update, pick, hover, toggle, close };
+	function close() {
+
+		opened = null;
+		card.obj.visible = false;
+		closeHovered = false;
+
+	}
+
+	return { group, setPlaces, update, pick, pickCard, hoverClose, hover, toggle, close };
 
 }
 
@@ -382,7 +415,7 @@ function wrap( ctx: CanvasRenderingContext2D, text: string, width: number ): str
 const STORY_TEXT_WIDTH = 1020; // px
 const PHOTO_WIDTH = 640; // px
 const PHOTO_MAX_HEIGHT = 900; // px; a taller (portrait) photo is narrowed to this
-function drawStoryCard( card: THREE.Sprite, place: Place, story: Story, photo: HTMLImageElement | null ) {
+function drawStoryCard( place: Place, story: Story, photo: HTMLImageElement | null, closeHovered: boolean ) {
 
 	const PAD = 40, GAP = 40, TEXT = STORY_TEXT_WIDTH - 36; // room for punctuation that hangs over
 	const left = story.photo ? PHOTO_WIDTH + GAP : 0;
@@ -478,24 +511,41 @@ function drawStoryCard( card: THREE.Sprite, place: Place, story: Story, photo: H
 
 	drawColumn( photoRows, PAD );
 	drawColumn( rows, PAD + left );
-	setCardTexture( card, canvas );
-	// Keep the text the same apparent size with or without the photo column.
-	card.userData.widthScale = W / ( PAD * 2 + STORY_TEXT_WIDTH );
+	return {
+		canvas,
+		// Keep the text the same apparent size with or without the photo column.
+		layout: { width: W, height: canvas.height, close: drawCloseButton( ctx, W, closeHovered ), widthScale: W / ( PAD * 2 + STORY_TEXT_WIDTH ) },
+	};
 
 }
 
-function setCardTexture( card: THREE.Sprite, canvas: HTMLCanvasElement ) {
+// Where a card's close button is on its canvas (px), for hit-testing the card.
+type CardLayout = { width: number, height: number, close: { x: number, y: number, size: number }, widthScale: number };
 
-	const mat = card.material;
-	mat.map?.dispose();
-	mat.map = new THREE.CanvasTexture( canvas );
-	mat.map.colorSpace = THREE.SRGBColorSpace;
-	mat.needsUpdate = true;
-	card.userData.aspect = canvas.width / canvas.height;
+// A round × button in the card's top right corner, lit while pointed at.
+const CLOSE_SIZE = 76; // px
+function drawCloseButton( ctx: CanvasRenderingContext2D, width: number, hovered: boolean ) {
+
+	const x = width - 24 - CLOSE_SIZE, y = 24, r = CLOSE_SIZE / 2;
+	ctx.fillStyle = hovered ? '#ffffff' : 'rgba(255, 255, 255, 0.16)';
+	ctx.beginPath();
+	ctx.arc( x + r, y + r, r, 0, Math.PI * 2 );
+	ctx.fill();
+	ctx.strokeStyle = hovered ? '#141a24' : '#ffffff';
+	ctx.lineWidth = 7;
+	ctx.lineCap = 'round';
+	const a = r * 0.42;
+	ctx.beginPath();
+	ctx.moveTo( x + r - a, y + r - a );
+	ctx.lineTo( x + r + a, y + r + a );
+	ctx.moveTo( x + r + a, y + r - a );
+	ctx.lineTo( x + r - a, y + r + a );
+	ctx.stroke();
+	return { x, y, size: CLOSE_SIZE };
 
 }
 
-function drawCard( card: THREE.Sprite, place: Place, cityName: string ) {
+function drawCard( place: Place, cityName: string, closeHovered: boolean ) {
 
 	const { title, lines, notes } = describePlace( place, cityName );
 	const W = 900, PAD = 36;
@@ -518,7 +568,7 @@ function drawCard( card: THREE.Sprite, place: Place, cityName: string ) {
 	let y = PAD;
 	ctx.fillStyle = '#ffffff';
 	ctx.font = 'bold 56px system-ui, sans-serif';
-	ctx.fillText( title, PAD, y, W - PAD * 2 );
+	ctx.fillText( title, PAD, y, W - PAD * 2 - CLOSE_SIZE );
 	y += 76;
 	ctx.font = '38px system-ui, sans-serif';
 	for ( const line of lines ) {
@@ -539,6 +589,6 @@ function drawCard( card: THREE.Sprite, place: Place, cityName: string ) {
 
 	}
 
-	setCardTexture( card, canvas );
+	return { canvas, layout: { width: W, height: canvas.height, close: drawCloseButton( ctx, W, closeHovered ), widthScale: 1 } };
 
 }

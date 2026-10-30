@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { billboard, pose, setTexture } from './billboard';
 import { depthColor, parseDepthLabel } from './flood';
 import { createCityMenu, type CityItem } from './vr-menu';
 import { createDebugBoard } from './vr-debug';
@@ -201,10 +202,11 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 				if ( pressed( 'A', gp, 4 ) ) toggleWater();
 				if ( pressed( 'grip', gp, 1 ) && hasMenu ) toggleMenu = true;
 				// With the list open, the right trigger picks a city instead of speeding up; on a
-				// pin, it opens or closes the pin's card.
+				// pin, it opens or closes the pin's card; on the card's × button, it closes the card.
 				if ( pressed( 'trigger', gp, 0 ) ) {
 
 					if ( menu.isOpen ) choose = true;
+					else if ( pointer.onCard?.part === 'close' ) pins.close();
 					else if ( pointer.hoveredPlace ) pins.toggle( pointer.hoveredPlace );
 
 				}
@@ -224,7 +226,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 			}
 
-			const rightTriggerTaken = menu.isOpen || pointer.hoveredPlace;
+			const rightTriggerTaken = menu.isOpen || pointer.hoveredPlace || pointer.onCard;
 			if ( gp.buttons[ 0 ]?.pressed && ! ( rightTriggerTaken && src.handedness === 'right' ) ) boost = true;
 
 		}
@@ -330,17 +332,16 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 	} );
 
-	// Drawn over everything so the label isn't buried in a building or the ground.
-	const label = new THREE.Sprite( new THREE.SpriteMaterial( { depthTest: false, transparent: true } ) );
-	label.center.set( 0.5, - 0.4 );
-	label.renderOrder = 1000;
+	// Drawn over everything so the label isn't buried in a building or the ground. Upright, facing
+	// the eye, like the pins' labels.
+	const label = billboard( null, 0.5, - 0.4, 1000 );
 	const dot = new THREE.Mesh(
 		new THREE.SphereGeometry( 1, 12, 8 ),
 		new THREE.MeshBasicMaterial( { color: '#ffffff', depthTest: false } ),
 	);
 	dot.renderOrder = 1000;
-	label.visible = dot.visible = false;
-	scene.add( label, dot );
+	label.obj.visible = dot.visible = false;
+	scene.add( label.obj, dot );
 
 	const ray = new THREE.Raycaster();
 	ray.far = 5000;
@@ -351,6 +352,8 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 	let hit: ReturnType<PointAt> | null = null;
 	// A pin under the ray, when it is nearer than whatever else the ray hits.
 	let place: { place: Place, distance: number } | null = null;
+	// The open card under the ray (it is drawn over everything, so it comes first).
+	let onCard: ReturnType<Pins[ 'pickCard' ]> = null;
 
 	function setText( depthLabel: string ) {
 
@@ -375,21 +378,24 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		ctx.textBaseline = 'middle';
 		ctx.fillText( text, pad + swatch + 20, h / 2 + 2 );
 
-		const mat = label.material;
-		mat.map?.dispose();
-		mat.map = new THREE.CanvasTexture( canvas );
-		mat.map.colorSpace = THREE.SRGBColorSpace;
-		mat.needsUpdate = true;
-		label.userData.aspect = canvas.width / canvas.height;
+		setTexture( label, canvas );
 
 	}
 
 	function hide() {
 
-		label.visible = dot.visible = false;
+		label.obj.visible = dot.visible = false;
 		controllers.forEach( ( { line } ) => ( line.visible = false ) );
 		hit = null;
 		setPlace( null );
+		setCard( null );
+
+	}
+
+	function setCard( c: typeof onCard ) {
+
+		onCard = c;
+		pins.hoverClose( c?.part === 'close' );
 
 	}
 
@@ -414,11 +420,12 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		active.line.visible = true;
 		if ( menu.isOpen ) {
 
-			label.visible = dot.visible = false;
+			label.obj.visible = dot.visible = false;
 			ray.setFromXRController( active.c );
 			active.line.scale.z = Math.min( menu.hover( ray ) ?? RAY_MAX, RAY_MAX );
 			hit = null;
 			setPlace( null );
+			setCard( null );
 			sinceLastPick = Infinity;
 			return;
 
@@ -429,24 +436,24 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 			sinceLastPick = 0;
 			ray.setFromXRController( active.c );
-			hit = pointAt( ray );
-			// Pins are drawn over everything, so one in front of a building still counts.
-			setPlace( pins.pick( ray.ray ) );
+			// The open card and pins are drawn over everything, so they count even in front of
+			// a building; the card covers whatever is behind it.
+			setCard( pins.pickCard( ray.ray ) );
+			hit = onCard ? null : pointAt( ray );
+			setPlace( onCard ? null : pins.pick( ray.ray ) );
 
 		}
 
-		active.line.scale.z = Math.min( place?.distance ?? hit?.distance ?? RAY_MAX, RAY_MAX );
+		active.line.scale.z = Math.min( onCard?.distance ?? place?.distance ?? hit?.distance ?? RAY_MAX, RAY_MAX );
 
-		const flood = place ? null : hit?.flood;
-		label.visible = dot.visible = !! flood;
+		const flood = place || onCard ? null : hit?.flood;
+		label.obj.visible = dot.visible = !! flood;
 		if ( ! flood ) return;
 
 		// Keep the label the same apparent size however far away it is.
 		setText( flood.label );
 		const dist = headCam.getWorldPosition( head ).distanceTo( flood.point );
-		const h = dist * 0.05;
-		label.position.copy( flood.point );
-		label.scale.set( h * label.userData.aspect, h, 1 );
+		pose( label, flood.point, dist * 0.05, head );
 		dot.position.copy( flood.point );
 		dot.scale.setScalar( dist * 0.005 );
 
@@ -461,7 +468,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 			return `手${ i } ${ c.userData.handedness ?? '未接続' }　姿勢${ c.visible ? '○' : '×' }　光線${ ray }${ c.parent ? '' : '（シーン外）' }`;
 
 		} );
-		const target = place ? `ピン ${ place.place.name }` : ! hit ? '-' : hit.flood ? hit.flood.label : hit.distance === Infinity ? 'なし' : `${ hit.distance.toFixed( 0 ) } m 先の建物`;
+		const target = onCard ? ( onCard.part === 'close' ? '札の閉じるボタン' : '札' ) : place ? `ピン ${ place.place.name }` : ! hit ? '-' : hit.flood ? hit.flood.label : hit.distance === Infinity ? 'なし' : `${ hit.distance.toFixed( 0 ) } m 先の建物`;
 		return lines.concat( `指す先: ${ target }` );
 
 	}
@@ -471,6 +478,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		hide,
 		status,
 		get hoveredPlace() { return place?.place ?? null; },
+		get onCard() { return onCard; },
 	};
 
 }
@@ -484,7 +492,7 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		[ '右スティック', '左右: 向きを変える　上下: 上昇・下降' ],
 		[ 'トリガー', '押している間 5 倍速' ],
 		[ '右手で指す', '想定浸水深・ピンの名前を表示' ],
-		[ 'ピンに右トリガー', '説明を開く・閉じる' ],
+		[ 'ピンに右トリガー', '説明を開く（札の × で閉じる）' ],
 		[ 'A', '水面を上げる・下げる' ],
 		...( hasMenu ? [ [ 'グリップ（右）', '市町村を選ぶ' ] ] : [] ),
 		[ 'X', '診断を表示' ],

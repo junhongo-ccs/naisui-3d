@@ -558,6 +558,15 @@ renderer.domElement.addEventListener( 'pointerup', e => {
 	pointer.set( ( e.clientX / window.innerWidth ) * 2 - 1, - ( e.clientY / window.innerHeight ) * 2 + 1 );
 	raycaster.setFromCamera( pointer, camera );
 	const info = $( '#info' );
+	// The open card is drawn over everything, so a click on it is for the card alone.
+	const onCard = pins.pickCard( raycaster.ray );
+	if ( onCard ) {
+
+		if ( onCard.part === 'close' ) pins.close();
+		return;
+
+	}
+
 	const pin = pins.pick( raycaster.ray );
 	if ( pin ) {
 
