@@ -24,6 +24,9 @@ const $ = <T extends HTMLElement>( sel: string ) => document.querySelector( sel 
 // With a Google Map Tiles API key (in .env, never committed), Google's photorealistic 3D tiles
 // stand in for the GSI terrain and the PLATEAU buildings; without one, those are used.
 const GOOGLE_KEY: string | undefined = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || undefined;
+// Whether Google's tiles are in use: there is a key, and they haven't failed to load (the day's
+// quota used up, say), in which case the GSI terrain and PLATEAU buildings take over.
+let useGoogle = !! GOOGLE_KEY;
 
 const cities = ONLY_CITY ? catalog.cities.filter( c => c.code === ONLY_CITY ) : catalog.cities;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
@@ -185,7 +188,28 @@ let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? 
 // The ground: GSI terrain, or Google's 3D tiles (ground and buildings in one).
 function createGround() {
 
-	return GOOGLE_KEY ? createGoogleTiles( GOOGLE_KEY, terrainArea(), dracoLoader ) : createTerrain( city.geoidHeight, baseMap, terrainArea() );
+	if ( ! GOOGLE_KEY || ! useGoogle ) return createTerrain( city.geoidHeight, baseMap, terrainArea() );
+	const tiles = createGoogleTiles( GOOGLE_KEY, terrainArea(), dracoLoader );
+	// The root tileset is refused when the day's quota is used up (or the key is): show the GSI
+	// terrain and PLATEAU buildings instead of nothing. Not from inside the renderer's own event.
+	tiles.addEventListener( 'load-error', ( { tile } ) => {
+
+		if ( tile === null ) setTimeout( fallBackFromGoogle );
+
+	} );
+	return tiles;
+
+}
+
+function fallBackFromGoogle() {
+
+	if ( ! useGoogle ) return;
+	useGoogle = false;
+	world.remove( terrain.group );
+	terrain.dispose();
+	terrain = addTiles( createGround() );
+	buildings = createBuildings();
+	renderGroundUI();
 
 }
 
@@ -315,11 +339,11 @@ function floodTiles( f: City[ 'floods' ][ number ], i: number ) {
 
 }
 
-function loadCityTiles() {
+function createBuildings() {
 
 	const showBuildings = $<HTMLInputElement>( '#show-buildings' ).checked;
 	// Google's tiles have the buildings already.
-	buildings = GOOGLE_KEY ? [] : city.buildings.map( b => {
+	return useGoogle ? [] : city.buildings.map( b => {
 
 		const tiles = plateauTiles( b.url );
 		tiles.errorTarget = 8;
@@ -327,6 +351,12 @@ function loadCityTiles() {
 		return tiles;
 
 	} );
+
+}
+
+function loadCityTiles() {
+
+	buildings = createBuildings();
 	floods = city.floods.map( floodTiles );
 
 }
@@ -429,6 +459,17 @@ function syncURL() {
 
 }
 
+// The controls and credits that depend on whose ground is shown. When Google's tiles have failed,
+// the credits say why the GSI terrain is shown instead.
+function renderGroundUI() {
+
+	$( '#base' ).closest( 'label' )!.hidden = useGoogle;
+	$( '#show-buildings' ).closest( 'label' )!.hidden = useGoogle;
+	$( '#google-attribution' ).hidden = ! useGoogle;
+	$( '#ground-note' ).hidden = useGoogle || ! GOOGLE_KEY;
+
+}
+
 function buildUI() {
 
 	const citySel = $<HTMLSelectElement>( '#city' );
@@ -442,9 +483,7 @@ function buildUI() {
 	citySel.addEventListener( 'change', () => switchCity( citySel.value ) );
 
 	const baseSel = $<HTMLSelectElement>( '#base' );
-	baseSel.closest( 'label' )!.hidden = !! GOOGLE_KEY;
-	$( '#show-buildings' ).closest( 'label' )!.hidden = !! GOOGLE_KEY;
-	$( '#google-attribution' ).hidden = ! GOOGLE_KEY;
+	renderGroundUI();
 	for ( const [ key, b ] of Object.entries( BASE_MAPS ) ) baseSel.add( new Option( b.label, key, false, key === baseMap ) );
 	baseSel.addEventListener( 'change', () => setBaseMap( baseSel.value as BaseMapKey ) );
 
@@ -539,7 +578,7 @@ function renderLegend() {
 // (reached via the group) applies the elevation.
 function raycastTargets( sets: TilesRenderer[] ) {
 
-	return sets.filter( t => t.group.visible ).flatMap( t => ( t === terrain && ! GOOGLE_KEY ? [ t.group ] : t.group.children ) );
+	return sets.filter( t => t.group.visible ).flatMap( t => ( t === terrain && ! useGoogle ? [ t.group ] : t.group.children ) );
 
 }
 
@@ -709,7 +748,7 @@ const vr = initVR( {
 	toLocal,
 	toLatLon,
 	startPose: vrStartPose,
-	tileStatus: () => [ [ GOOGLE_KEY ? 'Google' : '地形', terrain ] as const, ...buildings.map( t => [ '建物', t ] as const ) ]
+	tileStatus: () => [ [ useGoogle ? 'Google' : '地形', terrain ] as const, ...buildings.map( t => [ '建物', t ] as const ) ]
 		.map( ( [ name, t ] ) => {
 
 			const s = tileStats( t );
@@ -844,7 +883,7 @@ renderer.setAnimationLoop( () => {
 	}
 
 	pins.update( camera.getWorldPosition( eye ) );
-	if ( GOOGLE_KEY ) updateGoogleAttribution( dt );
+	if ( useGoogle ) updateGoogleAttribution( dt );
 	loading.update( dt, busy, xr.isPresenting );
 	gateVRButton( loading.settled );
 
