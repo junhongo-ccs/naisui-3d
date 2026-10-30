@@ -538,25 +538,55 @@ function pointAt( ray: THREE.Raycaster ) {
 const raycaster = new THREE.Raycaster();
 raycaster.firstHitOnly = true;
 const pointer = new THREE.Vector2();
+function rayAt( e: PointerEvent ) {
+
+	pointer.set( ( e.clientX / window.innerWidth ) * 2 - 1, - ( e.clientY / window.innerHeight ) * 2 + 1 );
+	raycaster.setFromCamera( pointer, camera );
+	return raycaster.ray;
+
+}
+
+// Pressing on an open card's top strip drags the card instead of the view.
 let downAt = { x: 0, y: 0 };
-renderer.domElement.addEventListener( 'pointerdown', e => ( downAt = { x: e.clientX, y: e.clientY } ) );
+renderer.domElement.addEventListener( 'pointerdown', e => {
+
+	downAt = { x: e.clientX, y: e.clientY };
+	if ( pins.startDrag( rayAt( e ) ) ) controls.enabled = false;
+
+} );
 
 // Show a grabbing hand while the view is being dragged (not on a plain click).
 // OrbitControls writes an inline cursor style, so set it inline too rather than via CSS.
 const setCursor = ( c: string ) => ( renderer.domElement.style.cursor = c );
 renderer.domElement.addEventListener( 'pointermove', e => {
 
+	if ( pins.dragging ) pins.dragTo( rayAt( e ) );
 	if ( e.buttons && Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) setCursor( 'grabbing' );
 
 } );
-renderer.domElement.addEventListener( 'pointercancel', () => setCursor( 'auto' ) );
+function endCardDrag() {
+
+	if ( ! pins.dragging ) return false;
+	pins.endDrag();
+	pins.hoverPart( null );
+	controls.enabled = true;
+	return true;
+
+}
+
+renderer.domElement.addEventListener( 'pointercancel', () => {
+
+	setCursor( 'auto' );
+	endCardDrag();
+
+} );
 
 renderer.domElement.addEventListener( 'pointerup', e => {
 
 	setCursor( 'auto' );
+	if ( endCardDrag() ) return;
 	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) return;
-	pointer.set( ( e.clientX / window.innerWidth ) * 2 - 1, - ( e.clientY / window.innerHeight ) * 2 + 1 );
-	raycaster.setFromCamera( pointer, camera );
+	rayAt( e );
 	const info = $( '#info' );
 	// The open card is drawn over everything, so a click on it is for the card alone.
 	const onCard = pins.pickCard( raycaster.ray );

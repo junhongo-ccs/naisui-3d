@@ -68,10 +68,14 @@ export function createPins() {
 	const card = billboard( null, 0.5, - 0.08, 1002 );
 	card.obj.visible = false;
 	group.add( card.obj );
-	// Where the card's close button is on its canvas, and how much wider than a plain text card it
-	// is (a story card with a photo has a second column).
-	let cardLayout: CardLayout = { width: 1, height: 1, close: { x: 0, y: 0, size: 0 }, widthScale: 1 };
-	let closeHovered = false;
+	// Where the card's close button and grab strip are on its canvas, and how much wider than a
+	// plain text card it is (a story card with a photo has a second column).
+	let cardLayout: CardLayout = { width: 1, height: 1, close: { x: 0, y: 0, size: 0 }, grabHeight: 0, widthScale: 1 };
+	let hoveredPart: CardPart | null = null; // lit while pointed at
+	// Where the user has put the card by dragging its top strip, instead of at its pin; and while
+	// dragging, the point grabbed (on the card, 0..1) and how far along the ray it is.
+	let movedTo: THREE.Vector3 | null = null;
+	let drag: { u: number, v: number, distance: number } | null = null;
 
 	type Pin = {
 		place: Place,
@@ -149,11 +153,13 @@ export function createPins() {
 		if ( opened ) {
 
 			// A story's card is tall, so it is centered on the pin's label (about eye level) rather
-			// than above it, where it would mean looking far up.
-			const d = eye.distanceTo( opened.head );
+			// than above it, where it would mean looking far up. Moved, it stays where it was put.
+			if ( movedTo ) cardAnchor.copy( movedTo );
+			else cardAnchor.copy( opened.head ).setY( opened.head.y + eye.distanceTo( opened.head ) * LABEL_SIZE * 1.4 );
+			const d = eye.distanceTo( cardAnchor );
 			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH * cardLayout.widthScale : CARD_WIDTH );
 			card.center.set( 0.5, opened.place.kind === 'story' ? 0.5 : - 0.08 );
-			pose( card, cardAnchor.copy( opened.head ).setY( opened.head.y + d * LABEL_SIZE * 1.4 ), w / card.aspect, eye );
+			pose( card, cardAnchor, w / card.aspect, eye );
 
 		}
 
@@ -187,11 +193,12 @@ export function createPins() {
 
 	}
 
-	// Whether a ray hits the open card, and if so whether on its close button. The card is drawn
-	// over everything, so it takes the ray before pins and the flood behind it.
+	// Whether a ray hits the open card, and if so where: its close button, its top strip (to drag
+	// it by), or elsewhere. The card is drawn over everything, so it takes the ray before pins and
+	// the flood behind it.
 	const cardRaycaster = new THREE.Raycaster();
 	const hits: THREE.Intersection[] = [];
-	function pickCard( ray: THREE.Ray ): { part: 'close' | 'card', distance: number } | null {
+	function pickCard( ray: THREE.Ray ): { part: CardPart, distance: number, u: number, v: number } | null {
 
 		if ( ! opened ) return null;
 		cardRaycaster.ray.copy( ray );
@@ -204,16 +211,53 @@ export function createPins() {
 		// A little larger than drawn, to be easy to hit with a wavering hand.
 		const slack = close.size * 0.25;
 		const onClose = x >= close.x - slack && x <= close.x + close.size + slack && y >= close.y - slack && y <= close.y + close.size + slack;
-		return { part: onClose ? 'close' : 'card', distance: hit.distance };
+		const part = onClose ? 'close' : y <= cardLayout.grabHeight ? 'grab' : 'card';
+		return { part, distance: hit.distance, u: hit.uv.x, v: hit.uv.y };
 
 	}
 
-	// Light up the close button while it is pointed at (VR).
-	function hoverClose( on: boolean ) {
+	// Light up the part of the card pointed at (VR): the close button or the grab strip.
+	function hoverPart( part: CardPart | null ) {
 
-		if ( on === closeHovered ) return;
-		closeHovered = on;
+		if ( part === 'card' ) part = null;
+		if ( part === hoveredPart ) return;
+		hoveredPart = part;
 		if ( opened ) draw();
+
+	}
+
+	// Drag the card by its top strip: start where `ray` hits the strip (false if it doesn't), move
+	// so the grabbed point follows the ray at the same distance, and let go.
+	function startDrag( ray: THREE.Ray ) {
+
+		const hit = pickCard( ray );
+		if ( hit?.part !== 'grab' ) return false;
+		drag = { u: hit.u, v: hit.v, distance: hit.distance };
+		hoverPart( 'grab' );
+		return true;
+
+	}
+
+	const grabbed = new THREE.Vector3(), right = new THREE.Vector3(), up = new THREE.Vector3();
+	function dragTo( ray: THREE.Ray ) {
+
+		if ( ! drag ) return;
+		ray.at( drag.distance, grabbed );
+		// The card's anchor is offset from the grabbed point along the card's own axes, by the
+		// grabbed point's place on the card and the card's size as last drawn.
+		card.obj.updateMatrixWorld();
+		right.setFromMatrixColumn( card.obj.matrixWorld, 0 ).normalize();
+		up.setFromMatrixColumn( card.obj.matrixWorld, 1 ).normalize();
+		const w = card.mesh.scale.x, h = card.mesh.scale.y;
+		movedTo = ( movedTo ?? new THREE.Vector3() ).copy( grabbed )
+			.addScaledVector( right, - ( drag.u - card.center.x ) * w )
+			.addScaledVector( up, - ( drag.v - card.center.y ) * h );
+
+	}
+
+	function endDrag() {
+
+		drag = null;
 
 	}
 
@@ -229,7 +273,8 @@ export function createPins() {
 		const pin = pins.find( p => p.place === place ) ?? null;
 		opened = opened === pin ? null : pin;
 		card.obj.visible = !! opened;
-		closeHovered = false;
+		hoveredPart = null;
+		movedTo = drag = null;
 		if ( opened ) draw();
 
 	}
@@ -240,14 +285,14 @@ export function createPins() {
 		const story = opened.place.story;
 		if ( ! story ) {
 
-			show( drawCard( opened.place, cityName, closeHovered ) );
+			show( drawCard( opened.place, cityName, hoveredPart ) );
 			return;
 
 		}
 
 		// Photos load when first opened; the card shows without it until then.
 		const photo = story.photo && loadPhoto( story.photo.src );
-		show( drawStoryCard( opened.place, story, photo?.complete ? photo : null, closeHovered ) );
+		show( drawStoryCard( opened.place, story, photo?.complete ? photo : null, hoveredPart ) );
 		if ( photo && ! photo.complete ) {
 
 			const shown = opened;
@@ -272,11 +317,12 @@ export function createPins() {
 
 		opened = null;
 		card.obj.visible = false;
-		closeHovered = false;
+		hoveredPart = null;
+		movedTo = drag = null;
 
 	}
 
-	return { group, setPlaces, update, pick, pickCard, hoverClose, hover, toggle, close };
+	return { group, setPlaces, update, pick, pickCard, hoverPart, startDrag, dragTo, endDrag, get dragging() { return !! drag; }, hover, toggle, close };
 
 }
 
@@ -415,7 +461,7 @@ function wrap( ctx: CanvasRenderingContext2D, text: string, width: number ): str
 const STORY_TEXT_WIDTH = 1020; // px
 const PHOTO_WIDTH = 640; // px
 const PHOTO_MAX_HEIGHT = 900; // px; a taller (portrait) photo is narrowed to this
-function drawStoryCard( place: Place, story: Story, photo: HTMLImageElement | null, closeHovered: boolean ) {
+function drawStoryCard( place: Place, story: Story, photo: HTMLImageElement | null, hovered: CardPart | null ) {
 
 	const PAD = 40, GAP = 40, TEXT = STORY_TEXT_WIDTH - 36; // room for punctuation that hangs over
 	const left = story.photo ? PHOTO_WIDTH + GAP : 0;
@@ -514,24 +560,33 @@ function drawStoryCard( place: Place, story: Story, photo: HTMLImageElement | nu
 	return {
 		canvas,
 		// Keep the text the same apparent size with or without the photo column.
-		layout: { width: W, height: canvas.height, close: drawCloseButton( ctx, W, closeHovered ), widthScale: W / ( PAD * 2 + STORY_TEXT_WIDTH ) },
+		layout: { width: W, height: canvas.height, ...drawCardControls( ctx, W, hovered ), widthScale: W / ( PAD * 2 + STORY_TEXT_WIDTH ) },
 	};
 
 }
 
-// Where a card's close button is on its canvas (px), for hit-testing the card.
-type CardLayout = { width: number, height: number, close: { x: number, y: number, size: number }, widthScale: number };
+// The parts of an open card that respond to pointing, and where they are on its canvas (px).
+type CardPart = 'close' | 'grab' | 'card';
+type CardLayout = { width: number, height: number, close: { x: number, y: number, size: number }, grabHeight: number, widthScale: number };
 
-// A round × button in the card's top right corner, lit while pointed at.
+// A round × button in the card's top right corner, and a bar along the top middle that marks the
+// strip to drag the card by; each lit while pointed at.
 const CLOSE_SIZE = 76; // px
-function drawCloseButton( ctx: CanvasRenderingContext2D, width: number, hovered: boolean ) {
+const GRAB_HEIGHT = 120; // px from the top: the strip that drags the card
+function drawCardControls( ctx: CanvasRenderingContext2D, width: number, hovered: CardPart | null ) {
+
+	const barWidth = 220;
+	ctx.fillStyle = hovered === 'grab' ? '#ffffff' : 'rgba(255, 255, 255, 0.35)';
+	ctx.beginPath();
+	ctx.roundRect( ( width - barWidth ) / 2, 12, barWidth, 12, 6 );
+	ctx.fill();
 
 	const x = width - 24 - CLOSE_SIZE, y = 24, r = CLOSE_SIZE / 2;
-	ctx.fillStyle = hovered ? '#ffffff' : 'rgba(255, 255, 255, 0.16)';
+	ctx.fillStyle = hovered === 'close' ? '#ffffff' : 'rgba(255, 255, 255, 0.16)';
 	ctx.beginPath();
 	ctx.arc( x + r, y + r, r, 0, Math.PI * 2 );
 	ctx.fill();
-	ctx.strokeStyle = hovered ? '#141a24' : '#ffffff';
+	ctx.strokeStyle = hovered === 'close' ? '#141a24' : '#ffffff';
 	ctx.lineWidth = 7;
 	ctx.lineCap = 'round';
 	const a = r * 0.42;
@@ -541,11 +596,11 @@ function drawCloseButton( ctx: CanvasRenderingContext2D, width: number, hovered:
 	ctx.moveTo( x + r + a, y + r - a );
 	ctx.lineTo( x + r - a, y + r + a );
 	ctx.stroke();
-	return { x, y, size: CLOSE_SIZE };
+	return { close: { x, y, size: CLOSE_SIZE }, grabHeight: GRAB_HEIGHT };
 
 }
 
-function drawCard( place: Place, cityName: string, closeHovered: boolean ) {
+function drawCard( place: Place, cityName: string, hovered: CardPart | null ) {
 
 	const { title, lines, notes } = describePlace( place, cityName );
 	const W = 900, PAD = 36;
@@ -589,6 +644,6 @@ function drawCard( place: Place, cityName: string, closeHovered: boolean ) {
 
 	}
 
-	return { canvas, layout: { width: W, height: canvas.height, close: drawCloseButton( ctx, W, closeHovered ), widthScale: 1 } };
+	return { canvas, layout: { width: W, height: canvas.height, ...drawCardControls( ctx, W, hovered ), widthScale: 1 } };
 
 }

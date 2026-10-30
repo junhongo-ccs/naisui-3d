@@ -202,14 +202,17 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 				if ( pressed( 'A', gp, 4 ) ) toggleWater();
 				if ( pressed( 'grip', gp, 1 ) && hasMenu ) toggleMenu = true;
 				// With the list open, the right trigger picks a city instead of speeding up; on a
-				// pin, it opens or closes the pin's card; on the card's × button, it closes the card.
+				// pin, it opens or closes the pin's card; on the card's × button, it closes the card;
+				// on the card's top strip, it grabs the card until let go.
 				if ( pressed( 'trigger', gp, 0 ) ) {
 
 					if ( menu.isOpen ) choose = true;
 					else if ( pointer.onCard?.part === 'close' ) pins.close();
+					else if ( pointer.onCard?.part === 'grab' ) pointer.grab();
 					else if ( pointer.hoveredPlace ) pins.toggle( pointer.hoveredPlace );
 
 				}
+				if ( pins.dragging && ! gp.buttons[ 0 ]?.pressed ) pointer.release();
 				if ( pressed( 'B', gp, 5 ) ) {
 
 					session.end();
@@ -226,7 +229,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 			}
 
-			const rightTriggerTaken = menu.isOpen || pointer.hoveredPlace || pointer.onCard;
+			const rightTriggerTaken = menu.isOpen || pointer.hoveredPlace || pointer.onCard || pins.dragging;
 			if ( gp.buttons[ 0 ]?.pressed && ! ( rightTriggerTaken && src.handedness === 'right' ) ) boost = true;
 
 		}
@@ -395,7 +398,25 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 	function setCard( c: typeof onCard ) {
 
 		onCard = c;
-		pins.hoverClose( c?.part === 'close' );
+		if ( ! pins.dragging ) pins.hoverPart( c?.part ?? null );
+
+	}
+
+	// Grab the card by its top strip with the right trigger (false if the ray isn't on it); it
+	// follows the ray until let go.
+	function grab() {
+
+		const active = controllers.find( ( { c } ) => c.userData.handedness === 'right' );
+		if ( ! active ) return false;
+		ray.setFromXRController( active.c );
+		return pins.startDrag( ray.ray );
+
+	}
+
+	function release() {
+
+		pins.endDrag();
+		sinceLastPick = Infinity;
 
 	}
 
@@ -427,6 +448,17 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 			setPlace( null );
 			setCard( null );
 			sinceLastPick = Infinity;
+			return;
+
+		}
+
+		if ( pins.dragging ) {
+
+			// Every frame, so the card keeps up with the hand.
+			label.obj.visible = dot.visible = false;
+			ray.setFromXRController( active.c );
+			pins.dragTo( ray.ray );
+			active.line.scale.z = Math.min( onCard?.distance ?? RAY_MAX, RAY_MAX );
 			return;
 
 		}
@@ -479,6 +511,8 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		status,
 		get hoveredPlace() { return place?.place ?? null; },
 		get onCard() { return onCard; },
+		grab,
+		release,
 	};
 
 }
@@ -493,6 +527,7 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		[ 'トリガー', '押している間 5 倍速' ],
 		[ '右手で指す', '想定浸水深・ピンの名前を表示' ],
 		[ 'ピンに右トリガー', '説明を開く（札の × で閉じる）' ],
+		[ '札の上部を右トリガー', 'つかんで動かす（離した所に置く）' ],
 		[ 'A', '水面を上げる・下げる' ],
 		...( hasMenu ? [ [ 'グリップ（右）', '市町村を選ぶ' ] ] : [] ),
 		[ 'X', '診断を表示' ],
