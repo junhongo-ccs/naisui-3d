@@ -465,6 +465,9 @@ function buildUI() {
 
 	// Phones are asked to turn sideways (see #rotate in style.css). Where the browser can lock the
 	// orientation (Android, in full screen), a button does it.
+	// With the phone's rotation lock on, turning it doesn't turn the page, so the prompt can also
+	// be put away to look upright.
+	$( '#rotate-dismiss' ).addEventListener( 'click', () => document.body.classList.add( 'rotate-dismissed' ) );
 	const lock = $<HTMLButtonElement>( '#rotate-lock' );
 	const orientation = screen.orientation as ScreenOrientation & { lock?: ( o: string ) => Promise<void> };
 	lock.hidden = ! ( document.fullscreenEnabled && typeof orientation?.lock === 'function' );
