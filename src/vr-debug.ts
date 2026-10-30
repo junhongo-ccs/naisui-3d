@@ -54,7 +54,7 @@ export function createDebugBoard() {
 		new THREE.PlaneGeometry( WIDTH, WIDTH * canvas.height / canvas.width ),
 		new THREE.MeshBasicMaterial( { map: texture, transparent: true, depthTest: false } ),
 	);
-	mesh.renderOrder = 1000;
+	mesh.renderOrder = 1100; // on the hand panel, over the scene's pins and cards
 
 	// Break text into lines that fit the board.
 	function wrap( text: string, width: number ): string[] {

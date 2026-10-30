@@ -1,13 +1,21 @@
 {
-	"generatedAt": "2026-10-30T01:42:37.339Z",
+	"generatedAt": "2026-10-30T08:31:35.413Z",
 	"landmarks": [
 		{
 			"kind": "landmark",
 			"name": "鎌倉駅",
-			"lat": 35.3196730336111,
-			"lon": 139.548347173611,
-			"town": "御成町",
-			"elevation": 7.9
+			"lat": 35.319,
+			"lon": 139.5507,
+			"town": "小町一丁目",
+			"elevation": 6.4
+		},
+		{
+			"kind": "landmark",
+			"name": "若宮大路",
+			"lat": 35.32056,
+			"lon": 139.55312,
+			"town": "小町二丁目",
+			"elevation": 6.5
 		},
 		{
 			"kind": "landmark",
@@ -48,14 +56,6 @@
 			"lon": 139.556427166667,
 			"town": "雪ノ下二丁目",
 			"elevation": 23.8
-		},
-		{
-			"kind": "landmark",
-			"name": "若宮大路",
-			"lat": 35.3202711313889,
-			"lon": 139.552336635556,
-			"town": "小町二丁目",
-			"elevation": 6.3
 		},
 		{
 			"kind": "landmark",

@@ -232,8 +232,21 @@ floodMaterial.onBeforeCompile = shader => {
 
 function setWaterRaised( on: boolean ) {
 
-	waterTarget = on ? 1 : 0;
-	$<HTMLInputElement>( '#raise-water' ).checked = on;
+	setWaterTarget( on ? 1 : 0 );
+
+}
+
+// Raise or lower the water by a fraction of full depth (VR: A / B held); it stops where left.
+function adjustWater( delta: number ) {
+
+	setWaterTarget( THREE.MathUtils.clamp( waterTarget + delta, 0, 1 ) );
+
+}
+
+function setWaterTarget( target: number ) {
+
+	waterTarget = target;
+	$<HTMLInputElement>( '#raise-water' ).checked = target > 0;
 
 }
 
@@ -658,13 +671,14 @@ function gateVRButton( settled: boolean ) {
 const vr = initVR( {
 	renderer, scene, camera, rig, controls, pointAt,
 	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
-	toggleWater: () => setWaterRaised( waterTarget === 0 ),
+	adjustWater,
 	cities: cities.map( c => ( { code: c.code, pref: c.pref, city: c.city } ) ),
 	currentCity: () => city.code,
 	selectCity: switchCity,
 	pins,
 	minimap,
 	bounds: () => bounds,
+	toLocal,
 	toLatLon,
 	startPose: vrStartPose,
 	tileStatus: () => [ [ GOOGLE_KEY ? 'Google' : '地形', terrain ] as const, ...buildings.map( t => [ '建物', t ] as const ) ]

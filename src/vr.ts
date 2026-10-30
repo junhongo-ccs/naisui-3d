@@ -19,9 +19,9 @@ type Minimap = ReturnType<typeof createMinimap>;
 //   right hand:   point at a flood polygon to float its depth over it (no button needed,
 //                 since the trigger is taken; works with hand tracking too)
 //   right trigger on a pin: open / close its card (instead of speeding up)
-//   A button:     raise / lower the water surface
-//   B button:     leave VR (back to the map view)
+//   A / B held:   raise / lower the water surface; it stops where let go
 //   Y button:     back to where VR started
+//   (Leaving VR is left to the headset's Meta button: a VR button is too easy to hit by mistake.)
 //   right grip:   open / close the city list; point at a city and pull the trigger to go there
 //                 (only when there is more than one city)
 //   X button:     diagnostics board (errors, inputs, pointer state) in place of the controls card;
@@ -30,7 +30,7 @@ type Minimap = ReturnType<typeof createMinimap>;
 // and the street stays walkable. Movement stops at the edge of `bounds`, so the user can't drift
 // off the city and lose it. The left controller carries a map of the city with an arrow for the
 // user, and a card listing these controls.
-export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, toggleWater, cities, currentCity, selectCity, pins, minimap, bounds, toLatLon, startPose, tileStatus }: {
+export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, adjustWater, cities, currentCity, selectCity, pins, minimap, bounds, toLocal, toLatLon, startPose, tileStatus }: {
 	renderer: THREE.WebGLRenderer,
 	scene: THREE.Scene,
 	camera: THREE.PerspectiveCamera,
@@ -38,13 +38,14 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	controls: OrbitControls,
 	groundTargets: () => THREE.Object3D[],
 	pointAt: PointAt,
-	toggleWater: () => void,
+	adjustWater: ( delta: number ) => void, // raise (+) or lower (-) the water, as a fraction of full depth
 	cities: CityItem[],
 	currentCity: () => string,
 	selectCity: ( code: string ) => void,
 	pins: Pins,
 	minimap: Minimap,
 	bounds: () => THREE.Box3, // where the rig may go, in scene meters
+	toLocal: ( lat: number, lon: number, elevation: number ) => THREE.Vector3,
 	toLatLon: ( p: THREE.Vector3 ) => { lat: number, lon: number },
 	// Where to stand (feet, in scene meters) and which way to face (radians about y, 0 = north)
 	// when VR starts, or null to stand where the map view was looking.
@@ -54,6 +55,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 	const MIN_SPEED = 15; // m/s at street level; above that, speed (m/s) = height above ground (m)
 	const BOOST = 5;
+	const WATER_TIME = 3; // s of holding A (or B) to raise (or lower) the water through its full depth
 	const GROUND_INTERVAL = 0.2; // s between ground-height raycasts (too heavy for every frame)
 	const saved = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() };
 	const raycaster = new THREE.Raycaster();
@@ -69,7 +71,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	let sinceGround = Infinity;
 	const hasMenu = cities.length > 1;
 	const menu = createCityMenu( cities );
-	const pointer = createPointer( renderer, scene, rig, pointAt, menu, pins );
+	const pointer = createPointer( renderer, scene, rig, pointAt, menu, pins, minimap );
 	const debug = createDebugBoard();
 	let showDebug = false;
 	debug.onError = () => ( showDebug = true );
@@ -216,7 +218,8 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 				turn = ax[ 0 ];
 				lift = - dz( ax[ 1 ] );
 				// xr-standard mapping: buttons[4] / [5] are A / B (right) and X / Y (left).
-				if ( pressed( 'A', gp, 4 ) ) toggleWater();
+				if ( gp.buttons[ 4 ]?.pressed ) adjustWater( dt / WATER_TIME );
+				if ( gp.buttons[ 5 ]?.pressed ) adjustWater( - dt / WATER_TIME );
 				if ( pressed( 'grip', gp, 1 ) && hasMenu ) toggleMenu = true;
 				// With the list open, the right trigger picks a city instead of speeding up; on a
 				// pin, it opens or closes the pin's card; on the card's × button, it closes the card;
@@ -224,18 +227,13 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 				if ( pressed( 'trigger', gp, 0 ) ) {
 
 					if ( menu.isOpen ) choose = true;
+					else if ( pointer.mapSpot ) goTo( pointer.mapSpot );
 					else if ( pointer.onCard?.part === 'close' ) pins.close();
 					else if ( pointer.onCard?.part === 'grab' ) pointer.grab();
 					else if ( pointer.hoveredPlace ) pins.toggle( pointer.hoveredPlace );
 
 				}
 				if ( pins.dragging && ! gp.buttons[ 0 ]?.pressed ) pointer.release();
-				if ( pressed( 'B', gp, 5 ) ) {
-
-					session.end();
-					return;
-
-				}
 
 			}
 
@@ -246,7 +244,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 			}
 
-			const rightTriggerTaken = menu.isOpen || pointer.hoveredPlace || pointer.onCard || pins.dragging;
+			const rightTriggerTaken = menu.isOpen || pointer.hoveredPlace || pointer.onCard || pointer.mapSpot || pins.dragging;
 			if ( gp.buttons[ 0 ]?.pressed && ! ( rightTriggerTaken && src.handedness === 'right' ) ) boost = true;
 
 		}
@@ -327,6 +325,23 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 	}
 
+	// Go to a spot picked on the hand map: up in the air a little short of it, facing it, so the
+	// spot and the water around it are in view (the stick brings the user down to the street).
+	// An open card closes, since it holds the user in place. Y still returns to the start.
+	const ARRIVE_BACK = 60, ARRIVE_UP = 30; // m
+	function goTo( place: Place ) {
+
+		pins.close();
+		const target = toLocal( place.lat, place.lon, place.elevation );
+		const toward = new THREE.Vector3( target.x - rig.position.x, 0, target.z - rig.position.z );
+		if ( toward.lengthSq() < 1 ) toward.set( 0, 0, - 1 );
+		toward.normalize();
+		rig.position.copy( target ).addScaledVector( toward, - ARRIVE_BACK ).setY( target.y + ARRIVE_UP );
+		rig.rotation.set( 0, Math.atan2( - toward.x, - toward.z ), 0 );
+		sinceGround = Infinity;
+
+	}
+
 	// Place the user somewhere new (on entering VR, after switching cities); Y returns here.
 	function arrive( position: THREE.Vector3, yaw = 0 ) {
 
@@ -344,7 +359,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 // A ray from the right controller (or right hand) and a depth label at the flood polygon it hits.
 // With the city list open, the ray points at the list instead.
-function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: THREE.Group, pointAt: PointAt, menu: ReturnType<typeof createCityMenu>, pins: Pins ) {
+function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: THREE.Group, pointAt: PointAt, menu: ReturnType<typeof createCityMenu>, pins: Pins, minimap: Minimap ) {
 
 	const RAY_MAX = 300; // m, drawn length when the ray hits nothing
 	const PICK_INTERVAL = 0.05; // s; raycasting the tiles every frame is too heavy for the headset
@@ -387,6 +402,8 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 	let place: { place: Place, distance: number } | null = null;
 	// The open card under the ray (it is drawn over everything, so it comes first).
 	let onCard: ReturnType<Pins[ 'pickCard' ]> = null;
+	// A landmark or story spot on the left-hand map under the ray (pull the trigger to go there).
+	let mapSpot: ReturnType<Minimap[ 'pick' ]> = null;
 
 	function setText( depthLabel: string ) {
 
@@ -422,6 +439,14 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		hit = null;
 		setPlace( null );
 		setCard( null );
+		setMapSpot( null );
+
+	}
+
+	function setMapSpot( s: typeof mapSpot ) {
+
+		if ( s?.place !== mapSpot?.place ) minimap.hover( s?.place ?? null );
+		mapSpot = s;
 
 	}
 
@@ -477,6 +502,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 			hit = null;
 			setPlace( null );
 			setCard( null );
+			setMapSpot( null );
 			sinceLastPick = Infinity;
 			return;
 
@@ -498,17 +524,21 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 			sinceLastPick = 0;
 			ray.setFromXRController( active.c );
-			// The open card and pins are drawn over everything, so they count even in front of
-			// a building; the card covers whatever is behind it.
-			setCard( pins.pickCard( ray.ray ) );
-			hit = onCard ? null : pointAt( ray );
-			setPlace( onCard ? null : pins.pick( ray.ray ) );
+			// The hand map, the open card and pins are drawn over everything, so they count even
+			// in front of a building; the map or card (whichever is nearer) covers what is behind.
+			const spot = minimap.pick( ray.ray ), card = pins.pickCard( ray.ray );
+			const mapFirst = spot && ( ! card || spot.distance < card.distance );
+			setMapSpot( mapFirst ? spot : null );
+			setCard( mapFirst ? null : card );
+			const covered = mapSpot || onCard;
+			hit = covered ? null : pointAt( ray );
+			setPlace( covered ? null : pins.pick( ray.ray ) );
 
 		}
 
-		active.line.scale.z = Math.min( onCard?.distance ?? place?.distance ?? hit?.distance ?? RAY_MAX, RAY_MAX );
+		active.line.scale.z = Math.min( mapSpot?.distance ?? onCard?.distance ?? place?.distance ?? hit?.distance ?? RAY_MAX, RAY_MAX );
 
-		const flood = place || onCard ? null : hit?.flood;
+		const flood = place || onCard || mapSpot ? null : hit?.flood;
 		label.obj.visible = dot.visible = !! flood;
 		if ( ! flood ) return;
 
@@ -530,7 +560,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 			return `手${ i } ${ c.userData.handedness ?? '未接続' }　姿勢${ c.visible ? '○' : '×' }　光線${ ray }${ c.parent ? '' : '（シーン外）' }`;
 
 		} );
-		const target = onCard ? ( onCard.part === 'close' ? '札の閉じるボタン' : '札' ) : place ? `ピン ${ place.place.name }` : ! hit ? '-' : hit.flood ? hit.flood.label : hit.distance === Infinity ? 'なし' : `${ hit.distance.toFixed( 0 ) } m 先の建物`;
+		const target = mapSpot ? `地図の ${ mapSpot.place.name }` : onCard ? ( onCard.part === 'close' ? '札の閉じるボタン' : '札' ) : place ? `ピン ${ place.place.name }` : ! hit ? '-' : hit.flood ? hit.flood.label : hit.distance === Infinity ? 'なし' : `${ hit.distance.toFixed( 0 ) } m 先の建物`;
 		return lines.concat( `指す先: ${ target }` );
 
 	}
@@ -541,6 +571,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		status,
 		get hoveredPlace() { return place?.place ?? null; },
 		get onCard() { return onCard; },
+		get mapSpot() { return mapSpot?.place ?? null; },
 		grab,
 		release,
 	};
@@ -558,11 +589,11 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		[ '右手で指す', '想定浸水深・ピンの名前を表示' ],
 		[ 'ピンに右トリガー', '説明を開く（札の × で閉じる）' ],
 		[ '札の上部を右トリガー', 'つかんで動かす（離した所に置く）' ],
-		[ 'A', '水面を上げる・下げる' ],
+		[ 'A / B（押したまま）', '水面を上げる / 下げる' ],
 		...( hasMenu ? [ [ 'グリップ（右）', '市町村を選ぶ' ] ] : [] ),
 		[ 'X', '診断を表示' ],
 		[ 'Y', 'スタート地点に戻る' ],
-		[ 'B', 'VR を終了' ],
+		[ 'Meta ボタン長押し', 'VR を終了' ],
 	];
 	const canvas = document.createElement( 'canvas' );
 	const ctx = canvas.getContext( '2d' )!;
@@ -594,7 +625,7 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		new THREE.PlaneGeometry( width, cardHeight ),
 		new THREE.MeshBasicMaterial( { map: texture, transparent: true, depthTest: false } ),
 	);
-	card.renderOrder = 1000;
+	card.renderOrder = 1100; // over the scene's pins and cards, like the map
 
 	// The pieces stack up the tilted panel from its bottom edge: map, then card or board.
 	const GAP = 0.01; // m
@@ -617,9 +648,8 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		const left = controllers.find( c => c.userData.handedness === 'left' );
 		if ( left && panel.parent !== left ) left.add( panel );
 		panel.visible = !! left;
-		// The map's height is known once it has been drawn for the city.
 		const mapHeight = minimap.height;
-		minimap.object.position.y = mapHeight / 2;
+		minimap.object.position.y = minimap.bottom;
 		card.position.y = mapHeight + GAP + cardHeight / 2;
 		const boardHeight = ( debugBoard.geometry as THREE.PlaneGeometry ).parameters.height;
 		debugBoard.position.set( 0, mapHeight + GAP + boardHeight / 2, 0 );

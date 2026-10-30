@@ -36,7 +36,7 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 | `src/vr.ts` | Quest コントローラーでの移動、ボタン操作、指さし、操作説明の板 |
 | `src/vr-debug.ts` | VR の診断ボード（X ボタン。エラー、入力、指さしの状態を左手の上に出す。エラーが出ると自動で開く） |
 | `src/vr-menu.ts` | VR の市町村一覧パネル（右グリップで開き、右手で指してトリガーで選ぶ。市が一つのときは出さない） |
-| `src/vr-minimap.ts` | VR の左手の地図（淡色地図に目印と避難所、現在地の矢印） |
+| `src/vr-minimap.ts` | VR の左手の地図（淡色地図 z16 に解説・目印・避難所。自分を中心に約 800 m を表示し、矢印が現在地と向き。解説・目印の点を右手で指して右トリガーでそこへ移動）。範囲全体を 1 枚に描き、テクスチャの offset で窓をずらす（毎フレーム GPU に送らない） |
 | `src/data/cities.json` | 対象 28 市町村のタイルセット URL・中心・ジオイド高（`scripts/build-catalog.mjs` が生成。手で編集しない） |
 | `src/data/places/<コード>.json` | 目印と指定避難所（町名・標高付き。`scripts/build-places.mjs` が生成。手で編集しない） |
 | `src/data/stories/<コード>.json` | 解説スポット（手で書く）。地形・しくみ・想定・記録・対策に分けた文と出典 |

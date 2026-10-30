@@ -15,16 +15,18 @@ const REVERSE_URL = 'https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatT
 const ELEVATION_URL = 'https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php';
 
 // Landmarks per city: the label to show, the search word (default: the label), and the title of
-// the search hit to take (default: the search word).
+// the search hit to take (default: the search word). Where the search's point is off (it can be
+// a few hundred meters from the place, or inside a building beside a street), `at` gives
+// [lat, lon] instead, taken from OpenStreetMap.
 const LANDMARKS = {
 	14204: [
-		{ name: '鎌倉駅' },
+		{ name: '鎌倉駅', at: [ 35.3190, 139.5507 ] }, // the station building; the search's point is 210 m west
+		{ name: '若宮大路', at: [ 35.32056, 139.55312 ] }, // on the street at 小町; the search's point is 70 m west, in a building
 		{ name: '北鎌倉駅' },
 		{ name: '大船駅' },
 		{ name: '長谷駅' },
 		{ name: '鎌倉高校前駅' },
 		{ name: '鶴岡八幡宮' },
-		{ name: '若宮大路' },
 		{ name: '鎌倉大仏（高徳院）', query: '高徳院' },
 		{ name: '建長寺', query: '建長寺', title: '建長寺境内・庭園' },
 		{ name: '円覚寺' },
@@ -71,8 +73,9 @@ async function getShelters( code ) {
 
 }
 
-async function findLandmark( code, { name, query = name, title = query } ) {
+async function findLandmark( code, { name, query = name, title = query, at } ) {
 
+	if ( at ) return { kind: 'landmark', name, lat: at[ 0 ], lon: at[ 1 ] };
 	const hits = await getJSON( SEARCH_URL + encodeURIComponent( query ) );
 	const hit = hits.find( f => f.properties.addressCode === code && f.properties.title === title );
 	if ( ! hit ) throw new Error( `no hit for ${ query } (${ title }) in ${ code }` );
