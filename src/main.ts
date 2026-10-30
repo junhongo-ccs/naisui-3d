@@ -10,6 +10,9 @@ import { depthColor, featureLabel, parseDepthLabel, surfaceHeight } from './floo
 import { BASE_MAPS, createTerrain, type BaseMapKey } from './terrain';
 import { initVR } from './vr';
 import { createLoadingIndicator } from './loading';
+import { ONLY_CITY } from './config';
+import { createPins, placesFor } from './places';
+import { createMinimap } from './vr-minimap';
 import './style.css';
 
 type City = ( typeof catalog.cities )[ number ];
@@ -17,8 +20,9 @@ type City = ( typeof catalog.cities )[ number ];
 const DEG = Math.PI / 180;
 const params = new URLSearchParams( location.search );
 const $ = <T extends HTMLElement>( sel: string ) => document.querySelector( sel ) as T;
+const cities = ONLY_CITY ? catalog.cities.filter( c => c.code === ONLY_CITY ) : catalog.cities;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
-let city: City = catalog.cities.find( c => c.code === params.get( 'city' ) ) ?? catalog.cities.find( c => c.code === '14204' )!;
+let city: City = cities.find( c => c.code === params.get( 'city' ) ) ?? cities.find( c => c.code === '14204' ) ?? cities[ 0 ];
 
 // Picking (tap, VR pointer) raycasts the dense flood meshes; without an index three.js tests every
 // triangle, which is too slow to do several times a second on a headset.
@@ -66,6 +70,39 @@ function placeWorld() {
 }
 
 placeWorld();
+
+// Scene position of a point given by latitude, longitude and height above the geoid, and back.
+function toLocal( lat: number, lon: number, elevation: number ) {
+
+	return WGS84_ELLIPSOID.getCartographicToPosition( lat * DEG, lon * DEG, elevation + city.geoidHeight, new THREE.Vector3() ).applyMatrix4( world.matrix );
+
+}
+
+const ecef = new THREE.Vector3();
+const toECEF = new THREE.Matrix4();
+const cartographic = { lat: 0, lon: 0, height: 0 };
+function toLatLon( p: THREE.Vector3 ) {
+
+	ecef.copy( p ).applyMatrix4( toECEF.copy( world.matrix ).invert() );
+	WGS84_ELLIPSOID.getPositionToCartographic( ecef, cartographic );
+	return { lat: cartographic.lat / DEG, lon: cartographic.lon / DEG };
+
+}
+
+// Where the VR rig may go: over the city's flood area and a little beyond, up to MAX_ALTITUDE.
+const BOUNDS_MARGIN = 300; // m
+const MAX_ALTITUDE = 2000; // m
+function cityBounds() {
+
+	const [ west, south, east, north ] = city.bounds;
+	const box = new THREE.Box3().setFromPoints( [ toLocal( south, west, 0 ), toLocal( north, east, 0 ) ] );
+	box.min.y = - 200;
+	box.max.y = MAX_ALTITUDE;
+	return box.expandByVector( new THREE.Vector3( BOUNDS_MARGIN, 0, BOUNDS_MARGIN ) );
+
+}
+
+let bounds = cityBounds();
 
 const camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 2e6 );
 const rig = new THREE.Group();
@@ -237,10 +274,24 @@ function loadCityTiles() {
 
 loadCityTiles();
 
+// Landmarks and shelters, as pins in the scene and dots on the VR hand map.
+const pins = createPins();
+scene.add( pins.group );
+const minimap = createMinimap();
+function loadPlaces() {
+
+	const places = placesFor( city.code );
+	pins.setPlaces( city.city, places, toLocal );
+	minimap.setCity( city.bounds, places );
+
+}
+
+loadPlaces();
+
 // Swap in another city without reloading the page, so a VR session survives it.
 function switchCity( code: string ) {
 
-	const next = catalog.cities.find( c => c.code === code );
+	const next = cities.find( c => c.code === code );
 	if ( ! next || next === city ) return;
 	city = next;
 	for ( const t of allTiles() ) {
@@ -252,8 +303,10 @@ function switchCity( code: string ) {
 
 	legend.clear();
 	placeWorld();
+	bounds = cityBounds();
 	terrain = addTiles( createTerrain( city.geoidHeight, baseMap ) );
 	loadCityTiles();
+	loadPlaces();
 	renderCityUI();
 	renderLegend();
 	$( '#info' ).hidden = true;
@@ -308,7 +361,8 @@ function syncURL() {
 function buildUI() {
 
 	const citySel = $<HTMLSelectElement>( '#city' );
-	for ( const c of catalog.cities ) {
+	citySel.closest( 'label' )!.hidden = cities.length < 2;
+	for ( const c of cities ) {
 
 		citySel.add( new Option( `${ c.pref } ${ c.city }`, c.code, false, c.code === city.code ) );
 
@@ -443,8 +497,17 @@ renderer.domElement.addEventListener( 'pointerup', e => {
 	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) return;
 	pointer.set( ( e.clientX / window.innerWidth ) * 2 - 1, - ( e.clientY / window.innerHeight ) * 2 + 1 );
 	raycaster.setFromCamera( pointer, camera );
-	const { flood } = pointAt( raycaster );
 	const info = $( '#info' );
+	const pin = pins.pick( raycaster.ray );
+	if ( pin ) {
+
+		pins.toggle( pin.place );
+		info.hidden = true;
+		return;
+
+	}
+
+	const { flood } = pointAt( raycaster );
 	info.hidden = ! flood;
 	if ( flood ) info.textContent = `想定浸水深: ${ flood.label }`;
 
@@ -465,7 +528,7 @@ buildUI();
 if ( import.meta.env.DEV ) {
 
 	Object.assign( window, { app: {
-		renderer, scene, world, camera, controls, legend,
+		renderer, scene, world, camera, controls, legend, pins, minimap, toLocal, toLatLon,
 		get vr() { return vr; },
 		get city() { return city; },
 		get terrain() { return terrain; },
@@ -498,9 +561,13 @@ const vr = initVR( {
 	renderer, scene, camera, rig, controls, pointAt,
 	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
 	toggleWater: () => setWaterRaised( waterTarget === 0 ),
-	cities: catalog.cities.map( c => ( { code: c.code, pref: c.pref, city: c.city } ) ),
+	cities: cities.map( c => ( { code: c.code, pref: c.pref, city: c.city } ) ),
 	currentCity: () => city.code,
 	selectCity: switchCity,
+	pins,
+	minimap,
+	bounds: () => bounds,
+	toLatLon,
 } );
 
 // A city picked in VR is framed for the map view on the way out.
@@ -513,6 +580,7 @@ renderer.xr.addEventListener( 'sessionend', () => {
 // ─── loop ───────────────────────────────────────────────────────────────────
 const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
+const eye = new THREE.Vector3();
 const loading = createLoadingIndicator( camera );
 renderer.setAnimationLoop( () => {
 
@@ -557,6 +625,7 @@ renderer.setAnimationLoop( () => {
 
 	}
 
+	pins.update( camera.getWorldPosition( eye ) );
 	loading.update( dt, busy, xr.isPresenting );
 	gateVRButton( loading.settled );
 

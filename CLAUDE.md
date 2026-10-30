@@ -15,22 +15,27 @@ npm run catalog     # src/data/cities.json を PLATEAU カタログ API から�
 ```
 
 テストは無い。変更後は `npm run typecheck` と、ブラウザで実際に表示して確認する。
-`?city=<市区町村コード>&base=photo|pale|std` で市町村と背景地図を切り替えられる。
+表示する市は `src/config.ts` の `ONLY_CITY`（今は鎌倉市 14204）。`null` にすると 28 市町村を選べ、`?city=<市区町村コード>` も効く。
+`?base=photo|pale|std` で背景地図を切り替えられる。
 画面からの市町村の切り替えはページを読み込み直さない（`switchCity`。VR を切らずに移れるように）。
-開発時は `window.app`（renderer, scene, world, camera, controls, legend, vr, city, terrain, buildings, floods）からコンソールで状態を見られる。
+開発時は `window.app`（renderer, scene, world, camera, controls, legend, pins, minimap, toLocal, toLatLon, vr, city, terrain, buildings, floods）からコンソールで状態を見られる。
 
 ## 構成
 
 | ファイル | 役割 |
 |---|---|
+| `src/config.ts` | 表示する市（`ONLY_CITY`） |
 | `src/main.ts` | シーン、座標系、タイルセットの読み込み、浸水の色付け、UI、描画ループ |
+| `src/places.ts` | 目印・避難所のピン（距離によらず同じ見かけの大きさ、他の物の手前に描く）と説明の札 |
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
 | `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込みが終わるまで VR ボタンを止める（最長 30 秒） |
 | `src/flood.ts` | 浸水深ラベルの解析と配色 |
 | `src/vr.ts` | Quest コントローラーでの移動、ボタン操作、指さし、操作説明の板 |
 | `src/vr-debug.ts` | VR の診断ボード（X ボタン。エラー、入力、指さしの状態を左手の上に出す。エラーが出ると自動で開く） |
-| `src/vr-menu.ts` | VR の市町村一覧パネル（右グリップで開き、右手で指してトリガーで選ぶ） |
+| `src/vr-menu.ts` | VR の市町村一覧パネル（右グリップで開き、右手で指してトリガーで選ぶ。市が一つのときは出さない） |
+| `src/vr-minimap.ts` | VR の左手の地図（淡色地図に目印と避難所、現在地の矢印） |
 | `src/data/cities.json` | 対象 28 市町村のタイルセット URL・中心・ジオイド高（`scripts/build-catalog.mjs` が生成。手で編集しない） |
+| `src/data/places/<コード>.json` | 目印と指定避難所（町名・標高付き。`scripts/build-places.mjs` が生成。手で編集しない） |
 | `src/types/3d-tiles-renderer.d.ts` | ライブラリに型が無い `TerrainRGBMeshPlugin` の型宣言 |
 
 ライブラリ: three 0.186、3d-tiles-renderer 0.5.3、three-mesh-bvh 0.9、Vite。UI フレームワークは使っていない（素の DOM）。
@@ -42,6 +47,9 @@ PLATEAU のタイルは、`group` ではなく `group.children`（表示中の�
 地形だけは必ず `group` に当てる。地形のメッシュは平らで、起伏は GPU で付けている。
 起伏を反映した判定は、`group` 経由で呼ばれるプラグインの `raycastTile` だけが行う。
 `children` に直接当てると、平らな面に当たる。
+
+ピンの指さしは、レイキャストではなく、光線とラベルの中心のなす角で判定している（`pins.pick`。ピンは他の物の手前に描くので、建物の陰でも選べる）。
+避難所の説明には、国土地理院が求める注意（最新でない場合がある、市町村に確認、指定緊急避難場所とは別）と出典を必ず入れる。
 
 VR で頭の位置・向きを取るときは `renderer.xr.getCamera()` ではなく `camera`（`rig` の子）を使う。
 XR カメラには親が無く、`getWorldPosition` などがリグ基準の値を返す。
@@ -61,6 +69,7 @@ XR カメラには親が無く、`getWorldPosition` などがリグ基準の値�
 - 浸水深はバッチテーブルにある。標準区分は `uro:rank`（「0.5m未満」「0.5m以上3m未満」…）、自治体独自区分は `uro:rankOrg`。
   データセットによってどちらか一方だけが入っている。`featureLabel` は `rankOrg` を優先する。
 - 独自区分の書き方は自治体ごとにばらばら（「5cm～20cm未満」「0.0m～0.2m未満の区域」「3.0m以上」）。`parseDepthLabel` で m 単位の範囲にしてから色を決める。
+- カタログ API の `lod` は文字列（`"2"`）。建物は LOD2 テクスチャ付き → LOD2 → LOD1 の順に選ぶ。LOD2 のタイルセットは全部の建物を含み、LOD2 のモデルが無い建物は LOD1 の形で入っている。鎌倉市でテクスチャがあるのは中心部（鎌倉駅〜由比ヶ浜・材木座）、大船、腰越・七里ガ浜のあたり。
 - 浸水ポリゴンは地表に貼り付いた面で、深さ方向の厚みは無い。地形と重なるので `polygonOffset` で手前に出している。
 - ルートタイル（遠景）には一部の地物しか入っていない。近づくと子タイルが読まれ、凡例の区分が増える。
 

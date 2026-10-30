@@ -1,0 +1,360 @@
+{
+	"generatedAt": "2026-10-30T01:42:37.339Z",
+	"landmarks": [
+		{
+			"kind": "landmark",
+			"name": "鎌倉駅",
+			"lat": 35.3196730336111,
+			"lon": 139.548347173611,
+			"town": "御成町",
+			"elevation": 7.9
+		},
+		{
+			"kind": "landmark",
+			"name": "北鎌倉駅",
+			"lat": 35.3380589444444,
+			"lon": 139.544516444444,
+			"town": "山ノ内",
+			"elevation": 22.5
+		},
+		{
+			"kind": "landmark",
+			"name": "大船駅",
+			"lat": 35.3537116213889,
+			"lon": 139.531452338056,
+			"town": "大船一丁目",
+			"elevation": 10.1
+		},
+		{
+			"kind": "landmark",
+			"name": "長谷駅",
+			"lat": 35.3129905272222,
+			"lon": 139.536183544167,
+			"town": "長谷一丁目",
+			"elevation": 6.5
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉高校前駅",
+			"lat": 35.3066171819444,
+			"lon": 139.500521196111,
+			"town": "腰越一丁目",
+			"elevation": 9.2
+		},
+		{
+			"kind": "landmark",
+			"name": "鶴岡八幡宮",
+			"lat": 35.3261118888889,
+			"lon": 139.556427166667,
+			"town": "雪ノ下二丁目",
+			"elevation": 23.8
+		},
+		{
+			"kind": "landmark",
+			"name": "若宮大路",
+			"lat": 35.3202711313889,
+			"lon": 139.552336635556,
+			"town": "小町二丁目",
+			"elevation": 6.3
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉大仏（高徳院）",
+			"lat": 35.3169824722222,
+			"lon": 139.536377166667,
+			"town": "長谷四丁目",
+			"elevation": 14.1
+		},
+		{
+			"kind": "landmark",
+			"name": "建長寺",
+			"lat": 35.3320172625,
+			"lon": 139.555986105,
+			"town": "山ノ内",
+			"elevation": 52.8
+		},
+		{
+			"kind": "landmark",
+			"name": "円覚寺",
+			"lat": 35.3379569444444,
+			"lon": 139.548512722222,
+			"town": "山ノ内",
+			"elevation": 42.3
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉宮",
+			"lat": 35.3262883888889,
+			"lon": 139.565155055556,
+			"town": "二階堂",
+			"elevation": 23.6
+		},
+		{
+			"kind": "landmark",
+			"name": "由比ヶ浜",
+			"lat": 35.30987573211,
+			"lon": 139.538800831372,
+			"town": "長谷二丁目",
+			"elevation": 1.8
+		},
+		{
+			"kind": "landmark",
+			"name": "材木座海岸",
+			"lat": 35.3052550632479,
+			"lon": 139.550045142114,
+			"town": "材木座五丁目",
+			"elevation": 1.1
+		},
+		{
+			"kind": "landmark",
+			"name": "七里ヶ浜",
+			"lat": 35.3046961927287,
+			"lon": 139.512286757017,
+			"town": "七里ガ浜東二丁目",
+			"elevation": 7.4
+		},
+		{
+			"kind": "landmark",
+			"name": "稲村ヶ崎",
+			"lat": 35.3018979126564,
+			"lon": 139.525550660869,
+			"town": "稲村ガ崎一丁目",
+			"elevation": 26.3
+		},
+		{
+			"kind": "landmark",
+			"name": "滑川（河口）",
+			"lat": 35.3082019088001,
+			"lon": 139.544841661861,
+			"town": "",
+			"elevation": 0.5
+		}
+	],
+	"shelters": [
+		{
+			"kind": "shelter",
+			"name": "玉縄中学校",
+			"address": "神奈川県鎌倉市岡本1100",
+			"lat": 35.347911,
+			"lon": 139.519482,
+			"town": "岡本",
+			"elevation": 8.8
+		},
+		{
+			"kind": "shelter",
+			"name": "深沢小学校",
+			"address": "神奈川県鎌倉市梶原1-11-1",
+			"lat": 35.331036,
+			"lon": 139.520447,
+			"town": "梶原一丁目",
+			"elevation": 11.3
+		},
+		{
+			"kind": "shelter",
+			"name": "深沢中学校",
+			"address": "神奈川県鎌倉市梶原1-14-1",
+			"lat": 35.330566,
+			"lon": 139.523544,
+			"town": "梶原一丁目",
+			"elevation": 22.5
+		},
+		{
+			"kind": "shelter",
+			"name": "関谷小学校",
+			"address": "神奈川県鎌倉市関谷468-1",
+			"lat": 35.361017,
+			"lon": 139.513565,
+			"town": "関谷",
+			"elevation": 19.7
+		},
+		{
+			"kind": "shelter",
+			"name": "岩瀬中学校",
+			"address": "神奈川県鎌倉市岩瀬840",
+			"lat": 35.347034,
+			"lon": 139.549423,
+			"town": "岩瀬",
+			"elevation": 35.3
+		},
+		{
+			"kind": "shelter",
+			"name": "稲村ケ崎小学校",
+			"address": "神奈川県鎌倉市極楽寺3-2-3",
+			"lat": 35.310959,
+			"lon": 139.528122,
+			"town": "極楽寺三丁目",
+			"elevation": 22.8
+		},
+		{
+			"kind": "shelter",
+			"name": "玉縄小学校",
+			"address": "神奈川県鎌倉市玉縄1-860",
+			"lat": 35.351021,
+			"lon": 139.523438,
+			"town": "玉縄一丁目",
+			"elevation": 8.6
+		},
+		{
+			"kind": "shelter",
+			"name": "御成小学校",
+			"address": "神奈川県鎌倉市御成町19-1",
+			"lat": 35.318314,
+			"lon": 139.547974,
+			"town": "御成町",
+			"elevation": 7.7
+		},
+		{
+			"kind": "shelter",
+			"name": "腰越中学校",
+			"address": "神奈川県鎌倉市腰越4-11-20",
+			"lat": 35.312283,
+			"lon": 139.497269,
+			"town": "腰越四丁目",
+			"elevation": 6.2
+		},
+		{
+			"kind": "shelter",
+			"name": "腰越小学校",
+			"address": "神奈川県鎌倉市腰越5-7-1",
+			"lat": 35.312405,
+			"lon": 139.493027,
+			"town": "腰越五丁目",
+			"elevation": 15.9
+		},
+		{
+			"kind": "shelter",
+			"name": "今泉小学校",
+			"address": "神奈川県鎌倉市今泉2-13-1",
+			"lat": 35.344627,
+			"lon": 139.550934,
+			"town": "今泉二丁目",
+			"elevation": 42.7
+		},
+		{
+			"kind": "shelter",
+			"name": "第一中学校",
+			"address": "神奈川県鎌倉市材木座6-19-19",
+			"lat": 35.303123,
+			"lon": 139.555176,
+			"town": "材木座六丁目",
+			"elevation": 26.5
+		},
+		{
+			"kind": "shelter",
+			"name": "御成中学校",
+			"address": "神奈川県鎌倉市笹目町2-1",
+			"lat": 35.317875,
+			"lon": 139.542435,
+			"town": "笹目町",
+			"elevation": 32.5
+		},
+		{
+			"kind": "shelter",
+			"name": "山崎小学校",
+			"address": "神奈川県鎌倉市山崎2500",
+			"lat": 35.338278,
+			"lon": 139.533839,
+			"town": "山崎",
+			"elevation": 25.5
+		},
+		{
+			"kind": "shelter",
+			"name": "七里ガ浜小学校",
+			"address": "神奈川県鎌倉市七里ガ浜東5-3-2",
+			"lat": 35.311428,
+			"lon": 139.512085,
+			"town": "七里ガ浜東五丁目",
+			"elevation": 23.8
+		},
+		{
+			"kind": "shelter",
+			"name": "手広中学校",
+			"address": "神奈川県鎌倉市手広5-7-1",
+			"lat": 35.325424,
+			"lon": 139.505203,
+			"town": "手広五丁目",
+			"elevation": 32.2
+		},
+		{
+			"kind": "shelter",
+			"name": "小坂小学校",
+			"address": "神奈川県鎌倉市小袋谷587",
+			"lat": 35.343666,
+			"lon": 139.540604,
+			"town": "小袋谷",
+			"elevation": 13.2
+		},
+		{
+			"kind": "shelter",
+			"name": "富士塚小学校",
+			"address": "神奈川県鎌倉市上町屋810",
+			"lat": 35.337311,
+			"lon": 139.521484,
+			"town": "上町屋",
+			"elevation": 18.5
+		},
+		{
+			"kind": "shelter",
+			"name": "植木小学校",
+			"address": "神奈川県鎌倉市植木1",
+			"lat": 35.354439,
+			"lon": 139.518417,
+			"town": "植木",
+			"elevation": 23.8
+		},
+		{
+			"kind": "shelter",
+			"name": "第二中学校",
+			"address": "神奈川県鎌倉市西御門1-7-1",
+			"lat": 35.328205,
+			"lon": 139.559372,
+			"town": "西御門一丁目",
+			"elevation": 27.2
+		},
+		{
+			"kind": "shelter",
+			"name": "大船小学校",
+			"address": "神奈川県鎌倉市大船2-8-1",
+			"lat": 35.351261,
+			"lon": 139.53479,
+			"town": "大船二丁目",
+			"elevation": 9
+		},
+		{
+			"kind": "shelter",
+			"name": "大船中学校",
+			"address": "神奈川県鎌倉市大船4-1-25",
+			"lat": 35.347965,
+			"lon": 139.537476,
+			"town": "大船四丁目",
+			"elevation": 9.8
+		},
+		{
+			"kind": "shelter",
+			"name": "西鎌倉小学校",
+			"address": "神奈川県鎌倉市津1069",
+			"lat": 35.323626,
+			"lon": 139.507293,
+			"town": "津",
+			"elevation": 29
+		},
+		{
+			"kind": "shelter",
+			"name": "第二小学校",
+			"address": "神奈川県鎌倉市二階堂878",
+			"lat": 35.323472,
+			"lon": 139.565546,
+			"town": "二階堂",
+			"elevation": 16.2
+		},
+		{
+			"kind": "shelter",
+			"name": "第一小学校",
+			"address": "神奈川県鎌倉市由比ガ浜2-9-55",
+			"lat": 35.31469,
+			"lon": 139.548462,
+			"town": "由比ガ浜二丁目",
+			"elevation": 5.4
+		}
+	]
+}
