@@ -48,6 +48,8 @@ canvas { display: block; touch-action: none; }
 	padding: 12px 14px;
 	font-size: 13px;
 	backdrop-filter: blur(6px);
+	/* Over the loading pill, which can reach it on a narrow screen and hide the ☰ button. */
+	z-index: 2;
 }
 
 #panel-toggle {
@@ -88,6 +90,18 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 .check input { margin-top: 2px; }
 
 .hint { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+#app-close { margin: 0 0 12px; }
+#app-close[hidden] { display: none; }
+#app-close-button {
+	width: 100%;
+	padding: 7px 10px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+}
 
 #legend {
 	position: fixed;

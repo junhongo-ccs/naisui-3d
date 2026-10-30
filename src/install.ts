@@ -16,6 +16,7 @@ export function offerInstall() {
 
 	const installed = matchMedia( '(display-mode: standalone), (display-mode: fullscreen)' ).matches
 		|| ( navigator as Navigator & { standalone?: boolean } ).standalone === true;
+	if ( installed ) offerClose();
 	const phone = matchMedia( '(pointer: coarse)' ).matches && Math.min( screen.width, screen.height ) < 600;
 	if ( installed || ! phone || localStorage.getItem( DISMISSED ) ) return;
 
@@ -52,6 +53,22 @@ export function offerInstall() {
 
 		box.hidden = true;
 		localStorage.setItem( DISMISSED, '1' );
+
+	} );
+
+}
+
+// Opened from the home screen there is no browser around the page to close it with. A page may
+// not close itself as a rule (some Android versions allow it), so the panel's button tries, and
+// where the page is still there a moment later, says how to close the app with the phone instead.
+function offerClose() {
+
+	const help = document.querySelector<HTMLElement>( '#app-close-help' )!;
+	document.querySelector<HTMLElement>( '#app-close' )!.hidden = false;
+	document.querySelector( '#app-close-button' )!.addEventListener( 'click', () => {
+
+		window.close();
+		setTimeout( () => ( help.hidden = false ), 300 );
 
 	} );
 
