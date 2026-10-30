@@ -7,10 +7,10 @@ import { GLTFExtensionsPlugin } from '3d-tiles-renderer/three/plugins';
 import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 import catalog from './data/cities.json';
 import { depthColor, featureLabel, parseDepthLabel, surfaceHeight } from './flood';
-import { BASE_MAPS, createGoogleTiles, createTerrain, type BaseMapKey } from './terrain';
+import { BASE_MAPS, createGoogleTiles, createTerrain, maskTo, type BaseMapKey } from './terrain';
 import { initVR } from './vr';
 import { createLoadingIndicator } from './loading';
-import { ONLY_CITY } from './config';
+import { AREA, ONLY_CITY, VR_START } from './config';
 import { createPins, placesFor } from './places';
 import { createMinimap } from './vr-minimap';
 import './style.css';
@@ -93,12 +93,26 @@ function toLatLon( p: THREE.Vector3 ) {
 
 }
 
-// Where the VR rig may go: over the city's flood area and a little beyond, up to MAX_ALTITUDE.
-const BOUNDS_MARGIN = 300; // m
+// The part of the city shown: config AREA, or the whole flood area. [west, south, east, north].
+function cityArea() {
+
+	return AREA[ city.code ] ?? city.bounds as [ number, number, number, number ];
+
+}
+
+function inArea( lat: number, lon: number ) {
+
+	const [ west, south, east, north ] = cityArea();
+	return lon >= west && lon <= east && lat >= south && lat <= north;
+
+}
+
+// Where the VR rig may go: over the area and a little beyond, up to MAX_ALTITUDE.
+const BOUNDS_MARGIN = 100; // m
 const MAX_ALTITUDE = 2000; // m
 function cityBounds() {
 
-	const [ west, south, east, north ] = city.bounds;
+	const [ west, south, east, north ] = cityArea();
 	const box = new THREE.Box3().setFromPoints( [ toLocal( south, west, 0 ), toLocal( north, east, 0 ) ] );
 	box.min.y = - 200;
 	box.max.y = MAX_ALTITUDE;
@@ -108,9 +122,9 @@ function cityBounds() {
 
 let bounds = cityBounds();
 
-// Where the terrain loads: the VR bounds and some more, so the ground runs out a little past
-// where the user can go. In ECEF, the tiles' own frame.
-const TERRAIN_MARGIN = 700; // m beyond the VR bounds
+// Where the ground and the flood tiles load: the VR bounds and some more, so the ground runs out a
+// little past where the user can go. In ECEF, the tiles' own frame.
+const TERRAIN_MARGIN = 300; // m beyond the VR bounds
 function terrainArea() {
 
 	const box = bounds.clone().expandByVector( new THREE.Vector3( TERRAIN_MARGIN, 0, TERRAIN_MARGIN ) );
@@ -124,13 +138,19 @@ const rig = new THREE.Group();
 rig.add( camera );
 scene.add( rig );
 
-// Size of the flood area in meters.
+// Size of the area in meters.
 function cityExtent() {
 
-	return Math.max(
-		( city.bounds[ 2 ] - city.bounds[ 0 ] ) * 111e3 * Math.cos( city.lat * DEG ),
-		( city.bounds[ 3 ] - city.bounds[ 1 ] ) * 111e3,
-	);
+	const [ west, south, east, north ] = cityArea();
+	return Math.max( ( east - west ) * 111e3 * Math.cos( city.lat * DEG ), ( north - south ) * 111e3 );
+
+}
+
+// The middle of the area, on the y = 0 plane.
+function areaCenter() {
+
+	const [ west, south, east, north ] = cityArea();
+	return toLocal( ( south + north ) / 2, ( west + east ) / 2, 0 ).setY( 0 );
 
 }
 
@@ -140,13 +160,14 @@ controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 20;
 controls.screenSpacePanning = false;
 
-// Look down over the flood area from the south.
+// Look down over the area from the south.
 let framedCity = '';
 function frameCity() {
 
 	const extent = cityExtent();
-	camera.position.set( 0, extent * 0.45, extent * 0.55 );
-	controls.target.set( 0, 0, 0 );
+	const center = areaCenter();
+	camera.position.set( 0, extent * 0.6, extent * 0.75 ).add( center );
+	controls.target.copy( center );
 	controls.maxDistance = extent * 4;
 	controls.update();
 	framedCity = city.code;
@@ -219,6 +240,7 @@ function setWaterRaised( on: boolean ) {
 function floodTiles( f: City[ 'floods' ][ number ], i: number ) {
 
 	const tiles = indexForRaycast( plateauTiles( f.url ) );
+	maskTo( tiles, terrainArea() );
 	tiles.errorTarget = 4;
 	tiles.group.visible = i === 0;
 	tiles.group.renderOrder = 10;
@@ -303,13 +325,25 @@ scene.add( pins.group );
 const minimap = createMinimap();
 function loadPlaces() {
 
-	const places = placesFor( city.code );
+	const places = placesFor( city.code ).filter( p => inArea( p.lat, p.lon ) );
 	pins.setPlaces( city.city, places, toLocal );
-	minimap.setCity( city.bounds, places );
+	minimap.setCity( cityArea(), places );
 
 }
 
 loadPlaces();
+
+// Where VR starts in this city (config VR_START).
+function vrStartPose() {
+
+	const start = VR_START[ city.code ];
+	if ( ! start ) return null;
+	const position = toLocal( ...start.at, start.elevation );
+	const toward = toLocal( ...start.facing, start.elevation ).sub( position );
+	// The rig looks along -z (north) at yaw 0, and turns counterclockwise seen from above.
+	return { position, yaw: Math.atan2( - toward.x, - toward.z ) };
+
+}
 
 // Swap in another city without reloading the page, so a VR session survives it.
 function switchCity( code: string ) {
@@ -594,7 +628,22 @@ const vr = initVR( {
 	minimap,
 	bounds: () => bounds,
 	toLatLon,
+	startPose: vrStartPose,
+	tileStatus: () => [ [ GOOGLE_KEY ? 'Google' : '地形', terrain ] as const, ...buildings.map( t => [ '建物', t ] as const ) ]
+		.map( ( [ name, t ] ) => {
+
+			const s = tileStats( t );
+			return `${ name }タイル 表示 ${ s.visible }　読込待ち ${ s.queued }　通信中 ${ s.downloading }　展開中 ${ s.parsing }　失敗 ${ s.failed }`;
+
+		} ),
 } );
+
+// Counters the renderer keeps (not in its type declarations).
+function tileStats( tiles: TilesRenderer ) {
+
+	return ( tiles as unknown as { stats: Record<'visible' | 'queued' | 'downloading' | 'parsing' | 'failed', number> } ).stats;
+
+}
 
 // A city picked in VR is framed for the map view on the way out.
 renderer.xr.addEventListener( 'sessionend', () => {

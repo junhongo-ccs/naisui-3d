@@ -29,7 +29,7 @@ type Minimap = ReturnType<typeof createMinimap>;
 // and the street stays walkable. Movement stops at the edge of `bounds`, so the user can't drift
 // off the city and lose it. The left controller carries a map of the city with an arrow for the
 // user, and a card listing these controls.
-export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, toggleWater, cities, currentCity, selectCity, pins, minimap, bounds, toLatLon }: {
+export function initVR( { renderer, scene, camera, rig, controls, groundTargets, pointAt, toggleWater, cities, currentCity, selectCity, pins, minimap, bounds, toLatLon, startPose, tileStatus }: {
 	renderer: THREE.WebGLRenderer,
 	scene: THREE.Scene,
 	camera: THREE.PerspectiveCamera,
@@ -45,6 +45,10 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	minimap: Minimap,
 	bounds: () => THREE.Box3, // where the rig may go, in scene meters
 	toLatLon: ( p: THREE.Vector3 ) => { lat: number, lon: number },
+	// Where to stand (feet, in scene meters) and which way to face (radians about y, 0 = north)
+	// when VR starts, or null to stand where the map view was looking.
+	startPose: () => { position: THREE.Vector3, yaw: number } | null,
+	tileStatus: () => string[], // lines for the diagnostics board
 } ) {
 
 	const MIN_SPEED = 15; // m/s at street level; above that, speed (m/s) = height above ground (m)
@@ -57,6 +61,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	const right = new THREE.Vector3();
 	const head = new THREE.Vector3();
 	const start = new THREE.Vector3();
+	let startYaw = 0;
 	let turnLatched = false;
 	const wasPressed: Record<string, boolean> = {};
 	let groundY = 0;
@@ -95,12 +100,20 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		saved.position.copy( camera.position );
 		saved.quaternion.copy( camera.quaternion );
-		// Stand on the street at the point the orbit view was looking at.
-		const { x, z } = controls.target;
-		rig.position.set( x, groundAt( x, z ), z );
-		rig.rotation.set( 0, 0, 0 );
-		start.copy( rig.position );
-		sinceGround = Infinity;
+		// Stand at the city's start point, or on the street at the point the orbit view was looking
+		// at. The start point's height comes from its known elevation, not a raycast: right after
+		// entering, only coarse tiles are loaded near it, and their surface can be meters off.
+		const pose = startPose();
+		if ( pose ) {
+
+			arrive( pose.position, pose.yaw );
+
+		} else {
+
+			const { x, z } = controls.target;
+			arrive( new THREE.Vector3( x, groundAt( x, z ), z ) );
+
+		}
 
 	} );
 
@@ -153,6 +166,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		const lines = [
 			`${ Math.round( fps ) } fps　描画 ${ info.calls } 回　${ Math.round( info.triangles / 1000 ) }k 三角形`,
 			`${ cities.find( c => c.code === currentCity() )?.city ?? currentCity() }　位置 ${ f( p.x ) }, ${ f( p.y ) }, ${ f( p.z ) }　地面から ${ f( lastHeight ) } m　一覧 ${ menu.isOpen ? '開' : '閉' }`,
+			...tileStatus(),
 		];
 		for ( const src of renderer.xr.getSession()?.inputSources ?? [] ) {
 
@@ -206,9 +220,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 			if ( src.handedness === 'left' && pressed( 'X', gp, 4 ) ) showDebug = ! showDebug;
 			if ( src.handedness === 'left' && pressed( 'Y', gp, 5 ) ) {
 
-				rig.position.copy( start );
-				rig.rotation.set( 0, 0, 0 );
-				sinceGround = Infinity;
+				arrive( start.clone(), startYaw );
 
 			}
 
@@ -280,12 +292,13 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 	}
 
-	// Place the user somewhere new (after switching cities); Y returns here.
-	function arrive( position: THREE.Vector3 ) {
+	// Place the user somewhere new (on entering VR, after switching cities); Y returns here.
+	function arrive( position: THREE.Vector3, yaw = 0 ) {
 
 		rig.position.copy( position );
-		rig.rotation.set( 0, 0, 0 );
+		rig.rotation.set( 0, yaw, 0 );
 		start.copy( position );
+		startYaw = yaw;
 		sinceGround = Infinity;
 
 	}

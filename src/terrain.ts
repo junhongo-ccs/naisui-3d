@@ -75,7 +75,7 @@ export type BaseMapKey = keyof typeof BASE_MAPS;
 // decoding them ties up the parse queue that the buildings and floods share, so those never
 // load. It also keeps the view to the one city. The region's error target is infinite so that
 // only the camera decides how fine to load; the region just masks.
-function maskTo( tiles: TilesRenderer, area: OBB ) {
+export function maskTo( tiles: TilesRenderer, area: OBB ) {
 
 	const region = new LoadRegionPlugin();
 	region.addRegion( new OBBRegion( { obb: area, mask: true, errorTarget: Infinity } ) );
