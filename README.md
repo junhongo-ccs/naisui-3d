@@ -118,5 +118,10 @@ node --use-system-ca scripts/build-places.mjs 14204
 - VR の手の地図（キーなしのときは地形・背景地図も）：[地理院タイル](https://maps.gsi.go.jp/development/ichiran.html)
 - 避難所：[指定緊急避難場所・指定避難所データ（国土地理院）](https://www.gsi.go.jp/bousaichiri/hinanbasho.html)
 - 目印の位置・町名・標高：国土地理院 地名検索・逆ジオコーダー・標高 API
+- 解説の写真（Wikimedia Commons、`public/photos/` に幅 1000 px に縮めて置いている）：
+  - 段葛：[Naokijp](https://commons.wikimedia.org/wiki/File:Tsurugaoka_Hachimangu_From_Third_Torii_until_First_Torii.jpg)（[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0)）
+  - 若宮大路：[Quercus acuta](https://commons.wikimedia.org/wiki/File:Wakamiya_Oji.jpg)（CC0）
+  - 由比ガ浜歩道橋の近く：[DimiTalen](https://commons.wikimedia.org/wiki/File:Looking_up_Wakamiya_Oji_near_Yuigahama_Hodokyo,_Kamakura,_2016.jpg)（CC0）
+  - 稲瀬川：[Vano111ru](https://commons.wikimedia.org/wiki/File:Inase_River_(26590).jpg)（[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0)）
 - 解説：鎌倉市 [下水道計画「基礎調査」](https://www.city.kamakura.kanagawa.jp/gesui/documents/kisochousa_1.pdf)、[雨水管理総合計画（2026 年 3 月）](https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf)、[同 素案の概要](https://www.city.kamakura.kanagawa.jp/gesui/documents/1_1120.pdf)、[策定について（2024 年 10 月）](https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_1-1.pdf)、[下水道事業運営審議会資料（2025 年 10 月）](https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_3_1.pdf)、[タウンニュース鎌倉版（2026 年 10 月 2 日）](https://www.townnews.co.jp/0602/2026/10/02/855379.html)、[毎日新聞（2026 年 9 月）](https://news.yahoo.co.jp/articles/18854f8b762febaf82b67702c139310c8c9f075f)
 - ジオイド高：[国土地理院 ジオイド計算 API](https://vldb.gsi.go.jp/sokuchi/surveycalc/main.html)

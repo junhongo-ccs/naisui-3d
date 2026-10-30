@@ -3,6 +3,7 @@
 	"stories": [
 		{
 			"name": "鎌倉の中心部と浸水",
+			"photo": { "src": "photos/dankazura.jpg", "caption": "段葛から海の方を見る（三の鳥居から一の鳥居）", "author": "Naokijp", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Tsurugaoka_Hachimangu_From_Third_Torii_until_First_Torii.jpg" },
 			"lat": 35.3230,
 			"lon": 139.5543,
 			"town": "雪ノ下一丁目",
@@ -21,6 +22,7 @@
 		},
 		{
 			"name": "若宮大路・小町",
+			"photo": { "src": "photos/wakamiya.jpg", "caption": "若宮大路から鶴岡八幡宮の方を見る", "author": "Quercus acuta", "license": "CC0", "url": "https://commons.wikimedia.org/wiki/File:Wakamiya_Oji.jpg" },
 			"lat": 35.31883,
 			"lon": 139.55193,
 			"town": "小町一丁目",
@@ -39,6 +41,7 @@
 		},
 		{
 			"name": "由比ガ浜の海沿い",
+			"photo": { "src": "photos/yuigahama.jpg", "caption": "由比ガ浜歩道橋の近く（若宮大路の海側）", "author": "DimiTalen", "license": "CC0", "url": "https://commons.wikimedia.org/wiki/File:Looking_up_Wakamiya_Oji_near_Yuigahama_Hodokyo,_Kamakura,_2016.jpg" },
 			"lat": 35.3108,
 			"lon": 139.5478,
 			"town": "由比ガ浜二丁目",
@@ -57,6 +60,7 @@
 		},
 		{
 			"name": "長谷・稲瀬川",
+			"photo": { "src": "photos/inase.jpg", "caption": "海に注ぐ手前の稲瀬川", "author": "Vano111ru", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Inase_River_(26590).jpg" },
 			"lat": 35.3116,
 			"lon": 139.5368,
 			"town": "長谷二丁目",

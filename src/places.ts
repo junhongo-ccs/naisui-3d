@@ -17,6 +17,9 @@ type StoryKind = 'terrain' | 'mechanism' | 'simulation' | 'record' | 'plan';
 type Story = {
 	sections: { kind: StoryKind, text: string }[],
 	sources: { label: string, url: string }[],
+	// An everyday photo of the spot, under a free licence (Wikimedia Commons): served from
+	// public/, credited on the card.
+	photo?: { src: string, caption: string, author: string, license: string, url: string },
 };
 
 // src/data/places/<city code>.json, written by scripts/build-places.mjs, and
@@ -27,8 +30,8 @@ const storyFiles = import.meta.glob<{ stories: ( Omit<Place, 'kind' | 'story'> &
 export function placesFor( code: string ): Place[] {
 
 	const f = files[ `./data/places/${ code }.json` ];
-	const stories = ( storyFiles[ `./data/stories/${ code }.json` ]?.stories ?? [] ).map( ( { sections, sources, ...where } ): Place => ( {
-		...where, kind: 'story', story: { sections, sources },
+	const stories = ( storyFiles[ `./data/stories/${ code }.json` ]?.stories ?? [] ).map( ( { sections, sources, photo, ...where } ): Place => ( {
+		...where, kind: 'story', story: { sections, sources, photo },
 	} ) );
 	return [ ...( f ? [ ...f.landmarks, ...f.shelters ] : [] ), ...stories ];
 
@@ -48,7 +51,7 @@ const LANDMARK_BG = 'rgba(20, 26, 36, 0.86)';
 // Apparent sizes, as a fraction of the distance from the eye (≈ radians).
 const LABEL_SIZE = 0.028;
 const CARD_WIDTH = 0.5;
-const STORY_CARD_WIDTH = 0.5; // about 30° tall: fits the PC view (55°) and reads in VR
+const STORY_CARD_WIDTH = 0.5; // of the text column; the card is about 30° tall, so it fits the PC view (55°) and reads in VR
 const PICK_ANGLE = 0.03;
 const SHELTER_NAME_RANGE = 2500; // m; farther shelters show the icon only
 const NAME_SCALE = 0.8; // shelter name height / icon height
@@ -161,7 +164,7 @@ export function createPins() {
 			// A story's card is tall, so it is centered on the pin's label (about eye level) rather
 			// than above it, where it would mean looking far up.
 			const d = eye.distanceTo( opened.head );
-			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH : CARD_WIDTH );
+			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH * card.userData.widthScale : CARD_WIDTH );
 			card.center.set( 0.5, opened.place.kind === 'story' ? 0.5 : - 0.08 );
 			card.position.copy( opened.head ).setY( opened.head.y + d * LABEL_SIZE * 1.4 );
 			card.scale.set( w, w / card.userData.aspect, 1 );
@@ -208,7 +211,28 @@ export function createPins() {
 		const pin = pins.find( p => p.place === place ) ?? null;
 		opened = opened === pin ? null : pin;
 		card.visible = !! opened;
-		if ( opened ) ( opened.place.story ? drawStoryCard( card, opened.place, opened.place.story ) : drawCard( card, opened.place, cityName ) );
+		if ( ! opened ) return;
+		const story = opened.place.story;
+		if ( ! story ) {
+
+			drawCard( card, opened.place, cityName );
+			return;
+
+		}
+
+		// Photos load when first opened; the card shows without it until then.
+		const photo = story.photo && loadPhoto( story.photo.src );
+		drawStoryCard( card, opened.place, story, photo?.complete ? photo : null );
+		if ( photo && ! photo.complete ) {
+
+			const shown = opened;
+			photo.addEventListener( 'load', () => {
+
+				if ( opened === shown ) drawStoryCard( card, shown.place, story, photo );
+
+			}, { once: true } );
+
+		}
 
 	}
 
@@ -270,6 +294,22 @@ function shelterIcon() {
 	ctx.closePath();
 	ctx.fill();
 	return canvas;
+
+}
+
+const photos = new Map<string, HTMLImageElement>();
+function loadPhoto( src: string ) {
+
+	let img = photos.get( src );
+	if ( ! img ) {
+
+		img = new Image();
+		img.src = import.meta.env.BASE_URL + src;
+		photos.set( src, img );
+
+	}
+
+	return img;
 
 }
 
@@ -336,17 +376,37 @@ function wrap( ctx: CanvasRenderingContext2D, text: string, width: number ): str
 
 }
 
-// A story's card: title, then each part under a colored tag, then the sources.
-function drawStoryCard( card: THREE.Sprite, place: Place, story: Story ) {
+// A story's card: the photo with its credit on the left (if there is one), and on the right the
+// title, each part under a colored tag, then the sources. Side by side, so the card stays short
+// enough to see whole. Until the photo has loaded, its column holds a placeholder of the same width.
+const STORY_TEXT_WIDTH = 1020; // px
+const PHOTO_WIDTH = 640; // px
+const PHOTO_MAX_HEIGHT = 900; // px; a taller (portrait) photo is narrowed to this
+function drawStoryCard( card: THREE.Sprite, place: Place, story: Story, photo: HTMLImageElement | null ) {
 
-	const W = 1100, PAD = 40, TEXT = W - PAD * 2 - 36; // room for punctuation that hangs over
+	const PAD = 40, GAP = 40, TEXT = STORY_TEXT_WIDTH - 36; // room for punctuation that hangs over
+	const left = story.photo ? PHOTO_WIDTH + GAP : 0;
+	const W = PAD * 2 + left + STORY_TEXT_WIDTH;
 	const TITLE = 'bold 54px system-ui, sans-serif', TAG = 'bold 30px system-ui, sans-serif';
 	const BODY = '36px system-ui, sans-serif', SOURCE = '25px system-ui, sans-serif';
 	const canvas = document.createElement( 'canvas' );
 	const ctx = canvas.getContext( '2d' )!;
 
-	// Lay out first, to know the height.
-	type Row = { font: string, color: string, text: string, height: number, tag?: string };
+	// Lay out both columns first, to know the height.
+	type Row = { font: string, color: string, text: string, height: number, tag?: string, image?: { img: HTMLImageElement | null, w: number, h: number } };
+	const photoRows: Row[] = [];
+	if ( story.photo ) {
+
+		const scale = photo ? Math.min( PHOTO_WIDTH / photo.naturalWidth, PHOTO_MAX_HEIGHT / photo.naturalHeight ) : 0;
+		const w = photo ? photo.naturalWidth * scale : PHOTO_WIDTH, h = photo ? photo.naturalHeight * scale : PHOTO_WIDTH * 0.75;
+		photoRows.push( { font: SOURCE, color: '', text: '', height: h + 14, image: { img: photo, w, h } } );
+		const { caption, author, license } = story.photo;
+		ctx.font = SOURCE;
+		for ( const line of wrap( ctx, caption, PHOTO_WIDTH ) ) photoRows.push( { font: SOURCE, color: '#c8d6e5', text: line, height: 36 } );
+		for ( const line of wrap( ctx, `写真: ${ author }（${ license }、Wikimedia Commons）`, PHOTO_WIDTH ) ) photoRows.push( { font: SOURCE, color: '#9fb3c8', text: line, height: 36 } );
+
+	}
+
 	const rows: Row[] = [ { font: TITLE, color: '#ffffff', text: place.name, height: 80 } ];
 	rows.push( { font: SOURCE, color: '#9fb3c8', text: `${ place.town }　標高 約 ${ Math.round( place.elevation ) } m`, height: 52 } );
 	for ( const s of story.sections ) {
@@ -363,8 +423,9 @@ function drawStoryCard( card: THREE.Sprite, place: Place, story: Story ) {
 	ctx.font = SOURCE;
 	for ( const src of story.sources ) for ( const line of wrap( ctx, `・${ src.label }`, TEXT ) ) rows.push( { font: SOURCE, color: '#9fb3c8', text: line, height: 36 } );
 
+	const height = ( rs: Row[] ) => rs.reduce( ( h, r ) => h + r.height, 0 );
 	canvas.width = W;
-	canvas.height = PAD * 2 + rows.reduce( ( h, r ) => h + r.height, 0 );
+	canvas.height = PAD * 2 + Math.max( height( rows ), height( photoRows ) );
 	ctx.fillStyle = 'rgba(20, 26, 36, 0.94)';
 	ctx.beginPath();
 	ctx.roundRect( 0, 0, W, canvas.height, 28 );
@@ -373,32 +434,53 @@ function drawStoryCard( card: THREE.Sprite, place: Place, story: Story ) {
 	ctx.fillRect( 0, 24, 12, canvas.height - 48 );
 
 	ctx.textBaseline = 'top';
-	let y = PAD;
-	for ( const r of rows ) {
+	const drawColumn = ( rs: Row[], x: number ) => {
 
-		ctx.font = r.font;
-		if ( r.tag ) {
+		let y = PAD;
+		for ( const r of rs ) {
 
-			const w = ctx.measureText( r.text ).width + 28;
-			ctx.fillStyle = r.tag;
-			ctx.beginPath();
-			ctx.roundRect( PAD, y + 4, w, 44, 10 );
-			ctx.fill();
-			ctx.fillStyle = r.color;
-			ctx.fillText( r.text, PAD + 14, y + 11 );
+			ctx.font = r.font;
+			if ( r.image ) {
 
-		} else {
+				if ( r.image.img ) {
 
-			ctx.fillStyle = r.color;
-			ctx.fillText( r.text, PAD, y );
+					ctx.drawImage( r.image.img, x, y, r.image.w, r.image.h );
+
+				} else {
+
+					ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+					ctx.fillRect( x, y, r.image.w, r.image.h );
+
+				}
+
+			} else if ( r.tag ) {
+
+				const w = ctx.measureText( r.text ).width + 28;
+				ctx.fillStyle = r.tag;
+				ctx.beginPath();
+				ctx.roundRect( x, y + 4, w, 44, 10 );
+				ctx.fill();
+				ctx.fillStyle = r.color;
+				ctx.fillText( r.text, x + 14, y + 11 );
+
+			} else {
+
+				ctx.fillStyle = r.color;
+				ctx.fillText( r.text, x, y );
+
+			}
+
+			y += r.height;
 
 		}
 
-		y += r.height;
+	};
 
-	}
-
+	drawColumn( photoRows, PAD );
+	drawColumn( rows, PAD + left );
 	setCardTexture( card, canvas );
+	// Keep the text the same apparent size with or without the photo column.
+	card.userData.widthScale = W / ( PAD * 2 + STORY_TEXT_WIDTH );
 
 }
 
