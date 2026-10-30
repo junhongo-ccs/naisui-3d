@@ -37,10 +37,12 @@ async function getGeoidHeight( lat, lon ) {
 }
 
 // Building tilesets: one per ward for designated cities, otherwise one per city.
-// Prefer LOD2 without textures (light but still shaped), then LOD1.
+// Prefer textured LOD2 (photo walls and roofs make the streets recognizable in VR), then LOD2
+// without textures, then LOD1. A LOD2 set holds every building; those without a LOD2 model are
+// in it as LOD1, so it covers as much as the LOD1 set. The catalog gives `lod` as a string.
 function pickBuildings( datasets ) {
 
-	const score = e => ( e.lod === 2 && ! e.texture ? 0 : e.lod === 1 ? 1 : 2 );
+	const score = e => ( Number( e.lod ) === 2 ? ( e.texture ? 0 : 1 ) : Number( e.lod ) === 1 ? 2 : 3 );
 	const byWard = new Map();
 	for ( const e of datasets ) {
 

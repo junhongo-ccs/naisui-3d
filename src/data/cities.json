@@ -1,5 +1,5 @@
 {
-	"generatedAt": "2026-10-28T05:02:12.375Z",
+	"generatedAt": "2026-10-30T01:34:48.782Z",
 	"cities": [
 		{
 			"code": "03201",
@@ -32,7 +32,7 @@
 			"buildings": [
 				{
 					"name": "盛岡市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/ac/74a1d2-b1ea-45ca-be28-ec8309e663e6/03201_morioka-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/01/3332d3-97b0-4854-8b28-c6f2d73b35e3/03201_morioka-shi_city_2024_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -61,7 +61,7 @@
 			"buildings": [
 				{
 					"name": "福島市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/cd/54d857-d709-485a-be3a-6225ca790a09/07201_fukushima-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/5d/b7d2dc-415b-42ea-989e-1893f59c6c2a/07201_fukushima-shi_city_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -90,7 +90,7 @@
 			"buildings": [
 				{
 					"name": "相馬市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/68/be78b0-cc20-4d12-881a-761dad6b753d/07209_soma-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/c9/53b140-2a81-4e09-bc05-d4c33251926a/07209_soma-shi_city_2023_citygml_2_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -127,7 +127,7 @@
 				},
 				{
 					"name": "大宮区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/3e/15c0d4-30df-4e7e-aea9-031acd9e2a1e/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11103_omiya-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/fb/dd5dd6-eae8-4173-9c3c-73516fdc0c10/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11103_omiya-ku_lod2/tileset.json"
 				},
 				{
 					"name": "見沼区",
@@ -135,7 +135,7 @@
 				},
 				{
 					"name": "中央区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/65/764a2b-72b3-4a0d-8005-265cf38f6698/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11105_chuo-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/db/bc8662-fa14-4e03-a702-e366e367b1d4/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11105_chuo-ku_lod2/tileset.json"
 				},
 				{
 					"name": "桜区",
@@ -143,19 +143,19 @@
 				},
 				{
 					"name": "浦和区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/ea/2102eb-ab6c-405e-9968-23b9a8b43491/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11107_urawa-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/54/f558f0-9676-4976-b72e-325df2165799/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11107_urawa-ku_lod2/tileset.json"
 				},
 				{
 					"name": "南区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/13/907203-33d1-4cda-892e-c811af81e8f9/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11108_minami-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/aa/d72d50-1fd6-4b49-8d03-8dfcc0789d02/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11108_minami-ku_lod2/tileset.json"
 				},
 				{
 					"name": "緑区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/e8/f0b09c-871d-4ca5-8bfd-f8eaac87aa7f/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11109_midori-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/7b/41590b-da57-4fba-9140-269ddf6bbb13/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11109_midori-ku_lod2/tileset.json"
 				},
 				{
 					"name": "岩槻区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/45/06c81c-9561-4761-883d-8fe8555f9a18/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11110_iwatsuki-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/61/f34b51-0fa0-476c-ad4c-c0433310b3ee/11100_saitama-shi_city_2025_citygml_1_op_bldg_3dtiles_11110_iwatsuki-ku_lod2/tileset.json"
 				}
 			]
 		},
@@ -184,7 +184,7 @@
 			"buildings": [
 				{
 					"name": "上尾市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/35/8372d0-624f-42fb-adf5-736022d246b5/11219_ageo-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/ed/05e629-6afb-4f8b-b2a5-c98bd247d951/11219_ageo-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -213,7 +213,7 @@
 			"buildings": [
 				{
 					"name": "草加市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/30/67dc09-79e8-468d-9243-b2a7253e416d/11221_soka-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/f5/c8ea6e-d6f1-4a6d-9d04-9dee4f076554/11221_soka-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -242,7 +242,7 @@
 			"buildings": [
 				{
 					"name": "越谷市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/52/697228-ba16-4281-b194-4e7cd038ad38/11222_koshigaya-shi_pref_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/ad/279bb7-f67b-488c-99ea-42218b2d5bcd/11222_koshigaya-shi_pref_2023_citygml_2_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -271,7 +271,7 @@
 			"buildings": [
 				{
 					"name": "蕨市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/70/a3a85b-3a0c-488e-8d41-06de4c95fb8c/11223_warabi-shi_pref_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/47/4174c0-b95e-431a-8421-e63258999700/11223_warabi-shi_pref_2024_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -300,7 +300,7 @@
 			"buildings": [
 				{
 					"name": "和光市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/c0/1f4a3c-67dc-4101-a0bd-2c611562a995/11229_wako-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/d1/74f31a-818d-44e2-9c6d-fe5bb7b17c17/11229_wako-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -329,7 +329,7 @@
 			"buildings": [
 				{
 					"name": "北本市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/88/597f71-6ac0-45f5-bfa5-0fb1e0e754dd/11233_kitamoto-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/fe/990eb7-d2bb-421d-a829-32ac54e0a57b/11233_kitamoto-shi_pref_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -358,7 +358,7 @@
 			"buildings": [
 				{
 					"name": "中央区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/9e/73e2df-8fe1-44a4-a57d-3f7c9886e5b2/12100_chiba-shi_city_2024_citygml_1_op_bldg_3dtiles_12101_chuo-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/19/3f90ce-ffa2-4dfa-945e-e84161ec4a0d/12100_chiba-shi_city_2024_citygml_1_op_bldg_3dtiles_12101_chuo-ku_lod2/tileset.json"
 				}
 			]
 		},
@@ -387,7 +387,7 @@
 			"buildings": [
 				{
 					"name": "鎌倉市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/df/c163a1-13a3-4d1b-a8b0-4e07f949e091/14204_kamakura-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/fe/641541-cf5c-42a9-bcb8-532d159db8c9/14204_kamakura-shi_city_2024_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -416,7 +416,7 @@
 			"buildings": [
 				{
 					"name": "藤沢市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/ef/44cc4e-632e-4765-b7ca-5fa3f0929afc/14205_fujisawa-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/22/a4cda2-f741-43fb-8d75-a51b941b7577/14205_fujisawa-shi_city_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -445,7 +445,7 @@
 			"buildings": [
 				{
 					"name": "高岡市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/87/de16b9-f897-4f93-a9fa-3d922737ce80/16202_takaoka-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/f4/7e0ed7-43b1-4a86-b21e-2c29bf2daf79/16202_takaoka-shi_city_2024_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -480,31 +480,31 @@
 			"buildings": [
 				{
 					"name": "中区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/8d/01deb7-3c29-4faf-9d15-818d79158d52/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22131_naka-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/8e/e64279-974c-4b98-861d-1d2fa7c6a327/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22131_naka-ku_lod2/tileset.json"
 				},
 				{
 					"name": "東区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/b6/a0856d-d0c1-4d23-8ef9-b394fc6cb282/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22132_higashi-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/4c/42de6c-ad75-430f-a05d-e38ac912591d/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22132_higashi-ku_lod2/tileset.json"
 				},
 				{
 					"name": "西区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/ae/ab773c-c81c-4f8f-a430-e322dbc99d32/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22133_nishi-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/80/6d4bf9-528b-46f8-9cde-8745daf91e26/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22133_nishi-ku_lod2/tileset.json"
 				},
 				{
 					"name": "南区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/27/147bc6-2af0-4c8e-961f-b6fc72369ea5/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22134_minami-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/85/fc3819-da13-496a-8df8-38a94f68d1a0/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22134_minami-ku_lod2/tileset.json"
 				},
 				{
 					"name": "北区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/e6/0624ae-ccaa-4ac0-ab10-24195af4668a/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22135_kita-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/bb/837a45-ce49-4fa9-b677-5a851f91aaaa/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22135_kita-ku_lod2/tileset.json"
 				},
 				{
 					"name": "浜北区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/40/904295-ce38-46e5-a5b7-c3f27999d88f/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22136_hamakita-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/16/7e978c-2c6c-4f13-87e1-56c702dcc2c1/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22136_hamakita-ku_lod2/tileset.json"
 				},
 				{
 					"name": "天竜区",
-					"url": "https://assets.cms.plateau.reearth.io/assets/3d/a710d8-9e60-4935-8bf6-0d42aed3e26f/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22137_tenryu-ku_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/2b/cefa4f-e3c9-4b98-8e72-e528e85295b8/22130_hamamatsu-shi_city_2023_citygml_2_op_bldg_3dtiles_22137_tenryu-ku_lod2/tileset.json"
 				}
 			]
 		},
@@ -533,7 +533,7 @@
 			"buildings": [
 				{
 					"name": "豊橋市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/ab/4a7e2c-6565-46e0-a515-f8967267f87b/23201_toyohashi-shi_city_2024_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/d0/913540-3985-48d1-9c38-814ca0e85e88/23201_toyohashi-shi_city_2024_citygml_2_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -562,7 +562,7 @@
 			"buildings": [
 				{
 					"name": "春日井市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/90/408437-4e7c-4009-ae6e-aa040569bc17/23206_kasugai-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/a7/7c4c28-c235-4c21-899b-142d36d5e7e4/23206_kasugai-shi_city_2023_citygml_2_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -591,7 +591,7 @@
 			"buildings": [
 				{
 					"name": "豊田市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/68/f420ee-ad56-4e56-aef9-8efe133235c0/23211_toyota-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/03/ba4c95-5488-48ba-9b80-9ce3e4a24231/23211_toyota-shi_city_2023_citygml_2_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -620,7 +620,7 @@
 			"buildings": [
 				{
 					"name": "四日市市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/10/6645ff-8a6d-4e50-bebc-9cc3c590835c/24202_yokkaichi-shi_city_2022_citygml_4_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/7a/87ad1c-f1a0-4e52-aa02-eb2778e31121/24202_yokkaichi-shi_city_2022_citygml_4_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -655,7 +655,7 @@
 			"buildings": [
 				{
 					"name": "姫路市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/7e/feb981-bc38-4e5e-b6de-162d40d6bfe8/28201_himeji-shi_city_2023_citygml_2_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/0e/d29649-6196-4d81-97c7-41cc343b0942/28201_himeji-shi_city_2023_citygml_2_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -684,7 +684,7 @@
 			"buildings": [
 				{
 					"name": "倉敷市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/56/a12403-0cab-42f1-aa88-88dfa0dcae7a/33202_kurashiki-shi_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/42/929b43-4f53-4882-b7bc-7f50457dd377/33202_kurashiki-shi_city_2024_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -713,7 +713,7 @@
 			"buildings": [
 				{
 					"name": "早島町",
-					"url": "https://assets.cms.plateau.reearth.io/assets/a6/f01341-2226-4040-9b5e-6f7f40590937/33423_hayashima-cho_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/e8/cc8292-d7e6-4ab6-999c-61ca1371a52f/33423_hayashima-cho_city_2024_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -742,7 +742,7 @@
 			"buildings": [
 				{
 					"name": "海田町",
-					"url": "https://assets.cms.plateau.reearth.io/assets/36/6767af-258b-4463-9830-b8c9b774dc06/34304_kaita-cho_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/13/2cd8e8-086c-4a58-a88e-c0b396efba0e/34304_kaita-cho_city_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -771,7 +771,7 @@
 			"buildings": [
 				{
 					"name": "美波町",
-					"url": "https://assets.cms.plateau.reearth.io/assets/2c/fec6dc-7def-4c66-9bdc-494146fdb294/36387_minami-cho_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/a3/9fedc2-ee87-4d6e-829f-9592a984b89f/36387_minami-cho_city_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -800,7 +800,7 @@
 			"buildings": [
 				{
 					"name": "いの町",
-					"url": "https://assets.cms.plateau.reearth.io/assets/3a/3012f5-a12a-4db7-bb8e-3fbc44038a90/39386_ino-cho_city_2024_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/ed/64b217-5799-4b69-a3e4-cd2af54a644c/39386_ino-cho_city_2024_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -829,7 +829,7 @@
 			"buildings": [
 				{
 					"name": "鳥栖市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/31/df4ae2-f768-4dc2-b633-0f6074bebab9/41203_tosu-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/95/23596f-f1fe-4cf4-9e87-13a3cfec1cbc/41203_tosu-shi_city_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -858,7 +858,7 @@
 			"buildings": [
 				{
 					"name": "宇城市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/26/45473e-ecea-4a07-aacc-02307d257121/43213_uki-shi_city_2025_citygml_1_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/cf/4f8ba0-05ac-4ea6-b71c-8d543064dc75/43213_uki-shi_city_2025_citygml_1_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		},
@@ -887,7 +887,7 @@
 			"buildings": [
 				{
 					"name": "日田市",
-					"url": "https://assets.cms.plateau.reearth.io/assets/1f/09b8fd-abf0-478a-ab2f-8ad72882906f/44204_hita-shi_city_2020_citygml_7_op_bldg_3dtiles_lod1/tileset.json"
+					"url": "https://assets.cms.plateau.reearth.io/assets/7d/a6bad0-bcf9-4712-ae6e-c088845049b9/44204_hita-shi_city_2020_citygml_7_op_bldg_3dtiles_lod2/tileset.json"
 				}
 			]
 		}
