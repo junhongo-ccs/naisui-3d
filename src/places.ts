@@ -14,7 +14,10 @@ export type Place = {
 
 // What a story spot explains, in parts kept apart by kind: above all, the simulation (what the
 // colors show) apart from the record (what actually happened).
-type StoryKind = 'terrain' | 'mechanism' | 'simulation' | 'record' | 'plan';
+// 'river' is the prefecture's simulation of the river itself overflowing (外水), and 'study' the
+// city's own simulations for its sewer plans: both kept apart from 'simulation', which is what the
+// colors on screen show (内水).
+type StoryKind = 'terrain' | 'mechanism' | 'simulation' | 'river' | 'study' | 'record' | 'plan';
 type Story = {
 	sections: { kind: StoryKind, text: string }[],
 	sources: { label: string, url: string }[],
@@ -44,6 +47,8 @@ const STORY_LABELS: Record<StoryKind, { label: string, color: string }> = {
 	terrain: { label: '地形', color: '#64748b' },
 	mechanism: { label: 'しくみ', color: '#0f766e' },
 	simulation: { label: 'この色（想定）', color: '#2563eb' },
+	river: { label: '川があふれた場合の想定（県。この色とは別）', color: '#7c3aed' },
+	study: { label: '市の検討（シミュレーション）', color: '#475569' },
 	record: { label: '実際の被害（記録）', color: '#c2410c' },
 	plan: { label: 'これからの対策', color: '#15803d' },
 };

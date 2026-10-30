@@ -75,6 +75,63 @@
 				{ "label": "鎌倉市「雨水管理総合計画」（2026 年 3 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf" },
 				{ "label": "国土地理院 標高 API（地点の標高）", "url": "https://maps.gsi.go.jp/development/elevation_s.html" }
 			]
+		},
+		{
+			"name": "滑川が谷を出る所（東勝寺橋）",
+			"lat": 35.3211,
+			"lon": 139.55779,
+			"town": "小町三丁目",
+			"elevation": 11,
+			"sections": [
+				{ "kind": "terrain", "text": "滑川は鎌倉の東の山から、谷あいを西へ流れてきます。このあたりで谷を出て、市街地の低い土地に入ります。周りの谷戸（山に囲まれた細長い谷）に降った雨も、水路や小さな川を通って滑川に集まります。" },
+				{ "kind": "mechanism", "text": "街に降った雨は、下水道の管で川へ流しています。大雨で川の水位が上がると、管の出口が川の水面より下になり、雨水が川へ流れ込めなくなります。すると管からあふれて、街が水につかります（内水氾濫）。市の調査も、浸水の原因に「出口の川の水位が高かったこと」を挙げています。" },
+				{ "kind": "river", "text": "この画面の色は、下水があふれる内水の想定です。川そのものがあふれる洪水の想定は、神奈川県が別に作っています。滑川の流域に 24 時間で 309 mm の雨が降り、この橋から海までの間で滑川があふれた場合、小町から大町・材木座にかけての低い土地が 0.5〜3 m 水につかる想定です（2020 年）。" },
+				{ "kind": "record", "text": "2026 年 9 月の台風 25 号では、市が滑川や神戸川の流域などに避難指示を出しました（報道）。" }
+			],
+			"sources": [
+				{ "label": "神奈川県「滑川水系滑川 洪水浸水想定区域図（想定最大規模）」（2020 年）", "url": "https://www.pref.kanagawa.jp/documents/10912/nameri_saidai.pdf" },
+				{ "label": "鎌倉市 下水道計画「基礎調査」", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/kisochousa_1.pdf" },
+				{ "label": "タウンニュース鎌倉版（2026 年 10 月 2 日）", "url": "https://www.townnews.co.jp/0602/2026/10/02/855379.html" }
+			]
+		},
+		{
+			"name": "滑川の下流（延命寺橋・大町）",
+			"lat": 35.31564,
+			"lon": 139.55045,
+			"town": "御成町",
+			"elevation": 5,
+			"sections": [
+				{ "kind": "terrain", "text": "滑川沿いの低い土地です（標高 5 m ほど）。この先、川は大町・材木座の間を通って海へ出ます。" },
+				{ "kind": "record", "text": "2025 年 9 月の台風 15 号（鎌倉消防署で 1 時間 60.5 mm）では、川の東側の大町で床上浸水 2 件・床下浸水 2 件、下流の材木座で床上浸水 1 件、鎌倉駅の南の下馬で道路の冠水がありました。" },
+				{ "kind": "mechanism", "text": "川に近い低い土地は、川の水位が上がると下水が流れ出にくくなる内水と、川そのものからあふれる洪水の両方に注意が要ります。" },
+				{ "kind": "river", "text": "神奈川県の想定（滑川の流域に 24 時間で 309 mm）では、滑川があふれると、このあたりから大町・材木座にかけて 0.5〜3 m 水につかります。" },
+				{ "kind": "plan", "text": "下流の材木座の古川地区では、海岸橋から九品寺の間の下水道の管の付け替えと、雨水の水路を深く掘ることで、浸水をなくす対策が検討されています。" }
+			],
+			"sources": [
+				{ "label": "鎌倉市下水道事業運営審議会「雨水管理総合計画について」（2025 年 10 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_3_1.pdf" },
+				{ "label": "神奈川県「滑川水系滑川 洪水浸水想定区域図（想定最大規模）」（2020 年）", "url": "https://www.pref.kanagawa.jp/documents/10912/nameri_saidai.pdf" },
+				{ "label": "鎌倉市 下水道計画「対策検討」", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/taisakukenntou.pdf" },
+				{ "label": "国土地理院 標高 API（地点の標高）", "url": "https://maps.gsi.go.jp/development/elevation_s.html" }
+			]
+		},
+		{
+			"name": "佐助川・鎌倉駅の西",
+			"lat": 35.31726,
+			"lon": 139.54795,
+			"town": "御成町",
+			"elevation": 4.5,
+			"sections": [
+				{ "kind": "terrain", "text": "佐助の谷戸から流れてくる佐助川が、鎌倉駅の西側の低い土地（標高 4〜5 m）を通ります。谷に降った雨が、短い時間でこの低い所に集まります。" },
+				{ "kind": "study", "text": "市が下水道の計画を作るときのシミュレーション（2004 年 10 月の台風 22 号と同じ雨）でも、鎌倉駅の周りから南にかけて浸水が出ました。" },
+				{ "kind": "record", "text": "2025 年 9 月の台風 15 号では、駅の南の下馬で道路が冠水しました。" },
+				{ "kind": "plan", "text": "このあたりの佐助川排水区は、市の評価で浸水のリスクが最も高い「重点対策地区」です。御成小学校に雨水をためる調整池を作るなどの計画です（長期、おおむね 30 年）。" }
+			],
+			"sources": [
+				{ "label": "鎌倉市 下水道計画「重点対策地区の設定」", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/juutenntiku.pdf" },
+				{ "label": "鎌倉市下水道事業運営審議会「雨水管理総合計画について」（2025 年 10 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/1003_3_1.pdf" },
+				{ "label": "鎌倉市「雨水管理総合計画」（2026 年 3 月）", "url": "https://www.city.kamakura.kanagawa.jp/gesui/documents/r7usuikanrisougoukeikaku.pdf" },
+				{ "label": "国土地理院 標高 API（地点の標高）", "url": "https://maps.gsi.go.jp/development/elevation_s.html" }
+			]
 		}
 	]
 }
