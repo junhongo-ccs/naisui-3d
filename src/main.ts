@@ -603,7 +603,8 @@ renderer.xr.addEventListener( 'sessionend', () => {
 
 } );
 
-// Google's terms: show the data providers of the tiles in view, along with Google's name.
+// Google's terms: say which part of the scene is Google Maps data, and show the data providers of
+// the tiles in view in full.
 let sinceAttribution = Infinity;
 function updateGoogleAttribution( dt: number ) {
 
@@ -611,7 +612,7 @@ function updateGoogleAttribution( dt: number ) {
 	if ( sinceAttribution < 1 ) return;
 	sinceAttribution = 0;
 	const text = terrain.getAttributions().filter( a => a.type === 'string' ).map( a => a.value ).join( ' ' );
-	$( '#google-attribution' ).textContent = `／ 3D: Google${ text ? `（${ text }）` : '' }`;
+	$( '#google-attribution' ).textContent = `／ 地面・建物の 3D: Google Maps${ text ? `（${ text }）` : '' }`;
 
 }
 

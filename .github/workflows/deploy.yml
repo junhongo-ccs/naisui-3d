@@ -27,6 +27,8 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          # 本番用のキー（公開 URL だけを許可したもの）。無ければ地理院＋PLATEAU で作る。
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
