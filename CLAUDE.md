@@ -1,6 +1,6 @@
 # naisui-3d
 
-PLATEAU の内水浸水想定区域モデル（`ifld`）を、建物（`bldg`）と地理院タイルの地形に重ねて表示する 3D ビューア。
+PLATEAU の内水浸水想定区域モデル（`ifld`）を、地面・建物の 3D（公開版は Google Photorealistic 3D Tiles、キーが無ければ地理院の地形と PLATEAU の建物 `bldg`）に重ねて表示する 3D ビューア。
 PC・スマホのブラウザと、Meta Quest（WebXR）で同じページを見る。
 兄弟プロジェクト: [naisui](https://github.com/junhongo-ccs/naisui)（品川区 中延・二葉の内水氾濫 PoC）。
 
@@ -80,6 +80,6 @@ XR カメラには親が無く、`getWorldPosition` などがリグ基準の値�
 
 ## 方針
 
-- API キーが要らないこと（誰でも URL を開くだけで見られること）を優先してきたが、PLATEAU の建物が重すぎて Quest で出ないため、`google-3d` ブランチで Google Photorealistic 3D Tiles を試している（`VITE_GOOGLE_MAPS_API_KEY` が `.env` にあるときだけ。無ければ地理院＋PLATEAU）。キーは自分で扱わない（ユーザーが `.env` に書く。中身を表示・コピーしない）。Google を使うときは、表示中のタイルの提供元を画面の出典に出す。
+- 公開版の地面と建物は Google Photorealistic 3D Tiles（PLATEAU の建物が重すぎて Quest で出なかったため）。キーは開発中は `.env`、公開版は GitHub の Actions secret `VITE_GOOGLE_MAPS_API_KEY` を `deploy.yml` がビルドに渡す。キーが無ければ地理院の地形＋PLATEAU の建物で動く（このときの表示も壊さない）。PLATEAU は浸水想定区域、地理院は手の地図とピンのデータで、どちらの場合も使う。キーは自分で扱わない（ユーザーが `.env` に書く。中身を表示・コピーしない）。Google を使うときは、表示中のタイルの提供元を画面の出典に出す。
 - 浸水想定は自治体のシミュレーション結果。画面や文書で「実際の浸水」「予報」のように書かない。
 - 出典表記（PLATEAU、地理院タイル）を画面から消さない。
