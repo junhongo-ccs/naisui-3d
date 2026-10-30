@@ -91,9 +91,26 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	// Height of the ground (terrain or roof) under a point, in local meters.
 	function groundAt( x: number, z: number ): number {
 
-		raycaster.set( new THREE.Vector3( x, 5000, z ), new THREE.Vector3( 0, - 1, 0 ) );
+		return castDown( x, 5000, z ) ?? 0;
+
+	}
+
+	function castDown( x: number, y: number, z: number ): number | null {
+
+		raycaster.set( new THREE.Vector3( x, y, z ), new THREE.Vector3( 0, - 1, 0 ) );
 		const hit = raycaster.intersectObjects( groundTargets(), true )[ 0 ];
-		return hit ? hit.point.y : 0;
+		return hit ? hit.point.y : null;
+
+	}
+
+	// The floor under the user standing at (x, y, z): the first surface below head height, so going
+	// under a tree or a bridge doesn't lift the user onto it. If there is none, the feet are inside
+	// the ground (its surface faces up, so a ray from inside misses it), and the floor is the
+	// surface above.
+	const HEAD_ROOM = 2; // m above the feet
+	function floorUnder( x: number, y: number, z: number ): number {
+
+		return castDown( x, y + HEAD_ROOM, z ) ?? castDown( x, 5000, z ) ?? - Infinity;
 
 	}
 
@@ -255,11 +272,12 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		if ( sinceGround >= GROUND_INTERVAL ) {
 
 			sinceGround = 0;
-			groundY = groundAt( rig.position.x, rig.position.z );
+			groundY = floorUnder( rig.position.x, rig.position.y, rig.position.z );
 
 		}
 
-		const height = Math.max( rig.position.y - groundY, 0 );
+		// (No ground under the user at all, e.g. before the tiles load: walking speed.)
+		const height = Number.isFinite( groundY ) ? Math.max( rig.position.y - groundY, 0 ) : 0;
 		lastHeight = height;
 		const speed = Math.max( MIN_SPEED, height ) * ( boost ? BOOST : 1 ) * dt;
 		headCam.getWorldDirection( forward );
@@ -270,6 +288,9 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		rig.position.addScaledVector( right, move[ 0 ] * speed );
 		rig.position.y += lift * speed;
 		bounds().clampPoint( rig.position, rig.position );
+		// Never below the ground: sinking stops at the floor, and walking into rising ground
+		// climbs it.
+		rig.position.y = Math.max( rig.position.y, groundY );
 
 		if ( Math.abs( turn ) > 0.7 && ! turnLatched ) {
 

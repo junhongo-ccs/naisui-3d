@@ -719,6 +719,28 @@ function placeStartEye() {
 
 }
 
+// Keep the map view's camera above the ground (orbiting low, it could dip into a hill). The
+// ground under it is looked up a few times a second, the raycast being heavy.
+const CAMERA_CLEARANCE = 2; // m
+const groundRay = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ) );
+groundRay.firstHitOnly = true;
+let groundUnderCamera = - Infinity;
+let sinceGroundCheck = Infinity;
+function keepAboveGround( dt: number ) {
+
+	sinceGroundCheck += dt;
+	if ( sinceGroundCheck >= 0.2 ) {
+
+		sinceGroundCheck = 0;
+		groundRay.ray.origin.set( camera.position.x, 5000, camera.position.z );
+		groundUnderCamera = groundRay.intersectObjects( raycastTargets( [ terrain, ...buildings ] ), true )[ 0 ]?.point.y ?? - Infinity;
+
+	}
+
+	camera.position.y = Math.max( camera.position.y, groundUnderCamera + CAMERA_CLEARANCE );
+
+}
+
 // ─── loop ───────────────────────────────────────────────────────────────────
 const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
@@ -732,7 +754,12 @@ renderer.setAnimationLoop( () => {
 
 	const xr = renderer.xr;
 	if ( xr.isPresenting ) vr.update( dt );
-	else controls.update();
+	else {
+
+		controls.update();
+		keepAboveGround( dt );
+
+	}
 
 	scene.updateMatrixWorld();
 	const active = xr.isPresenting ? xr.getCamera() : camera;
