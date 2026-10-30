@@ -457,7 +457,21 @@ function buildUI() {
 	raise.addEventListener( 'change', () => setWaterRaised( raise.checked ) );
 
 	$( '#panel-toggle' ).addEventListener( 'click', () => document.body.classList.toggle( 'panel-closed' ) );
-	if ( window.innerWidth < 640 ) document.body.classList.add( 'panel-closed' );
+	// On a phone (narrow, or held sideways and so short) the panel starts folded, to leave the map.
+	if ( window.innerWidth < 640 || window.innerHeight < 500 ) document.body.classList.add( 'panel-closed' );
+
+	// Phones are asked to turn sideways (see #rotate in style.css). Where the browser can lock the
+	// orientation (Android, in full screen), a button does it.
+	const lock = $<HTMLButtonElement>( '#rotate-lock' );
+	const orientation = screen.orientation as ScreenOrientation & { lock?: ( o: string ) => Promise<void> };
+	lock.hidden = ! ( document.fullscreenEnabled && typeof orientation?.lock === 'function' );
+	lock.addEventListener( 'click', () => {
+
+		document.documentElement.requestFullscreen()
+			.then( () => orientation.lock?.( 'landscape' ) )
+			.catch( () => {} );
+
+	} );
 
 	renderCityUI();
 
@@ -651,8 +665,16 @@ if ( import.meta.env.DEV ) {
 }
 
 // ─── VR ─────────────────────────────────────────────────────────────────────
+// Only shown where VR can be entered (a headset's browser): on a PC or phone it would just say
+// "VR NOT SUPPORTED". The VR line of the help text goes with it.
 const vrButton = VRButton.createButton( renderer ) as HTMLButtonElement;
-document.body.appendChild( vrButton );
+navigator.xr?.isSessionSupported( 'immersive-vr' ).then( ok => {
+
+	if ( ! ok ) return;
+	document.body.appendChild( vrButton );
+	$( '#vr-hint' ).hidden = false;
+
+} ).catch( () => {} );
 
 // Keep the VR button shut until the city, and the buildings at the VR start point, have first
 // loaded: entering on half-loaded tiles shows a flat photo where the buildings should be. There

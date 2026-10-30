@@ -34,9 +34,15 @@
 				<label class="check"><input id="show-buildings" type="checkbox" checked /> 建物を表示</label>
 
 				<p class="hint">ドラッグ／1本指: 回転 ・ 右ドラッグ／2本指: 移動 ・ ホイール／ピンチ: ズーム ・ クリック／タップ: 浸水深を表示、ピン（目印・避難所・青い i の解説）の説明を開く・閉じる</p>
-				<p class="hint">VR: 左スティックで移動、右スティック左右で向きを変える、上下で高さ、トリガーで加速、右手で浸水域を指すと想定浸水深を表示、ピンを指して右トリガーで説明を開く・閉じる、A ボタンで水面の上げ下げ、X で診断表示、Y でスタート地点、B で VR を終了。左手に市の地図と現在地が出ます</p>
+				<p id="vr-hint" class="hint" hidden>VR: 左スティックで移動、右スティック左右で向きを変える、上下で高さ、トリガーで加速。右手で浸水域を指すと想定浸水深、ピンを指して右トリガーで説明（× で閉じる）。A／B を押している間、水面が上がる／下がる。左手の地図の点を指して右トリガーでそこへ移動。X で診断、Y で出発点。Meta ボタン長押しで終了</p>
 			</div>
 		</aside>
+
+		<div id="rotate" role="dialog" aria-label="横向きにしてください">
+			<div class="rotate-phone" aria-hidden="true"></div>
+			<p>スマホを横向きにしてご覧ください</p>
+			<button id="rotate-lock" type="button" hidden>全画面・横向きで見る</button>
+		</div>
 
 		<section id="legend" hidden>
 			<h2>想定浸水深</h2>
