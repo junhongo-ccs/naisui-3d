@@ -4,3 +4,5 @@ dist/
 .DS_Store
 .env
 .env.*
+# Browser profiles left by tools that render pages (e.g. the share image)
+.chrome-*/

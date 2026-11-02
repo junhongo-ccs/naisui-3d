@@ -43,12 +43,16 @@ let vrCapable = false;
 // A phone's tiles load lighter (addTiles, the loop): its memory for the GPU is small, and
 // textures that no longer fit draw black.
 const lightTiles = () => touchUI && ! vrCapable;
-// Memory for the tiles kept loaded, per tileset: on a phone a third of the library's default.
+// All tilesets share the library's LRU cache. Keep more of the city in memory on a desktop so
+// turning away and back does not fetch and decode the same textured tiles again. Increase the
+// headset budget more cautiously; phones keep a smaller limit for browser and GPU memory.
 // iPhone's Safari closes a page that grows past its (small) limit, and after the second time
-// shows "問題が繰り返し起きました". A full cache refuses new tiles, so this must not reach a
-// headset: in VR it left tiles missing and "読み込み中" up for good.
-const TOUCH_CACHE = { min: 100e6, max: 150e6 }; // bytes
-const DEFAULT_CACHE = { min: 0.3 * 2 ** 30, max: 0.4 * 2 ** 30 }; // bytes, the library's
+// shows "問題が繰り返し起きました" (that was at 430 MB, with the VR start point loaded besides).
+// A full cache refuses new tiles: on the street a phone's 150 MB left coarse tiles in place of
+// fine ones, and in VR such a limit left tiles missing and "読み込み中" up for good.
+const TOUCH_CACHE = { min: 200e6, max: 280e6 }; // bytes
+const HEADSET_CACHE = { min: 0.4 * 2 ** 30, max: 0.6 * 2 ** 30 }; // bytes
+const DESKTOP_CACHE = { min: 0.75 * 2 ** 30, max: 1 * 2 ** 30 }; // bytes, shared by all tilesets
 
 const cities = ONLY_CITY ? catalog.cities.filter( c => c.code === ONLY_CITY ) : catalog.cities;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
@@ -229,8 +233,8 @@ const DEFAULT_BASE: BaseMapKey = 'photo';
 let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : DEFAULT_BASE;
 // How fine the ground's tiles load: the screen error, in pixels, a tile may show before its finer
 // children are loaded instead (the library's default is 16). Smaller is finer, and loads and holds
-// more. ?detail=8 tries it, to weigh the look against the loading on a headset.
-const DEFAULT_DETAIL = 16;
+// more. 12 balances detail and loading; ?detail= can still override it for comparison.
+const DEFAULT_DETAIL = 12;
 const detail = Number( params.get( 'detail' ) ) > 0 ? Number( params.get( 'detail' ) ) : DEFAULT_DETAIL;
 // The ground: GSI terrain, or Google's 3D tiles (ground and buildings in one).
 function createGround() {
@@ -559,7 +563,7 @@ function addTiles( tiles: TilesRenderer ) {
 
 function sizeCache( tiles: TilesRenderer ) {
 
-	const cache = lightTiles() ? TOUCH_CACHE : DEFAULT_CACHE;
+	const cache = lightTiles() ? TOUCH_CACHE : vrCapable ? HEADSET_CACHE : DESKTOP_CACHE;
 	tiles.lruCache.minBytesSize = cache.min;
 	tiles.lruCache.maxBytesSize = cache.max;
 
@@ -1239,9 +1243,12 @@ const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
 const eye = new THREE.Vector3();
 const eyeRotation = new THREE.Quaternion();
-// On a touch screen the tiles are picked as if for a screen this much smaller: a phone's pixels
-// are fine enough that coarser tiles look much the same, and they take less memory and time.
+// On a phone, from above, the tiles are picked as if for a screen this much smaller: a phone's
+// pixels are fine enough that coarser tiles look much the same there, and the memory saved goes
+// to the street. On the street, where the town is seen up close, they are picked for the screen
+// as it is (the phone is used on Wi-Fi, so slower loading is fine for a sharper town).
 const TOUCH_DETAIL = 0.65;
+const TOUCH_DETAIL_STREET = 1;
 const drawingBuffer = new THREE.Vector2();
 const loading = createLoadingIndicator( camera );
 renderer.setAnimationLoop( () => {
@@ -1297,7 +1304,12 @@ renderer.setAnimationLoop( () => {
 		}
 
 		if ( xr.isPresenting ) t.setResolution( active, XR_RESOLUTION, XR_RESOLUTION );
-		else if ( light ) t.setResolution( camera, drawingBuffer.x * TOUCH_DETAIL, drawingBuffer.y * TOUCH_DETAIL );
+		else if ( light ) {
+
+			const k = street.active ? TOUCH_DETAIL_STREET : TOUCH_DETAIL;
+			t.setResolution( camera, drawingBuffer.x * k, drawingBuffer.y * k );
+
+		}
 		else t.setResolutionFromRenderer( camera, renderer );
 		if ( eyes.includes( startEye ) ) t.setResolution( startEye, XR_RESOLUTION, XR_RESOLUTION );
 		t.update();

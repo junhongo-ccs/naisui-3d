@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">内水浸水 3D</title>
+  <desc id="desc">鎌倉の浸水想定を3Dのまちで見る。青の線画で街と水の広がりを表したOGP画像。</desc>
+  <rect width="1200" height="630" fill="#f3f8fb"/>
+  <path d="M0 500 C190 450 335 545 515 503 S825 447 1200 520 V630 H0Z" fill="#e2f0f6"/>
+  <path d="M0 551 C165 501 340 582 524 546 S900 505 1200 563" fill="none" stroke="#a5d3e5" stroke-width="3"/>
+  <path d="M0 577 C180 542 338 610 510 583 S881 550 1200 595" fill="none" stroke="#a5d3e5" stroke-width="2"/>
+  <g fill="none" stroke="#4f91b6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M79 79h37m-28 10h36m-47 10h32" stroke-width="4"/>
+    <path d="M80 118c11 0 11 7 22 7s11-7 22-7 11 7 22 7" stroke-width="3"/>
+  </g>
+  <text x="164" y="111" fill="#174a70" font-family="Yu Gothic, Meiryo, sans-serif" font-size="24" font-weight="700" letter-spacing="3">KAMAKURA  ·  FLOOD VISUALIZER</text>
+  <text x="77" y="234" fill="#18242b" font-family="Yu Gothic, Meiryo, sans-serif" font-size="78" font-weight="800" letter-spacing="2">内水浸水 3D</text>
+  <rect x="80" y="268" width="76" height="5" rx="2.5" fill="#4f91b6"/>
+  <text x="78" y="338" fill="#174a70" font-family="Yu Gothic, Meiryo, sans-serif" font-size="34" font-weight="700">鎌倉の浸水想定を、</text>
+  <text x="78" y="393" fill="#174a70" font-family="Yu Gothic, Meiryo, sans-serif" font-size="34" font-weight="700">3Dのまちで見る。</text>
+  <rect x="79" y="448" width="124" height="43" rx="21.5" fill="#174a70"/>
+  <text x="141" y="477" text-anchor="middle" fill="#ffffff" font-family="Yu Gothic, Meiryo, sans-serif" font-size="21" font-weight="700">鎌倉市</text>
+
+  <!-- Isometric street: one dark line weight, with three related blues for water. -->
+  <g stroke="#174a70" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M612 392 853 260 1114 388 874 524Z" fill="#f3f8fb"/>
+    <path d="M612 392v42l262 132v-42m0 42 240-136v-42" fill="none"/>
+    <path d="M667 395 855 293 1052 391 868 495Z" fill="#e2f0f6"/>
+    <path d="M667 395 868 495 1052 391" fill="none" stroke="#a5d3e5" stroke-width="2"/>
+    <path d="M727 388 869 463m-20-147 141 71M785 427l196-106M856 466l185-104" fill="none" stroke="#a5d3e5" stroke-width="2"/>
+
+    <!-- Rear buildings. -->
+    <path d="m777 281 71-38 72 36-70 39Z" fill="#f3f8fb"/>
+    <path d="M777 281v87l73 38v-88l70-39v87l-70 40" fill="#e2f0f6"/>
+    <path d="m850 318 70-39v87l-70 40Z" fill="#a5d3e5"/>
+    <path d="m950 318 55-30 56 28-56 31Z" fill="#f3f8fb"/>
+    <path d="M950 318v63l55 28v-62l56-31v64l-56 29" fill="#e2f0f6"/>
+    <path d="m1005 347 56-31v64l-56 29Z" fill="#a5d3e5"/>
+
+    <!-- Front buildings. -->
+    <path d="m677 361 52-27 53 27-53 28Z" fill="#f3f8fb"/>
+    <path d="M677 361v71l52 27v-70l53-28v71l-53 27" fill="#e2f0f6"/>
+    <path d="m729 389 53-28v71l-53 27Z" fill="#a5d3e5"/>
+    <path d="m903 392 56-30 58 30-57 31Z" fill="#f3f8fb"/>
+    <path d="M903 392v75l57 29v-73l57-31v76l-57 28" fill="#e2f0f6"/>
+    <path d="m960 423 57-31v76l-57 28Z" fill="#a5d3e5"/>
+  </g>
+  <g fill="none" stroke="#4f91b6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m795 299 16 8v17l-16-8Zm35 18 12 6v15l-12-6Zm37 3 18-10m-18 30 18-10m-90 13 16 8v17l-16-8Zm35 18 12 6v15l-12-6Z"/>
+    <path d="m965 335 14 7v14l-14-7Zm57 21 15-8m-15 26 15-8m-57 5 14 7v14l-14-7Z"/>
+    <path d="m691 383 13 7v14l-13-7Zm60 17 14-8m-14 26 14-8m-74 12 13 7v14l-13-7Z"/>
+    <path d="m918 418 14 7v15l-14-7Zm64 21 16-9m-16 27 16-9m-80-3 14 7v15l-14-7Z"/>
+  </g>
+  <!-- The flood layer stays on the ground plane, as in the viewer. -->
+  <path d="M619 417c47-12 81-3 121 13 50 20 58 52 118 53 44 1 62-37 114-31 45 5 72 27 125 12l16-34-239 136-262-132Z" fill="#4f91b6" opacity=".72"/>
+  <g fill="none" stroke="#f3f8fb" stroke-width="3" stroke-linecap="round">
+    <path d="M650 441c48-9 73 7 107 23m40 15c45 20 69 22 106 2m43-15c39-18 76-4 111 4"/>
+    <path d="M696 470c35 0 58 8 88 23m109 15c48-7 75-35 123-30"/>
+  </g>
+  <circle cx="1085" cy="176" r="44" fill="#e2f0f6" stroke="#a5d3e5" stroke-width="3"/>
+  <path d="M1085 151c-13 18-20 29-20 41a20 20 0 0 0 40 0c0-12-7-23-20-41Z" fill="none" stroke="#4f91b6" stroke-width="4" stroke-linejoin="round"/>
+</svg>
