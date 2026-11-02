@@ -20,7 +20,7 @@ Google 3D は 1 日 100 回まで（ページを開くたびに 1 回。開発�
 市の中で見せる範囲は `AREA`（地面・浸水タイル・ピン・手の地図・VR で動ける範囲がこれに従う）、VR の出発点は `VR_START`。
 出発点は道路の中心線の座標で決める（地理院の地名検索の点は建物の中にあることがあり、Google 3D だと壁の中に立ってしまう。若宮大路の点は道路から約 70 m 西だった）。
 `?base=photo|pale|std` で背景地図を切り替えられる。
-タッチ画面（`(pointer: coarse)`）ではスマホ用の表示になる（ピンは HTML、説明はモーダル、凡例はたたむ、まちの中から見るボタン）。`?ui=touch` で PC でも試せ、`?ui=desktop` で PC 用に戻せる。Chrome のウィンドウが最大化されていて大きさを変えられないときは、ページに 844×390 の iframe を置いて `/?ui=touch` を開くとスマホの横向きの大きさで見られる。
+タッチ画面（`(pointer: coarse)`）ではスマホ用の表示になる（ピンは HTML、説明はモーダル、凡例はたたむ、まちの中から見るボタン）。タイルも軽くする：VR の出発点の先読みをしない、タイルセットごとのメモリを 100〜150 MB に（既定は 0.3〜0.4 GB）、タイルは画面の 0.65 倍の解像度向けに選ぶ（`TOUCH_CACHE`, `TOUCH_DETAIL`）。iPhone の Safari で Google 3D が角度によって黒くなり、やがて「問題が繰り返し起きました」でページが落ちたため（メモリ不足）。それでも WebGL が落ちたら「読み込み直す」の案内を出す。`?ui=touch` で PC でも試せ、`?ui=desktop` で PC 用に戻せる。Chrome のウィンドウが最大化されていて大きさを変えられないときは、ページに 844×390 の iframe を置いて `/?ui=touch` を開くとスマホの横向きの大きさで見られる。
 画面からの市町村の切り替えはページを読み込み直さない（`switchCity`。VR を切らずに移れるように）。
 開発時は `window.app`（renderer, scene, world, camera, controls, legend, pins, minimap, toLocal, toLatLon, vr, city, terrain, buildings, floods）からコンソールで状態を見られる。
 

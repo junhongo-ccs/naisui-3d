@@ -30,6 +30,16 @@ const GOOGLE_KEY: string | undefined = import.meta.env.VITE_GOOGLE_MAPS_API_KEY 
 // Whether Google's tiles are in use: there is a key, and they haven't failed to load (the day's
 // quota used up, say), in which case the GSI terrain and PLATEAU buildings take over.
 let useGoogle = !! GOOGLE_KEY;
+// On a touch screen (a phone or tablet; or ?ui=touch, to try it on a PC) the pins' labels are
+// HTML over the view, larger to tap, and a pin's description opens as a modal rather than as a
+// card in the scene (src/touch-pins.ts, src/place-dialog.ts). VR is the same either way.
+// The tiles load lighter there, too (addTiles, the loop): a phone's memory for the GPU is small,
+// and textures that no longer fit draw black.
+const touchUI = params.get( 'ui' ) === 'touch' || ( params.get( 'ui' ) !== 'desktop' && matchMedia( '(pointer: coarse)' ).matches );
+// Memory for the tiles kept loaded, per tileset, on a touch screen: a third of the library's
+// default (0.3–0.4 GB). iPhone's Safari closes a page that grows past its (small) limit, and
+// after the second time shows "問題が繰り返し起きました".
+const TOUCH_CACHE = { min: 100e6, max: 150e6 }; // bytes
 
 const cities = ONLY_CITY ? catalog.cities.filter( c => c.code === ONLY_CITY ) : catalog.cities;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
@@ -370,10 +380,6 @@ loadCityTiles();
 const pins = createPins();
 scene.add( pins.group );
 const minimap = createMinimap();
-// On a touch screen (a phone or tablet; or ?ui=touch, to try it on a PC) the pins' labels are
-// HTML over the view, larger to tap, and a pin's description opens as a modal rather than as a
-// card in the scene (src/touch-pins.ts, src/place-dialog.ts). VR is the same either way.
-const touchUI = params.get( 'ui' ) === 'touch' || ( params.get( 'ui' ) !== 'desktop' && matchMedia( '(pointer: coarse)' ).matches );
 const pinLayer = $( '#pin-layer' );
 const touchPins = createTouchPins( pinLayer );
 const placeDialog = createPlaceDialog( () => touchPins.setActive( null ) );
@@ -502,6 +508,13 @@ function addTiles( tiles: TilesRenderer ) {
 
 	tiles.setCamera( camera );
 	tiles.setResolutionFromRenderer( camera, renderer );
+	if ( touchUI ) {
+
+		tiles.lruCache.minBytesSize = TOUCH_CACHE.min;
+		tiles.lruCache.maxBytesSize = TOUCH_CACHE.max;
+
+	}
+
 	world.add( tiles.group );
 	return tiles;
 
@@ -647,8 +660,8 @@ function buildUI() {
 
 }
 
-// As the VR button is: shut until the first load, including the street at the start point, is
-// done, so the view doesn't drop onto half-loaded ground.
+// As the VR button is: shut until the first load is done, so the view doesn't drop onto ground
+// whose first, coarse tiles aren't even in yet.
 let streetGateOpen = false;
 function gateStreetButton( settled: boolean ) {
 
@@ -853,6 +866,12 @@ renderer.domElement.addEventListener( 'pointerup', e => {
 
 } );
 
+// The browser can take the GPU away from the page (on a phone, when it runs short of memory): the
+// view goes black. Say so and offer a reload, rather than leave a black screen.
+renderer.domElement.addEventListener( 'webglcontextlost', () => ( $( '#context-lost' ).hidden = false ) );
+renderer.domElement.addEventListener( 'webglcontextrestored', () => ( $( '#context-lost' ).hidden = true ) );
+$( '#context-lost-reload' ).addEventListener( 'click', () => location.reload() );
+
 window.addEventListener( 'resize', () => {
 
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -996,6 +1015,10 @@ const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
 const eye = new THREE.Vector3();
 const eyeRotation = new THREE.Quaternion();
+// On a touch screen the tiles are picked as if for a screen this much smaller: a phone's pixels
+// are fine enough that coarser tiles look much the same, and they take less memory and time.
+const TOUCH_DETAIL = 0.65;
+const drawingBuffer = new THREE.Vector2();
 const loading = createLoadingIndicator( camera );
 renderer.setAnimationLoop( () => {
 
@@ -1034,8 +1057,11 @@ renderer.setAnimationLoop( () => {
 	}
 
 	// Outside VR, also look from the VR start point, so its street-level tiles are loaded (and the
-	// VR button held back) before the user steps in, instead of popping in after.
-	const eyes = xr.isPresenting ? [ active ] : placeStartEye() ? [ camera, startEye ] : [ camera ];
+	// VR button held back) before the user steps in, instead of popping in after. Not on a touch
+	// screen, which has no VR: there it would double what loads, and the street view loads its
+	// tiles as it goes.
+	const eyes = xr.isPresenting ? [ active ] : ! touchUI && placeStartEye() ? [ camera, startEye ] : [ camera ];
+	if ( touchUI && ! xr.isPresenting ) renderer.getDrawingBufferSize( drawingBuffer );
 	let busy = false;
 	for ( const t of allTiles() ) {
 
@@ -1047,6 +1073,7 @@ renderer.setAnimationLoop( () => {
 		}
 
 		if ( xr.isPresenting ) t.setResolution( active, XR_RESOLUTION, XR_RESOLUTION );
+		else if ( touchUI ) t.setResolution( camera, drawingBuffer.x * TOUCH_DETAIL, drawingBuffer.y * TOUCH_DETAIL );
 		else t.setResolutionFromRenderer( camera, renderer );
 		if ( eyes.includes( startEye ) ) t.setResolution( startEye, XR_RESOLUTION, XR_RESOLUTION );
 		t.update();

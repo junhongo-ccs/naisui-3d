@@ -257,6 +257,34 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 @media (prefers-reduced-motion: reduce) {
 	.rotate-phone { animation: none; transform: rotate(-90deg); }
 }
+/* The GPU was taken away from the page (main.ts): over the black view, a way back. */
+#context-lost {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	padding: 24px;
+	background: rgb(20 26 36 / 0.94);
+	color: #ffffff;
+	text-align: center;
+	font-size: 15px;
+}
+#context-lost[hidden] { display: none; }
+#context-lost p { margin: 0; max-width: 360px; line-height: 1.6; }
+#context-lost button {
+	min-height: 44px;
+	padding: 0 20px;
+	border: 1px solid #ffffff;
+	border-radius: 8px;
+	background: transparent;
+	color: #ffffff;
+	font: inherit;
+}
+
 /* On a touch screen the legend folds to a strip of its colors (main.ts); a tap opens it. */
 body.touch-ui #legend { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
 body.touch-ui #legend h2::after { content: " ▾"; color: var(--muted); }
