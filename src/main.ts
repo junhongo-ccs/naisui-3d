@@ -31,15 +31,23 @@ const GOOGLE_KEY: string | undefined = import.meta.env.VITE_GOOGLE_MAPS_API_KEY 
 // quota used up, say), in which case the GSI terrain and PLATEAU buildings take over.
 let useGoogle = !! GOOGLE_KEY;
 // A touch screen (a phone or tablet; or ?ui=touch, to try it on a PC): the title and heading a
-// step smaller, the legend folded, a d-pad on the street (style.css). The tiles load lighter there,
-// too (addTiles, the loop): a phone's memory for the GPU is small, and textures that no longer
-// fit draw black. (On any flat screen, PC or phone, the pins' labels and descriptions are HTML:
-// src/screen-pins.ts, src/place-dialog.ts. VR has its own, in the scene.)
+// step smaller, the legend folded, a stick on the street (style.css). (On any flat screen, PC or
+// phone, the pins' labels and descriptions are HTML: src/screen-pins.ts, src/place-dialog.ts.
+// VR has its own, in the scene.)
 const touchUI = params.get( 'ui' ) === 'touch' || ( params.get( 'ui' ) !== 'desktop' && matchMedia( '(pointer: coarse)' ).matches );
-// Memory for the tiles kept loaded, per tileset, on a touch screen: a third of the library's
-// default (0.3–0.4 GB). iPhone's Safari closes a page that grows past its (small) limit, and
-// after the second time shows "問題が繰り返し起きました".
+// Whether VR can be entered here (a headset's browser), once the browser has said so. Quest's
+// browser can count as a touch screen too (its controllers' rays act as fingers), but it is no
+// phone: it needs the full memory for VR's fine tiles, and the start point loaded beforehand.
+let vrCapable = false;
+// A phone's tiles load lighter (addTiles, the loop): its memory for the GPU is small, and
+// textures that no longer fit draw black.
+const lightTiles = () => touchUI && ! vrCapable;
+// Memory for the tiles kept loaded, per tileset: on a phone a third of the library's default.
+// iPhone's Safari closes a page that grows past its (small) limit, and after the second time
+// shows "問題が繰り返し起きました". A full cache refuses new tiles, so this must not reach a
+// headset: in VR it left tiles missing and "読み込み中" up for good.
 const TOUCH_CACHE = { min: 100e6, max: 150e6 }; // bytes
+const DEFAULT_CACHE = { min: 0.3 * 2 ** 30, max: 0.4 * 2 ** 30 }; // bytes, the library's
 
 const cities = ONLY_CITY ? catalog.cities.filter( c => c.code === ONLY_CITY ) : catalog.cities;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
@@ -530,15 +538,17 @@ function addTiles( tiles: TilesRenderer ) {
 
 	tiles.setCamera( camera );
 	tiles.setResolutionFromRenderer( camera, renderer );
-	if ( touchUI ) {
-
-		tiles.lruCache.minBytesSize = TOUCH_CACHE.min;
-		tiles.lruCache.maxBytesSize = TOUCH_CACHE.max;
-
-	}
-
+	sizeCache( tiles );
 	world.add( tiles.group );
 	return tiles;
+
+}
+
+function sizeCache( tiles: TilesRenderer ) {
+
+	const cache = lightTiles() ? TOUCH_CACHE : DEFAULT_CACHE;
+	tiles.lruCache.minBytesSize = cache.min;
+	tiles.lruCache.maxBytesSize = cache.max;
 
 }
 
@@ -1082,6 +1092,8 @@ const vrButton = VRButton.createButton( renderer ) as HTMLButtonElement;
 navigator.xr?.isSessionSupported( 'immersive-vr' ).then( ok => {
 
 	if ( ! ok ) return;
+	vrCapable = true;
+	allTiles().forEach( sizeCache ); // made before the browser said so
 	document.body.appendChild( vrButton );
 	$( '#vr-hint' ).hidden = false;
 
@@ -1118,7 +1130,8 @@ const vr = initVR( {
 		.map( ( [ name, t ] ) => {
 
 			const s = tileStats( t );
-			return `${ name }タイル 表示 ${ s.visible }　読込待ち ${ s.queued }　通信中 ${ s.downloading }　展開中 ${ s.parsing }　失敗 ${ s.failed }`;
+			// 断った: refused for want of memory (the cache is full), which would keep it loading.
+			return `${ name }タイル 表示 ${ s.visible }　読込待ち ${ s.queued }　通信中 ${ s.downloading }　展開中 ${ s.parsing }　失敗 ${ s.failed }　断った ${ s.refused }　メモリ ${ Math.round( ( t.lruCache as unknown as { cachedBytes: number } ).cachedBytes / 1e6 ) }/${ Math.round( t.lruCache.maxBytesSize / 1e6 ) } MB`;
 
 		} ),
 } );
@@ -1126,7 +1139,7 @@ const vr = initVR( {
 // Counters the renderer keeps (not in its type declarations).
 function tileStats( tiles: TilesRenderer ) {
 
-	return ( tiles as unknown as { stats: Record<'visible' | 'queued' | 'downloading' | 'parsing' | 'failed', number> } ).stats;
+	return ( tiles as unknown as { stats: Record<'visible' | 'queued' | 'downloading' | 'parsing' | 'failed' | 'refused', number> } ).stats;
 
 }
 
@@ -1246,12 +1259,12 @@ renderer.setAnimationLoop( () => {
 
 	}
 
-	// Outside VR, also look from the VR start point, so its street-level tiles are loaded (and the
-	// VR button held back) before the user steps in, instead of popping in after. Not on a touch
-	// screen, which has no VR: there it would double what loads, and the street view loads its
-	// tiles as it goes.
-	const eyes = xr.isPresenting ? [ active ] : ! touchUI && placeStartEye() ? [ camera, startEye ] : [ camera ];
-	if ( touchUI && ! xr.isPresenting ) renderer.getDrawingBufferSize( drawingBuffer );
+	// Where VR can be entered, also look from the VR start point outside VR, so its street-level
+	// tiles are loaded (and the VR button held back) before the user steps in, instead of popping
+	// in after. Not where it can't (a PC, a phone): there it would only add to what loads.
+	const eyes = xr.isPresenting ? [ active ] : vrCapable && placeStartEye() ? [ camera, startEye ] : [ camera ];
+	const light = lightTiles() && ! xr.isPresenting;
+	if ( light ) renderer.getDrawingBufferSize( drawingBuffer );
 	let busy = false;
 	for ( const t of allTiles() ) {
 
@@ -1263,7 +1276,7 @@ renderer.setAnimationLoop( () => {
 		}
 
 		if ( xr.isPresenting ) t.setResolution( active, XR_RESOLUTION, XR_RESOLUTION );
-		else if ( touchUI ) t.setResolution( camera, drawingBuffer.x * TOUCH_DETAIL, drawingBuffer.y * TOUCH_DETAIL );
+		else if ( light ) t.setResolution( camera, drawingBuffer.x * TOUCH_DETAIL, drawingBuffer.y * TOUCH_DETAIL );
 		else t.setResolutionFromRenderer( camera, renderer );
 		if ( eyes.includes( startEye ) ) t.setResolution( startEye, XR_RESOLUTION, XR_RESOLUTION );
 		t.update();
