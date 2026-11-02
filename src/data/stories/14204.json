@@ -78,6 +78,7 @@
 		},
 		{
 			"name": "滑川が谷を出る所（東勝寺橋）",
+			"photo": { "src": "photos/toshoji.jpg", "caption": "東勝寺橋のあたりの滑川", "author": "Guilhem Vellut", "license": "CC BY 2.0", "url": "https://commons.wikimedia.org/wiki/File:Kamakura_(13897636491).jpg" },
 			"lat": 35.3211,
 			"lon": 139.55779,
 			"town": "小町三丁目",
@@ -96,6 +97,7 @@
 		},
 		{
 			"name": "滑川の下流（延命寺橋・大町）",
+			"photo": { "src": "photos/namerigawa-omachi.jpg", "caption": "鎌倉女学院の近くの滑川（下流）", "author": "ToshiJapon", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Namerigawa.JPG" },
 			"lat": 35.31564,
 			"lon": 139.55045,
 			"town": "御成町",
@@ -116,6 +118,7 @@
 		},
 		{
 			"name": "佐助川・鎌倉駅の西",
+			"photo": { "src": "photos/kamakura-west.jpg", "caption": "鎌倉駅の西口（江ノ電の駅舎の前）", "author": "VZP10224", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Kamakura_Station_west-side_20261018.jpg" },
 			"lat": 35.31726,
 			"lon": 139.54795,
 			"town": "御成町",

@@ -205,3 +205,6 @@ URL の `?base=photo|pale|std` で背景地図を切り替えられます（Goog
   - 若宮大路：[Quercus acuta](https://commons.wikimedia.org/wiki/File:Wakamiya_Oji.jpg)（CC0）
   - 由比ガ浜歩道橋の近く：[DimiTalen](https://commons.wikimedia.org/wiki/File:Looking_up_Wakamiya_Oji_near_Yuigahama_Hodokyo,_Kamakura,_2016.jpg)（CC0）
   - 稲瀬川：[Vano111ru](https://commons.wikimedia.org/wiki/File:Inase_River_(26590).jpg)（[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0)）
+  - 東勝寺橋のあたりの滑川：[Guilhem Vellut](https://commons.wikimedia.org/wiki/File:Kamakura_(13897636491).jpg)（[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)）
+  - 鎌倉女学院の近くの滑川（下流）：[ToshiJapon](https://commons.wikimedia.org/wiki/File:Namerigawa.JPG)（[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0)）
+  - 鎌倉駅の西口：[VZP10224](https://commons.wikimedia.org/wiki/File:Kamakura_Station_west-side_20261018.jpg)（[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0)）
