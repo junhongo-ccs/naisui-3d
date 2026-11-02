@@ -23,7 +23,7 @@ const HAND_PX_PER_M = HAND_FONT_PX / ( HAND_DISTANCE * Math.tan( 1.2 * DEG ) );
 // Quest controller locomotion. The headset pose is applied to `camera` relative to `rig`,
 // so moving and turning are done by moving `rig`.
 //   left stick:   move along the gaze direction (horizontal)
-//   right stick:  X = 45° snap turn, Y = rise / sink
+//   right stick:  X = 45° snap turn (with a card open: turn its pages instead), Y = rise / sink
 //   trigger held: 5× speed
 //   right hand:   point at a flood polygon to float its depth over it (no button needed,
 //                 since the trigger is taken; works with hand tracking too)
@@ -266,12 +266,16 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		}
 
-		// While a card is open the user stays put (turning is still allowed), so the card can be read
-		// without drifting away from it; closing the card frees them.
+		// While a card is open the user stays put and doesn't turn, so the card can be read without
+		// drifting away from it; the right stick's left and right turn its pages instead (as the
+		// card's ◀ ▶ do). Closing the card frees them.
+		let flip = 0;
 		if ( pins.isOpen ) {
 
 			move = [ 0, 0 ];
 			lift = 0;
+			flip = turn;
+			turn = 0;
 
 		}
 
@@ -316,16 +320,28 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 		// climbs it.
 		rig.position.y = Math.max( rig.position.y, groundY );
 
-		if ( Math.abs( turn ) > 0.7 && ! turnLatched ) {
+		// The right stick pushed left or right: one step each push (let it come back to the middle
+		// for the next). A 45° turn, or with a card open, a page.
+		const side = turn || flip;
+		if ( Math.abs( side ) > 0.7 && ! turnLatched ) {
 
-			// Turn around the head, not the rig origin, so the view doesn't slide.
-			headCam.getWorldPosition( head );
-			const angle = - Math.sign( turn ) * Math.PI / 4;
-			rig.position.sub( head ).applyAxisAngle( rig.up, angle ).add( head );
-			rig.rotateY( angle );
+			if ( flip ) {
+
+				pins.flip( Math.sign( flip ) );
+
+			} else {
+
+				// Turn around the head, not the rig origin, so the view doesn't slide.
+				headCam.getWorldPosition( head );
+				const angle = - Math.sign( turn ) * Math.PI / 4;
+				rig.position.sub( head ).applyAxisAngle( rig.up, angle ).add( head );
+				rig.rotateY( angle );
+
+			}
+
 			turnLatched = true;
 
-		} else if ( Math.abs( turn ) < 0.3 ) {
+		} else if ( Math.abs( side ) < 0.3 ) {
 
 			turnLatched = false;
 
@@ -607,6 +623,7 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		[ '右手で指す', '想定浸水深・ピンの名前を表示' ],
 		[ 'ピンに右トリガー', '説明を開く（札の × で閉じる）' ],
 		[ '札の ◀ ▶ に右トリガー', 'ページをめくる' ],
+		[ '札を開いている間', '右スティック左右でページをめくる' ],
 		[ '札の上部を右トリガー', 'つかんで動かす（離した所に置く）' ],
 		[ 'A / B（押したまま）', '水面を上げる / 下げる' ],
 		...( hasMenu ? [ [ 'グリップ（右）', '市町村を選ぶ' ] ] : [] ),
