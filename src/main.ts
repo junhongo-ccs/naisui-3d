@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { OBB, TilesRenderer, WGS84_ELLIPSOID } from '3d-tiles-renderer/three';
+import { Scheduler } from '3d-tiles-renderer/core';
 import { GLTFExtensionsPlugin } from '3d-tiles-renderer/three/plugins';
 import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 import catalog from './data/cities.json';
@@ -1075,7 +1076,7 @@ buildUI();
 if ( import.meta.env.DEV ) {
 
 	Object.assign( window, { app: {
-		renderer, scene, world, camera, controls, legend, pins, screenPins, minimap, toLocal, toLatLon,
+		renderer, scene, world, camera, controls, legend, pins, screenPins, minimap, toLocal, toLatLon, Scheduler,
 		get vr() { return vr; },
 		get city() { return city; },
 		get terrain() { return terrain; },
@@ -1143,9 +1144,16 @@ function tileStats( tiles: TilesRenderer ) {
 
 }
 
+// The tile renderer runs its download, parse and processing queues on animation frames, the
+// window's by default. In VR the window's frames stop (only the XR session's run), so without
+// this, no tile loaded once the user was in: what VR newly saw stayed coarse or missing, and
+// "読み込み中" never went. The library leaves telling it about the session to the page.
+renderer.xr.addEventListener( 'sessionstart', () => Scheduler.setXRSession( renderer.xr.getSession()! ) );
+
 // A city picked in VR is framed for the map view on the way out.
 renderer.xr.addEventListener( 'sessionend', () => {
 
+	Scheduler.setXRSession( null as unknown as XRSession ); // back to the window's frames
 	if ( framedCity !== city.code ) frameCity();
 
 } );

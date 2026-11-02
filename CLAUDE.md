@@ -66,6 +66,8 @@ PLATEAU のタイルは、`group` ではなく `group.children`（表示中の�
 解説の札では、想定（PLATEAU のシミュレーション）と記録（実際にあった被害）を別の項目に書き、どちらにも出典を付ける。報道だけが出典のことは「（報道）」と書く。
 写真は、自由なライセンス（Wikimedia Commons の CC0・CC BY・CC BY-SA など）か、許可の取れたもの・自分で撮ったものだけ使う（鎌倉市のサイトの写真、報道や SNS の写真は不可）。今は平常時の写真だけ。札と README に撮影者とライセンスを書く。
 
+3d-tiles-renderer は、タイルのダウンロード・展開・後処理の順番待ちを `requestAnimationFrame` で回す。VR の中ではウィンドウの `requestAnimationFrame` が止まるので、VR に入るとき `Scheduler.setXRSession( session )`、出るとき `null` を必ず呼ぶ（`main.ts`）。ライブラリは自分では呼ばない。呼ばないと、VR の中で新しいタイルが読まれず、「読み込み中」が消えない（2026-11-02 まで気づかなかった）。
+
 VR で頭の位置・向きを取るときは `renderer.xr.getCamera()` ではなく `camera`（`rig` の子）を使う。
 XR カメラには親が無く、`getWorldPosition` などがリグ基準の値を返す。
 
