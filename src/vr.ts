@@ -35,6 +35,7 @@ const HAND_PX_PER_M = HAND_FONT_PX / ( HAND_DISTANCE * Math.tan( 1.2 * DEG ) );
 //                 (only when there is more than one city)
 //   X button:     diagnostics board (errors, inputs, pointer state) in place of the controls card;
 //                 it also opens by itself when an error happens
+//   left stick pressed: put the controls card away / bring it back (the map stays)
 // Speed scales with height above the ground, so crossing the city from the air isn't a crawl
 // and the street stays walkable. Movement stops at the edge of `bounds`, so the user can't drift
 // off the city and lose it. The left controller carries a map of the city with an arrow for the
@@ -83,6 +84,9 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 	const pointer = createPointer( renderer, scene, rig, pointAt, menu, pins, minimap );
 	const debug = createDebugBoard();
 	let showDebug = false;
+	// The controls card on the left hand comes and goes with a press of the left stick (the
+	// controller's menu button would be the natural one, but the browser keeps it for itself).
+	let showHelp = true;
 	debug.onError = () => ( showDebug = true );
 	const help = createHandPanel( renderer, rig, minimap, debug.mesh, hasMenu );
 	let fps = 0;
@@ -182,7 +186,7 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 
 		}
 
-		help.update( showDebug );
+		help.update( showDebug, showHelp );
 		debug.update();
 
 	}
@@ -249,6 +253,8 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 			}
 
 			if ( src.handedness === 'left' && pressed( 'X', gp, 4 ) ) showDebug = ! showDebug;
+			// xr-standard: buttons[3] is the stick pressed in.
+			if ( src.handedness === 'left' && pressed( 'L3', gp, 3 ) ) showHelp = ! showHelp;
 			if ( src.handedness === 'left' && pressed( 'Y', gp, 5 ) && ! pins.isOpen ) {
 
 				arrive( start.clone(), startYaw );
@@ -589,11 +595,12 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 
 }
 
-// Above the left controller, tilted back toward the face: the city map, and over it a card
-// listing the controls. The diagnostics board takes the card's place when shown.
+// Above the left controller, tilted back toward the face: the city map, always, and over it a
+// card listing the controls, which a press of the left stick puts away and brings back; put away,
+// a one-line tab says how to bring it back. The diagnostics board takes the card's place when shown.
 function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minimap: Minimap, debugBoard: THREE.Mesh, hasMenu: boolean ) {
 
-	const lines = [
+	const card = keyCard( [
 		[ '左スティック', '移動' ],
 		[ '右スティック', '左右: 向きを変える　上下: 上昇・下降' ],
 		[ 'トリガー', '押している間 5 倍速' ],
@@ -605,9 +612,51 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		...( hasMenu ? [ [ 'グリップ（右）', '市町村を選ぶ' ] ] : [] ),
 		[ 'X', '診断を表示' ],
 		[ 'Y', 'スタート地点に戻る' ],
+		[ '左スティックを押す', 'この説明をしまう' ],
 		[ 'Meta ボタン長押し', 'VR を終了' ],
-	];
-	// Sized from its text, which is 1.2° (HAND_PX_PER_M): wider than the map under it.
+	] );
+	const tab = keyCard( [ [ '左スティックを押す', '操作説明を出す' ] ] );
+
+	// The pieces stack up the tilted panel from its bottom edge: map, then card, tab or board.
+	const GAP = 0.01; // m
+	const panel = new THREE.Group();
+	panel.position.set( 0, 0.05, - 0.05 );
+	panel.rotation.x = - Math.PI / 6;
+	panel.visible = false;
+	panel.add( minimap.object, card.mesh, tab.mesh, debugBoard );
+
+	const controllers = [ 0, 1 ].map( i => {
+
+		const c = renderer.xr.getController( i );
+		rig.add( c );
+		return c;
+
+	} );
+
+	function update( showDebug: boolean, showHelp: boolean ) {
+
+		const left = controllers.find( c => c.userData.handedness === 'left' );
+		if ( left && panel.parent !== left ) left.add( panel );
+		panel.visible = !! left;
+		const mapHeight = minimap.height;
+		minimap.object.position.y = minimap.bottom;
+		for ( const c of [ card, tab ] ) c.mesh.position.y = mapHeight + GAP + c.height / 2;
+		const boardHeight = ( debugBoard.geometry as THREE.PlaneGeometry ).parameters.height;
+		debugBoard.position.set( 0, mapHeight + GAP + boardHeight / 2, 0 );
+		card.mesh.visible = ! showDebug && showHelp;
+		tab.mesh.visible = ! showDebug && ! showHelp;
+		debugBoard.visible = showDebug;
+
+	}
+
+	return { update };
+
+}
+
+// A card of [key, what it does] rows for the left hand, sized from its text, which is 1.2°
+// (HAND_PX_PER_M): the full list is wider than the map under it.
+function keyCard( lines: string[][] ) {
+
 	const canvas = document.createElement( 'canvas' );
 	const ctx = canvas.getContext( '2d' )!;
 	const KEY = `bold ${ HAND_FONT_PX }px system-ui, sans-serif`, ACTION = `${ HAND_FONT_PX }px system-ui, sans-serif`;
@@ -638,44 +687,12 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 	const texture = new THREE.CanvasTexture( canvas );
 	texture.colorSpace = THREE.SRGBColorSpace;
 	const width = canvas.width / HAND_PX_PER_M; // m
-	const cardHeight = width * canvas.height / canvas.width;
-	const card = new THREE.Mesh(
-		new THREE.PlaneGeometry( width, cardHeight ),
+	const height = width * canvas.height / canvas.width;
+	const mesh = new THREE.Mesh(
+		new THREE.PlaneGeometry( width, height ),
 		new THREE.MeshBasicMaterial( { map: texture, transparent: true, depthTest: false } ),
 	);
-	card.renderOrder = 1100; // over the scene's pins and cards, like the map
-
-	// The pieces stack up the tilted panel from its bottom edge: map, then card or board.
-	const GAP = 0.01; // m
-	const panel = new THREE.Group();
-	panel.position.set( 0, 0.05, - 0.05 );
-	panel.rotation.x = - Math.PI / 6;
-	panel.visible = false;
-	panel.add( minimap.object, card, debugBoard );
-
-	const controllers = [ 0, 1 ].map( i => {
-
-		const c = renderer.xr.getController( i );
-		rig.add( c );
-		return c;
-
-	} );
-
-	function update( showDebug: boolean ) {
-
-		const left = controllers.find( c => c.userData.handedness === 'left' );
-		if ( left && panel.parent !== left ) left.add( panel );
-		panel.visible = !! left;
-		const mapHeight = minimap.height;
-		minimap.object.position.y = minimap.bottom;
-		card.position.y = mapHeight + GAP + cardHeight / 2;
-		const boardHeight = ( debugBoard.geometry as THREE.PlaneGeometry ).parameters.height;
-		debugBoard.position.set( 0, mapHeight + GAP + boardHeight / 2, 0 );
-		card.visible = ! showDebug;
-		debugBoard.visible = showDebug;
-
-	}
-
-	return { update };
+	mesh.renderOrder = 1100; // over the scene's pins and cards, like the map
+	return { mesh, height };
 
 }

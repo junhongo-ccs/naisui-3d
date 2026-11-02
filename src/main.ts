@@ -227,11 +227,23 @@ const dracoLoader = new DRACOLoader().setDecoderPath( 'https://www.gstatic.com/d
 
 const DEFAULT_BASE: BaseMapKey = 'photo';
 let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : DEFAULT_BASE;
+// How fine the ground's tiles load: the screen error, in pixels, a tile may show before its finer
+// children are loaded instead (the library's default is 16). Smaller is finer, and loads and holds
+// more. ?detail=8 tries it, to weigh the look against the loading on a headset.
+const DEFAULT_DETAIL = 16;
+const detail = Number( params.get( 'detail' ) ) > 0 ? Number( params.get( 'detail' ) ) : DEFAULT_DETAIL;
 // The ground: GSI terrain, or Google's 3D tiles (ground and buildings in one).
 function createGround() {
 
-	if ( ! GOOGLE_KEY || ! useGoogle ) return createTerrain( city.geoidHeight, baseMap, terrainArea() );
-	const tiles = createGoogleTiles( GOOGLE_KEY, terrainArea(), dracoLoader );
+	const tiles = ! GOOGLE_KEY || ! useGoogle ? createTerrain( city.geoidHeight, baseMap, terrainArea() ) : googleTiles( GOOGLE_KEY );
+	tiles.errorTarget = detail;
+	return tiles;
+
+}
+
+function googleTiles( key: string ) {
+
+	const tiles = createGoogleTiles( key, terrainArea(), dracoLoader );
 	// The root tileset is refused when the day's quota is used up (or the key is): show the GSI
 	// terrain and PLATEAU buildings instead of nothing. Not from inside the renderer's own event.
 	tiles.addEventListener( 'load-error', ( { tile } ) => {
@@ -564,7 +576,7 @@ function setBaseMap( key: BaseMapKey ) {
 	baseMap = key;
 	world.remove( terrain.group );
 	terrain.dispose();
-	terrain = addTiles( createTerrain( city.geoidHeight, key, terrainArea() ) );
+	terrain = addTiles( createGround() );
 	syncURL();
 
 }
@@ -580,6 +592,7 @@ function syncURL() {
 	if ( cities.length > 1 && city.code !== DEFAULT_CITY ) q.set( 'city', city.code );
 	if ( ! useGoogle && baseMap !== DEFAULT_BASE ) q.set( 'base', baseMap );
 	if ( params.has( 'ui' ) ) q.set( 'ui', params.get( 'ui' )! );
+	if ( detail !== DEFAULT_DETAIL ) q.set( 'detail', String( detail ) );
 	const search = q.toString();
 	history.replaceState( null, '', location.pathname + ( search ? `?${ search }` : '' ) + location.hash );
 
@@ -1132,7 +1145,7 @@ const vr = initVR( {
 
 			const s = tileStats( t );
 			// 断った: refused for want of memory (the cache is full), which would keep it loading.
-			return `${ name }タイル 表示 ${ s.visible }　読込待ち ${ s.queued }　通信中 ${ s.downloading }　展開中 ${ s.parsing }　失敗 ${ s.failed }　断った ${ s.refused }　メモリ ${ Math.round( ( t.lruCache as unknown as { cachedBytes: number } ).cachedBytes / 1e6 ) }/${ Math.round( t.lruCache.maxBytesSize / 1e6 ) } MB`;
+			return `${ name }タイル 細かさ ${ t.errorTarget }　表示 ${ s.visible }　読込待ち ${ s.queued }　通信中 ${ s.downloading }　展開中 ${ s.parsing }　失敗 ${ s.failed }　断った ${ s.refused }　メモリ ${ Math.round( ( t.lruCache as unknown as { cachedBytes: number } ).cachedBytes / 1e6 ) }/${ Math.round( t.lruCache.maxBytesSize / 1e6 ) } MB`;
 
 		} ),
 } );
