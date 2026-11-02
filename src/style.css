@@ -150,6 +150,14 @@ body.touch-ui .controls-touch { display: grid; }
 #legend h2 { font-size: var(--fs-label); margin: 0 0 4px; }
 #legend ul { list-style: none; margin: 0; padding: 0; }
 #legend li { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+#legend-depth[hidden] { display: none; }
+#legend-depth + .legend-pins { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+/* The pins as on the map, smaller (the icons' styles are the pins', .pin-story .pin-icon etc.). */
+#legend .pin-icon { width: 20px; height: 20px; border-width: 2px; box-shadow: none; }
+#legend .pin-story .pin-icon { font-size: 13px; color: #ffffff; } /* the "i" icon */
+#legend .pin-shelter .pin-icon::before { width: 10px; height: 9px; }
+#legend li.pin-landmark { padding: 0; border-radius: 0; background: none; box-shadow: none; } /* not the map's landmark label */
+#legend .legend-chip { flex: none; width: 20px; height: 12px; border-radius: 3px; background: rgb(20 26 36 / 0.82); border: 1px solid rgb(255 255 255 / 0.6); }
 .swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgb(0 0 0 / 0.2); flex: none; }
 
 #info {
@@ -324,13 +332,16 @@ body.touch-ui .controls-touch { display: grid; }
 
 /* On a touch screen the legend folds to a strip of its colors (main.ts); a tap opens it. */
 body.touch-ui #legend { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-body.touch-ui #legend h2::after { content: " ▾"; color: var(--muted); }
+/* On a touch screen the legend is headed "凡例 ▾" (or ▸ folded). Folded, it shows just the depth
+   colors and the pin icons, no other words. */
+body.touch-ui #legend::before { content: "凡例 ▾"; display: block; margin-bottom: 6px; font-size: var(--fs-label); font-weight: bold; }
+body.touch-ui #legend.folded::before { content: "凡例 ▸"; margin-bottom: 4px; }
 #legend.folded { padding: 6px 10px; }
-#legend.folded h2 { margin-bottom: 4px; }
-body.touch-ui #legend.folded h2::after { content: " ▸"; }
-#legend.folded ul { display: flex; gap: 2px; }
+#legend.folded h2 { display: none; }
+#legend.folded ul { display: flex; gap: 4px; }
 #legend.folded li { margin: 0; font-size: 0; gap: 0; }
 #legend.folded .swatch { width: 16px; height: 10px; border-radius: 2px; }
+#legend.folded #legend-depth + .legend-pins { margin-top: 6px; padding-top: 0; border-top: none; }
 
 /* Looking around from the street (src/street.ts). */
 #street-enter, #street-exit {

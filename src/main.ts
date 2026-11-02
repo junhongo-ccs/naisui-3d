@@ -140,16 +140,34 @@ function cityBounds() {
 
 let bounds = cityBounds();
 
-// Where the ground and the flood tiles load: the VR bounds and some more, so the ground runs out a
-// little past where the user can go. In ECEF, the tiles' own frame.
-const TERRAIN_MARGIN = 300; // m beyond the VR bounds
+// Only where the user can go is shown, and loaded: the ground and flood tiles load within the
+// bounds, and everything is cut off at the bounds' sides, so the coarse tiles that reach beyond
+// (to Ofuna, Zushi) don't show past them. Seen from above, the town stands cut out like a model.
+// In ECEF, the tiles' own frame.
 function terrainArea() {
 
-	const box = bounds.clone().expandByVector( new THREE.Vector3( TERRAIN_MARGIN, 0, TERRAIN_MARGIN ) );
+	const box = bounds.clone();
 	box.min.y = - 500;
 	return new OBB( box, world.matrix.clone().invert() );
 
 }
+
+// The four sides of the bounds, as clipping planes (each keeps what is on its normal's side).
+const clipPlanes = [
+	new THREE.Plane( new THREE.Vector3( 1, 0, 0 ) ), new THREE.Plane( new THREE.Vector3( - 1, 0, 0 ) ),
+	new THREE.Plane( new THREE.Vector3( 0, 0, 1 ) ), new THREE.Plane( new THREE.Vector3( 0, 0, - 1 ) ),
+];
+function clipToBounds() {
+
+	clipPlanes[ 0 ].constant = - bounds.min.x;
+	clipPlanes[ 1 ].constant = bounds.max.x;
+	clipPlanes[ 2 ].constant = - bounds.min.z;
+	clipPlanes[ 3 ].constant = bounds.max.z;
+
+}
+
+clipToBounds();
+renderer.clippingPlanes = clipPlanes;
 
 const camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 2e6 );
 const rig = new THREE.Group();
@@ -487,6 +505,7 @@ function switchCity( code: string ) {
 	legend.clear();
 	placeWorld();
 	bounds = cityBounds();
+	clipToBounds();
 	terrain = addTiles( createGround() );
 	loadCityTiles();
 	loadPlaces();
@@ -834,7 +853,7 @@ function renderLegend() {
 		return li;
 
 	} ) );
-	$( '#legend' ).hidden = items.length === 0;
+	$( '#legend-depth' ).hidden = items.length === 0;
 
 }
 
@@ -1064,6 +1083,18 @@ function placeStartEye() {
 
 }
 
+// Keep the point the map view looks at within the bounds (dragging could slide it off to where
+// nothing is shown); the camera moves with it, so the view keeps its angle.
+const outside = new THREE.Vector3();
+function keepInBounds() {
+
+	outside.copy( controls.target ).clamp( bounds.min, bounds.max ).sub( controls.target );
+	if ( outside.lengthSq() === 0 ) return;
+	controls.target.add( outside );
+	camera.position.add( outside );
+
+}
+
 // Keep the map view's camera above the ground (orbiting low, it could dip into a hill). The
 // ground under it is looked up a few times a second, the raycast being heavy.
 const CAMERA_CLEARANCE = 2; // m
@@ -1111,6 +1142,7 @@ renderer.setAnimationLoop( () => {
 		updateFly( dt );
 		panView( move, dt );
 		controls.update();
+		keepInBounds();
 		keepAboveGround( dt );
 
 	}

@@ -81,9 +81,20 @@
 			<button id="rotate-dismiss" type="button">縦のまま見る</button>
 		</div>
 
-		<section id="legend" hidden>
-			<h2>想定浸水深</h2>
-			<ul id="legend-items"></ul>
+		<!-- The flood depths' colors (as the tiles load, main.ts), and what the pins are. -->
+		<section id="legend">
+			<div id="legend-depth" hidden>
+				<h2>想定浸水深</h2>
+				<ul id="legend-items"></ul>
+			</div>
+			<div class="legend-pins">
+				<h2>ピン</h2>
+				<ul>
+					<li class="pin-story"><span class="pin-icon" aria-hidden="true"></span>解説</li>
+					<li class="pin-landmark"><span class="legend-chip" aria-hidden="true"></span>目印</li>
+					<li class="pin-shelter"><span class="pin-icon" aria-hidden="true"></span>避難所</li>
+				</ul>
+			</div>
 		</section>
 
 		<div id="info" hidden></div>
