@@ -744,33 +744,67 @@ let shiftDown = false;
 window.addEventListener( 'keydown', e => ( shiftDown = e.shiftKey ) );
 window.addEventListener( 'keyup', e => ( shiftDown = e.shiftKey ) );
 
+// The d-pad is one touch area, as a real one is under the thumb: the way is where the thumb is
+// from the middle, in eight sectors (a corner walks diagonally), and it follows the thumb as it
+// rolls round without being lifted. A little dead zone in the middle stops.
+const DPAD_DEAD = 0.12; // of the pad's width, from its middle
+const DPAD_SECTOR = Math.sin( Math.PI / 8 ); // a way counts beyond 22.5° off its axis
 function setupDpad() {
 
-	for ( const button of document.querySelectorAll<HTMLButtonElement>( '#dpad button' ) ) {
+	const pad = $( '#dpad' );
+	const arrows = [ ...pad.querySelectorAll<HTMLElement>( '[data-dir]' ) ];
+	let finger: number | null = null;
+	const aim = ( e: PointerEvent | null ) => {
 
-		const dir = button.dataset.dir!;
-		const press = ( on: boolean ) => {
+		dpadDown.clear();
+		if ( e ) {
 
-			if ( on ) dpadDown.add( dir );
-			else dpadDown.delete( dir );
-			button.classList.toggle( 'pressed', on );
+			const r = pad.getBoundingClientRect();
+			const dx = e.clientX - ( r.left + r.width / 2 ), dy = e.clientY - ( r.top + r.height / 2 );
+			const d = Math.hypot( dx, dy );
+			if ( d > r.width * DPAD_DEAD ) {
 
-		};
-		button.addEventListener( 'pointerdown', e => {
+				if ( Math.abs( dx ) / d > DPAD_SECTOR ) dpadDown.add( dx > 0 ? 'right' : 'left' );
+				if ( Math.abs( dy ) / d > DPAD_SECTOR ) dpadDown.add( dy > 0 ? 'down' : 'up' );
 
-			press( true );
-			// Keep the finger's events while it is down, even if it slides off the button.
-			try {
+			}
 
-				button.setPointerCapture( e.pointerId );
+		}
 
-			} catch {}
+		for ( const a of arrows ) a.classList.toggle( 'pressed', dpadDown.has( a.dataset.dir! ) );
+
+	};
+	pad.addEventListener( 'pointerdown', e => {
+
+		if ( finger !== null ) return;
+		finger = e.pointerId;
+		// Keep the thumb's events while it is down, even if it slides off the pad.
+		try {
+
+			pad.setPointerCapture( e.pointerId );
+
+		} catch {}
+		aim( e );
+
+	} );
+	pad.addEventListener( 'pointermove', e => {
+
+		if ( e.pointerId === finger ) aim( e );
+
+	} );
+	for ( const type of [ 'pointerup', 'pointercancel', 'lostpointercapture' ] ) {
+
+		pad.addEventListener( type, e => {
+
+			if ( ( e as PointerEvent ).pointerId !== finger ) return;
+			finger = null;
+			aim( null );
 
 		} );
-		for ( const type of [ 'pointerup', 'pointercancel', 'lostpointercapture' ] ) button.addEventListener( type, () => press( false ) );
-		button.addEventListener( 'contextmenu', e => e.preventDefault() ); // a long press would open it
 
 	}
+
+	pad.addEventListener( 'contextmenu', e => e.preventDefault() ); // a long press would open it
 
 }
 

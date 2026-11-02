@@ -387,33 +387,32 @@ body.in-street #street-bar {
    the button to come down to the street was (the d-pad takes the bottom left). */
 body.in-street #legend { bottom: 92px; }
 body.in-street.touch-ui #legend { left: auto; right: max(12px, env(safe-area-inset-right)); bottom: 30px; }
-body.in-street.touch-ui #street-bar { max-width: calc(100vw - 2 * 196px); }
+body.in-street.touch-ui #street-bar { max-width: calc(100vw - 2 * 165px); }
 
-/* The d-pad for walking on the street, on a phone held sideways (src/main.ts). Held down, a
-   direction keeps walking. */
+/* The d-pad for walking on the street, on a phone held sideways (src/main.ts). The whole square
+   takes the thumb, corners too (diagonals); the arrows only show the ways and light up. */
 #dpad { display: none; }
 body.in-street.touch-ui #dpad {
 	position: fixed;
 	left: max(16px, env(safe-area-inset-left));
 	bottom: 30px;
 	display: grid;
-	grid-template: repeat(3, 56px) / repeat(3, 56px);
+	grid-template: repeat(3, 45px) / repeat(3, 45px);
 	touch-action: none;
 	user-select: none;
 	-webkit-user-select: none;
 	-webkit-tap-highlight-color: transparent;
 }
-#dpad button {
+#dpad span {
 	display: grid;
 	place-items: center;
-	padding: 0;
 	border: 1px solid rgb(255 255 255 / 0.5);
 	background: rgb(20 26 36 / 0.62);
 	color: #ffffff;
-	font-size: var(--fs-heading); /* the arrows */
-	touch-action: none;
+	font-size: var(--fs-label); /* the arrows */
+	pointer-events: none;
 }
-#dpad button.pressed { background: #1f6fb2; }
+#dpad span.pressed { background: #1f6fb2; }
 #dpad [data-dir="up"] { grid-area: 1 / 2; border-radius: 12px 12px 0 0; }
 #dpad [data-dir="left"] { grid-area: 2 / 1; border-radius: 12px 0 0 12px; }
 #dpad [data-dir="right"] { grid-area: 2 / 3; border-radius: 0 12px 12px 0; }
