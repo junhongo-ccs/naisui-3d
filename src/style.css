@@ -257,6 +257,201 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 @media (prefers-reduced-motion: reduce) {
 	.rotate-phone { animation: none; transform: rotate(-90deg); }
 }
+/* On a touch screen the legend folds to a strip of its colors (main.ts); a tap opens it. */
+body.touch-ui #legend { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+body.touch-ui #legend h2::after { content: " ▾"; color: var(--muted); }
+#legend.folded { padding: 6px 10px; }
+#legend.folded h2 { margin-bottom: 3px; font-size: 11px; }
+body.touch-ui #legend.folded h2::after { content: " ▸"; }
+#legend.folded ul { display: flex; gap: 2px; }
+#legend.folded li { margin: 0; font-size: 0; gap: 0; }
+#legend.folded .swatch { width: 16px; height: 10px; border-radius: 2px; }
+
+/* Looking around from the street on a touch screen (src/street.ts). */
+#street-enter, #street-exit {
+	min-height: 44px;
+	padding: 0 16px;
+	border: none;
+	border-radius: 22px;
+	/* Not --accent: in the dark scheme it is too light under white text. */
+	background: #1f6fb2;
+	color: #ffffff;
+	font: inherit;
+	font-size: 14px;
+	font-weight: bold;
+	box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+	cursor: pointer;
+}
+#street-enter {
+	position: fixed;
+	right: max(12px, env(safe-area-inset-right));
+	bottom: 30px;
+}
+#street-enter:disabled { background: #64748b; cursor: default; }
+#street-enter[hidden], body.in-street #street-enter { display: none; }
+#street-bar { display: none; }
+body.in-street #street-bar {
+	position: fixed;
+	left: 50%;
+	bottom: 30px;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: calc(100vw - 24px);
+	padding: 6px 6px 6px 14px;
+	border-radius: 28px;
+	background: var(--panel-bg);
+	border: 1px solid var(--line);
+	font-size: 12px;
+}
+#street-bar p { margin: 0; line-height: 1.4; }
+#street-exit { flex: none; }
+/* On the street the legend moves up out of the bar's way. */
+body.in-street #legend { bottom: 92px; }
+
+/* The pins' labels on a touch screen (src/touch-pins.ts): placed by transform each frame, top
+   left at the origin. They let touches through to the view. */
+#pin-layer { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+#pin-layer[hidden], .pin[hidden], .pin-name[hidden] { display: none; }
+.pin {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	white-space: nowrap;
+	font-size: 12px;
+	font-weight: bold;
+	line-height: 1;
+	color: #ffffff;
+	will-change: transform;
+}
+.pin-icon {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	border: 2px solid #ffffff;
+	border-radius: 50%;
+	box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+}
+.pin-story .pin-icon { background: #1d4ed8; font: bold 17px Georgia, serif; }
+.pin-story .pin-icon::before { content: "i"; }
+.pin-shelter .pin-icon { background: #15803d; }
+/* A house, as on the PC's icon. */
+.pin-shelter .pin-icon::before {
+	content: "";
+	width: 13px;
+	height: 12px;
+	background: #ffffff;
+	clip-path: polygon(50% 0, 100% 46%, 86% 46%, 86% 100%, 14% 100%, 14% 46%, 0 46%);
+}
+.pin-name, .pin-landmark {
+	padding: 4px 7px;
+	border-radius: 6px;
+	box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+.pin-story .pin-name { background: #1d4ed8; }
+.pin-shelter .pin-name { background: #15803d; font-weight: normal; }
+.pin-landmark { background: rgb(20 26 36 / 0.82); font-weight: normal; }
+/* Pins gathered into one disc: how many, in their color (dark if mixed). */
+.pin-cluster .pin-icon { width: 30px; height: 30px; font: bold 14px system-ui, sans-serif; background: #334155; }
+.pin-cluster-story .pin-icon { background: #1d4ed8; }
+.pin-cluster-shelter .pin-icon { background: #15803d; }
+/* The list of places too close together to tell apart (src/place-dialog.ts). */
+#place-dialog .dialog-list { list-style: none; margin: 0; padding: 0; }
+#place-dialog .dialog-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	min-height: 48px;
+	padding: 6px 4px;
+	border: none;
+	border-bottom: 1px solid rgb(255 255 255 / 0.08);
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+#place-dialog .dialog-item .pin-icon { color: #ffffff; }
+.dialog-item.pin-landmark .pin-icon { background: #475569; }
+.dialog-item.pin-landmark .pin-icon::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #ffffff; }
+/* The pin whose description is open. */
+.pin-active .pin-icon { transform: scale(1.25); box-shadow: 0 0 0 3px #fcd34d; }
+.pin-active.pin-landmark, .pin-active .pin-name { outline: 3px solid #fcd34d; }
+
+/* A place's description on a touch screen (src/place-dialog.ts). Dark, like the card in the scene. */
+#place-dialog {
+	width: min(760px, calc(100vw - 24px));
+	max-height: calc(100dvh - 24px);
+	padding: 0;
+	border: none;
+	border-left: 6px solid var(--kind-color, transparent);
+	border-radius: 14px;
+	background: rgb(20 26 36 / 0.97);
+	color: #e5edf5;
+	overflow: hidden;
+	font-size: 15px;
+	line-height: 1.65;
+}
+#place-dialog[open] { display: flex; flex-direction: column; }
+#place-dialog::backdrop { background: rgb(0 0 0 / 0.35); }
+#place-dialog .dialog-head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 6px 6px 18px;
+	border-bottom: 1px solid rgb(255 255 255 / 0.1);
+}
+#place-dialog h2 { flex: 1; margin: 0; font-size: 18px; line-height: 1.35; }
+#place-dialog .dialog-close {
+	flex: none;
+	width: 44px;
+	height: 44px;
+	border: none;
+	border-radius: 50%;
+	background: rgb(255 255 255 / 0.12);
+	color: #ffffff;
+	font-size: 26px;
+	line-height: 1;
+	cursor: pointer;
+}
+#place-dialog .dialog-body {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 10px 18px max(16px, env(safe-area-inset-bottom));
+}
+#place-dialog p { margin: 4px 0 12px; }
+#place-dialog .dialog-where, #place-dialog .dialog-notes, #place-dialog .dialog-sources, #place-dialog figcaption { color: #9fb3c8; font-size: 13px; }
+#place-dialog .dialog-line { margin: 2px 0; }
+#place-dialog .dialog-tag {
+	display: inline-block;
+	padding: 1px 9px;
+	border-radius: 6px;
+	color: #ffffff;
+	font-size: 13px;
+	font-weight: bold;
+}
+#place-dialog h3 { margin: 14px 0 2px; font-size: 13px; color: #9fb3c8; }
+#place-dialog ul { margin: 6px 0 0; padding-left: 1.2em; }
+#place-dialog a { color: #93c5fd; }
+#place-dialog .dialog-photo { margin: 0 0 12px; }
+#place-dialog .dialog-photo img { display: block; width: 100%; max-height: 50dvh; object-fit: cover; border-radius: 8px; }
+#place-dialog figcaption { margin-top: 4px; line-height: 1.5; }
+/* Held sideways there is room beside the photo but little above and below: put it to the side,
+   where it stays in view while the text scrolls. */
+@media (min-width: 560px) {
+	#place-dialog .dialog-columns { display: flex; align-items: flex-start; gap: 16px; }
+	#place-dialog .dialog-photo { flex: 0 0 40%; position: sticky; top: 4px; margin-top: 4px; }
+	#place-dialog .dialog-photo img { max-height: none; }
+	#place-dialog .dialog-text { flex: 1; min-width: 0; }
+}
+
 #loading .spinner {
 	width: 16px;
 	height: 16px;

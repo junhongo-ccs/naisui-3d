@@ -18,7 +18,7 @@ export type Place = {
 // city's own simulations for its sewer plans: both kept apart from 'simulation', which is what the
 // colors on screen show (内水).
 type StoryKind = 'terrain' | 'mechanism' | 'simulation' | 'river' | 'study' | 'record' | 'plan';
-type Story = {
+export type Story = {
 	sections: { kind: StoryKind, text: string }[],
 	sources: { label: string, url: string }[],
 	// An everyday photo of the spot, under a free licence (Wikimedia Commons): served from
@@ -43,7 +43,7 @@ export function placesFor( code: string ): Place[] {
 
 export const SHELTER_COLOR = '#15803d';
 export const STORY_COLOR = '#1d4ed8';
-const STORY_LABELS: Record<StoryKind, { label: string, color: string }> = {
+export const STORY_LABELS: Record<StoryKind, { label: string, color: string }> = {
 	terrain: { label: '地形', color: '#64748b' },
 	mechanism: { label: 'しくみ', color: '#0f766e' },
 	simulation: { label: 'この色（想定）', color: '#2563eb' },
@@ -134,22 +134,33 @@ export function createPins() {
 
 	}
 
-	// Resize the pins for the eye's distance and turn them to face it. Call every frame before
+	// Resize the pins for the eye's distance and turn them to face it (in VR), or to lie flat in the
+	// screen, given the camera's rotation as `facing` (on a PC or phone). Call every frame before
 	// rendering.
-	function update( eye: THREE.Vector3 ) {
+	// On a flat screen the stems, too, stand along the camera's up rather than straight up, so they
+	// stay upright and parallel on screen instead of converging below the view.
+	// Without `labels` only the stems are drawn: on a phone the labels are HTML over the canvas
+	// (src/touch-pins.ts), standing on the stems' heads.
+	function update( eye: THREE.Vector3, facing: THREE.Quaternion | null, labels = true ) {
 
+		pinUp.set( 0, 1, 0 );
+		if ( facing ) pinUp.applyQuaternion( facing );
 		for ( const p of pins ) {
 
 			const d = eye.distanceTo( p.base );
 			p.height = Math.max( d * LABEL_SIZE, 0.05 ) * ( p === hovered ? 1.3 : 1 );
 			const stemHeight = THREE.MathUtils.clamp( d * 0.05, 3, 400 );
 			p.stem.scale.y = stemHeight;
-			p.head.copy( p.base ).setY( p.base.y + stemHeight );
-			pose( p.icon, p.head, p.height, eye );
+			p.stem.visible = true;
+			if ( facing ) p.stem.quaternion.copy( facing );
+			else p.stem.quaternion.identity();
+			p.head.copy( p.base ).addScaledVector( pinUp, stemHeight );
+			p.icon.obj.visible = labels;
+			pose( p.icon, p.head, p.height, eye, facing );
 			if ( p.name ) {
 
-				p.name.obj.visible = p.place.kind === 'story' || d < SHELTER_NAME_RANGE || p === hovered || p === opened;
-				pose( p.name, p.head, p.height * NAME_SCALE, eye );
+				p.name.obj.visible = labels && ( p.place.kind === 'story' || d < SHELTER_NAME_RANGE || p === hovered || p === opened );
+				pose( p.name, p.head, p.height * NAME_SCALE, eye, facing );
 
 			}
 
@@ -160,17 +171,18 @@ export function createPins() {
 			// A story's card is tall, so it is centered on the pin's label (about eye level) rather
 			// than above it, where it would mean looking far up. Moved, it stays where it was put.
 			if ( movedTo ) cardAnchor.copy( movedTo );
-			else cardAnchor.copy( opened.head ).setY( opened.head.y + eye.distanceTo( opened.head ) * LABEL_SIZE * 1.4 );
+			else cardAnchor.copy( opened.head ).addScaledVector( pinUp, eye.distanceTo( opened.head ) * LABEL_SIZE * 1.4 );
 			const d = eye.distanceTo( cardAnchor );
 			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH * cardLayout.widthScale : CARD_WIDTH );
 			card.center.set( 0.5, opened.place.kind === 'story' ? 0.5 : - 0.08 );
-			pose( card, cardAnchor, w / card.aspect, eye );
+			pose( card, cardAnchor, w / card.aspect, eye, facing );
 
 		}
 
 	}
 
 	const cardAnchor = new THREE.Vector3();
+	const pinUp = new THREE.Vector3( 0, 1, 0 ); // which way the pins stand, as last drawn
 
 	// The pin a ray points at (within a small angle of its label), nearest first.
 	const toHead = new THREE.Vector3();
@@ -180,7 +192,7 @@ export function createPins() {
 		for ( const p of pins ) {
 
 			// Aim at the middle of the label, not its bottom edge.
-			toHead.copy( p.head ).setY( p.head.y + p.height / 2 ).sub( ray.origin );
+			toHead.copy( p.head ).addScaledVector( pinUp, p.height / 2 ).sub( ray.origin );
 			const along = toHead.dot( ray.direction );
 			if ( along <= 0 ) continue;
 			const angle = Math.sqrt( Math.max( toHead.lengthSq() - along * along, 0 ) ) / along;
@@ -327,7 +339,23 @@ export function createPins() {
 
 	}
 
-	return { group, setPlaces, update, pick, pickCard, hoverPart, startDrag, dragTo, endDrag, get dragging() { return !! drag; }, get isOpen() { return !! opened; }, hover, toggle, close };
+	// Where each pin stands on the ground, and where its label stands (the top of its stem) as
+	// last drawn.
+	function heads(): readonly { place: Place, base: THREE.Vector3, head: THREE.Vector3 }[] {
+
+		return pins;
+
+	}
+
+	// Show only the stems whose labels are shown (on a phone, where crowded labels are left out),
+	// by the pins' order. Call after update.
+	function showStems( shown: readonly boolean[] ) {
+
+		pins.forEach( ( p, i ) => ( p.stem.visible = shown[ i ] ) );
+
+	}
+
+	return { group, setPlaces, update, heads, showStems, pick, pickCard, hoverPart, startDrag, dragTo, endDrag, get dragging() { return !! drag; }, get isOpen() { return !! opened; }, hover, toggle, close };
 
 }
 

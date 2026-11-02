@@ -30,12 +30,16 @@ export function setTexture( b: Billboard, canvas: HTMLCanvasElement ) {
 
 }
 
-// Stand `b` at `position`, `height` tall, facing `eye`.
-export function pose( b: Billboard, position: THREE.Vector3, height: number, eye: THREE.Vector3 ) {
+// Stand `b` at `position`, `height` tall, facing `eye`; or, given `facing` (the camera's world
+// rotation; the parent must be unrotated), lying flat in the screen like a sprite. Facing the eye
+// suits VR, but on a flat screen it turns each label a little differently and they fan out
+// towards the edges.
+export function pose( b: Billboard, position: THREE.Vector3, height: number, eye: THREE.Vector3, facing?: THREE.Quaternion | null ) {
 
 	const w = height * b.aspect;
 	b.obj.position.copy( position );
-	b.obj.lookAt( eye );
+	if ( facing ) b.obj.quaternion.copy( facing );
+	else b.obj.lookAt( eye );
 	b.mesh.scale.set( w, height, 1 );
 	b.mesh.position.set( ( 0.5 - b.center.x ) * w, ( 0.5 - b.center.y ) * height, 0 );
 

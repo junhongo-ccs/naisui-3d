@@ -11,7 +11,10 @@ import { BASE_MAPS, createGoogleTiles, createTerrain, maskTo, type BaseMapKey } 
 import { initVR } from './vr';
 import { createLoadingIndicator } from './loading';
 import { AREA, ONLY_CITY, VR_START } from './config';
-import { createPins, placesFor } from './places';
+import { createPins, placesFor, type Place } from './places';
+import { createTouchPins } from './touch-pins';
+import { createPlaceDialog } from './place-dialog';
+import { createStreetView } from './street';
 import { createMinimap } from './vr-minimap';
 import { offerInstall } from './install';
 import './style.css';
@@ -367,10 +370,79 @@ loadCityTiles();
 const pins = createPins();
 scene.add( pins.group );
 const minimap = createMinimap();
+// On a touch screen (a phone or tablet; or ?ui=touch, to try it on a PC) the pins' labels are
+// HTML over the view, larger to tap, and a pin's description opens as a modal rather than as a
+// card in the scene (src/touch-pins.ts, src/place-dialog.ts). VR is the same either way.
+const touchUI = params.get( 'ui' ) === 'touch' || ( params.get( 'ui' ) !== 'desktop' && matchMedia( '(pointer: coarse)' ).matches );
+const pinLayer = $( '#pin-layer' );
+const touchPins = createTouchPins( pinLayer );
+const placeDialog = createPlaceDialog( () => touchPins.setActive( null ) );
+function openPlace( place: Place ) {
+
+	touchPins.setActive( place );
+	placeDialog.open( place, city.city );
+
+}
+
+// A tap on pins gathered into one disc closes in on them, until they stand apart on screen; if
+// they are still together up close, they are listed to choose from.
+const CLOSE_ENOUGH = 120; // m from the view's center: closer than this, list them
+const SPREAD = 9; // view distance per meter between the closest two, to set them about 40 px apart
+function openCluster( places: Place[] ) {
+
+	const bases = places.map( p => pins.heads().find( h => h.place === p )!.base );
+	const center = bases.reduce( ( c, b ) => c.add( b ), new THREE.Vector3() ).divideScalar( bases.length );
+	let closest = Infinity;
+	for ( let i = 0; i < bases.length; i ++ ) for ( let j = i + 1; j < bases.length; j ++ ) closest = Math.min( closest, bases[ i ].distanceTo( bases[ j ] ) );
+	const distance = camera.position.distanceTo( controls.target );
+	if ( street.active || distance < CLOSE_ENOUGH ) {
+
+		placeDialog.openList( places, openPlace );
+		return;
+
+	}
+
+	flyTo( center, THREE.MathUtils.clamp( closest * SPREAD, CLOSE_ENOUGH * 0.6, distance * 0.6 ) );
+
+}
+
+// Glide the view from above to look at `target` from `distance`, from the same direction.
+const FLY_TIME = 0.8; // s
+let fly: { fromPosition: THREE.Vector3, fromTarget: THREE.Vector3, toPosition: THREE.Vector3, toTarget: THREE.Vector3, t: number } | null = null;
+function flyTo( target: THREE.Vector3, distance: number ) {
+
+	const toward = camera.position.clone().sub( controls.target ).normalize();
+	fly = {
+		fromPosition: camera.position.clone(), fromTarget: controls.target.clone(),
+		toPosition: target.clone().addScaledVector( toward, distance ), toTarget: target.clone(), t: 0,
+	};
+
+}
+
+function updateFly( dt: number ) {
+
+	if ( ! fly ) return;
+	fly.t = Math.min( 1, fly.t + dt / FLY_TIME );
+	const k = fly.t * fly.t * ( 3 - 2 * fly.t );
+	camera.position.lerpVectors( fly.fromPosition, fly.toPosition, k );
+	controls.target.lerpVectors( fly.fromTarget, fly.toTarget, k );
+	if ( fly.t === 1 ) fly = null;
+
+}
+
+// Looking around from the street on a phone (src/street.ts).
+const street = createStreetView( {
+	camera, controls, canvas: renderer.domElement,
+	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
+	bounds: () => bounds,
+	startPose: vrStartPose,
+} );
+
 function loadPlaces() {
 
 	const places = placesFor( city.code ).filter( p => inArea( p.lat, p.lon ) );
 	pins.setPlaces( city.city, places, toLocal );
+	if ( touchUI ) touchPins.setPlaces( places );
 	minimap.setCity( cityArea(), places );
 
 }
@@ -419,6 +491,7 @@ function switchCity( code: string ) {
 
 	} else {
 
+		leaveStreet();
 		frameCity();
 
 	}
@@ -455,6 +528,7 @@ function setBaseMap( key: BaseMapKey ) {
 function syncURL() {
 
 	const q = new URLSearchParams( { city: city.code, base: baseMap } );
+	if ( params.has( 'ui' ) ) q.set( 'ui', params.get( 'ui' )! );
 	history.replaceState( null, '', `?${ q }` );
 
 }
@@ -497,6 +571,37 @@ function buildUI() {
 	raise.addEventListener( 'change', () => setWaterRaised( raise.checked ) );
 
 	$( '#panel-toggle' ).addEventListener( 'click', () => document.body.classList.toggle( 'panel-closed' ) );
+
+	if ( touchUI ) {
+
+		document.body.classList.add( 'touch-ui' );
+		// The legend starts folded to a strip of its colors; a tap opens or folds it.
+		const legendBox = $( '#legend' );
+		const setFolded = ( folded: boolean ) => {
+
+			legendBox.classList.toggle( 'folded', folded );
+			legendBox.setAttribute( 'aria-expanded', String( ! folded ) );
+
+		};
+		legendBox.setAttribute( 'role', 'button' );
+		legendBox.tabIndex = 0;
+		setFolded( true );
+		legendBox.addEventListener( 'click', () => setFolded( ! legendBox.classList.contains( 'folded' ) ) );
+
+		const enter = $<HTMLButtonElement>( '#street-enter' );
+		enter.hidden = false;
+		gateStreetButton( false );
+		enter.addEventListener( 'click', () => {
+
+			fly = null;
+			street.enter();
+			document.body.classList.add( 'in-street' );
+			$( '#info' ).hidden = true;
+
+		} );
+		$( '#street-exit' ).addEventListener( 'click', leaveStreet );
+
+	}
 	// On a phone (narrow, or held sideways and so short) the panel starts folded, to leave the map.
 	if ( window.innerWidth < 640 || window.innerHeight < 500 ) document.body.classList.add( 'panel-closed' );
 
@@ -539,6 +644,27 @@ function buildUI() {
 	} );
 
 	renderCityUI();
+
+}
+
+// As the VR button is: shut until the first load, including the street at the start point, is
+// done, so the view doesn't drop onto half-loaded ground.
+let streetGateOpen = false;
+function gateStreetButton( settled: boolean ) {
+
+	if ( streetGateOpen ) return;
+	const button = $<HTMLButtonElement>( '#street-enter' );
+	button.disabled = ! settled;
+	button.textContent = settled ? 'まちの中から見る' : '読み込み中…';
+	streetGateOpen = settled;
+
+}
+
+function leaveStreet() {
+
+	street.exit();
+	document.body.classList.remove( 'in-street' );
+	$( '#info' ).hidden = true;
 
 }
 
@@ -643,7 +769,8 @@ let downAt = { x: 0, y: 0 };
 renderer.domElement.addEventListener( 'pointerdown', e => {
 
 	downAt = { x: e.clientX, y: e.clientY };
-	if ( pins.startDrag( rayAt( e ) ) ) controls.enabled = false;
+	fly = null; // a touch takes the view back from a glide
+	if ( ! touchUI && pins.startDrag( rayAt( e ) ) ) controls.enabled = false;
 
 } );
 
@@ -680,6 +807,28 @@ renderer.domElement.addEventListener( 'pointerup', e => {
 	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) return;
 	rayAt( e );
 	const info = $( '#info' );
+	if ( touchUI ) {
+
+		const hit = touchPins.pick( e.clientX, e.clientY );
+		if ( hit ) {
+
+			if ( 'place' in hit ) openPlace( hit.place );
+			else openCluster( hit.cluster );
+			info.hidden = true;
+			return;
+
+		}
+
+		// On the street, a tap on the ground walks there (and, below, says the depth there).
+		if ( street.active ) {
+
+			const ground = raycaster.intersectObjects( raycastTargets( [ terrain, ...buildings ] ), true )[ 0 ];
+			if ( ground ) street.moveTo( ground.point );
+
+		}
+
+	}
+
 	// The open card is drawn over everything, so a click on it is for the card alone.
 	const onCard = pins.pickCard( raycaster.ray );
 	if ( onCard ) {
@@ -846,6 +995,7 @@ function keepAboveGround( dt: number ) {
 const WATER_RISE_TIME = 1.5; // s, ground → full depth
 const clock = new THREE.Clock();
 const eye = new THREE.Vector3();
+const eyeRotation = new THREE.Quaternion();
 const loading = createLoadingIndicator( camera );
 renderer.setAnimationLoop( () => {
 
@@ -855,11 +1005,13 @@ renderer.setAnimationLoop( () => {
 
 	const xr = renderer.xr;
 	if ( xr.isPresenting ) vr.update( dt );
+	else if ( street.active ) street.update( dt );
 	else {
 
 		// As in VR, an open card holds the view in place: it can turn around, but not pan or zoom
 		// away until the card is closed.
 		controls.enablePan = controls.enableZoom = ! pins.isOpen;
+		updateFly( dt );
 		controls.update();
 		keepAboveGround( dt );
 
@@ -902,10 +1054,20 @@ renderer.setAnimationLoop( () => {
 
 	}
 
-	pins.update( camera.getWorldPosition( eye ) );
+	// In VR the pins face the head; on a flat screen they lie flat in it, so they don't fan out.
+	// On a touch screen their labels are HTML, placed on the stems after they are updated.
+	const flat = ! xr.isPresenting;
+	pins.update( camera.getWorldPosition( eye ), flat ? camera.getWorldQuaternion( eyeRotation ) : null, ! ( touchUI && flat ) );
+	if ( touchUI ) {
+
+		pinLayer.hidden = ! flat;
+		if ( flat ) pins.showStems( touchPins.update( camera, pins.heads() ) );
+
+	}
 	if ( useGoogle ) updateGoogleAttribution( dt );
 	loading.update( dt, busy, xr.isPresenting );
 	gateVRButton( loading.settled );
+	if ( touchUI ) gateStreetButton( loading.settled );
 
 	renderer.render( scene, camera );
 
