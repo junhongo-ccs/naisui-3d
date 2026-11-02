@@ -11,6 +11,15 @@ type PointAt = ( ray: THREE.Raycaster ) => { distance: number, flood: { point: T
 type Pins = ReturnType<typeof createPins>;
 type Minimap = ReturnType<typeof createMinimap>;
 
+// Text sizes in VR, from the type scale (CLAUDE.md, 文字の大きさ), as angles of view.
+const DEG = Math.PI / 180;
+// The depth readout: 56 px text on a 96 px canvas, drawn so the text is 1.4° (body).
+const DEPTH_LABEL_SIZE = 1.4 * DEG * 96 / 56; // label height / distance
+// The controls card on the left hand, about 0.4 m from the eyes: its text 1.2° (label).
+const HAND_DISTANCE = 0.4; // m
+const HAND_FONT_PX = 40; // canvas px of the card's text
+const HAND_PX_PER_M = HAND_FONT_PX / ( HAND_DISTANCE * Math.tan( 1.2 * DEG ) );
+
 // Quest controller locomotion. The headset pose is applied to `camera` relative to `rig`,
 // so moving and turning are done by moving `rig`.
 //   left stick:   move along the gaze direction (horizontal)
@@ -229,6 +238,8 @@ export function initVR( { renderer, scene, camera, rig, controls, groundTargets,
 					if ( menu.isOpen ) choose = true;
 					else if ( pointer.mapSpot ) goTo( pointer.mapSpot );
 					else if ( pointer.onCard?.part === 'close' ) pins.close();
+				else if ( pointer.onCard?.part === 'prev' ) pins.flip( - 1 );
+				else if ( pointer.onCard?.part === 'next' ) pins.flip( 1 );
 					else if ( pointer.onCard?.part === 'grab' ) pointer.grab();
 					else if ( pointer.hoveredPlace ) pins.toggle( pointer.hoveredPlace );
 
@@ -412,7 +423,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		const text = `想定浸水深 ${ depthLabel }`;
 		const canvas = document.createElement( 'canvas' );
 		const ctx = canvas.getContext( '2d' )!;
-		const font = 'bold 56px system-ui, sans-serif';
+		const font = '56px system-ui, sans-serif'; // drawn at DEPTH_LABEL_SIZE: 1.4° (body)
 		ctx.font = font;
 		const pad = 28, swatch = 44, h = 96;
 		canvas.width = Math.ceil( pad + swatch + 20 + ctx.measureText( text ).width + pad );
@@ -545,7 +556,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 		// Keep the label the same apparent size however far away it is.
 		setText( flood.label );
 		const dist = headCam.getWorldPosition( head ).distanceTo( flood.point );
-		pose( label, flood.point, dist * 0.05, head );
+		pose( label, flood.point, dist * DEPTH_LABEL_SIZE, head );
 		dot.position.copy( flood.point );
 		dot.scale.setScalar( dist * 0.005 );
 
@@ -560,7 +571,7 @@ function createPointer( renderer: THREE.WebGLRenderer, scene: THREE.Scene, rig: 
 			return `手${ i } ${ c.userData.handedness ?? '未接続' }　姿勢${ c.visible ? '○' : '×' }　光線${ ray }${ c.parent ? '' : '（シーン外）' }`;
 
 		} );
-		const target = mapSpot ? `地図の ${ mapSpot.place.name }` : onCard ? ( onCard.part === 'close' ? '札の閉じるボタン' : '札' ) : place ? `ピン ${ place.place.name }` : ! hit ? '-' : hit.flood ? hit.flood.label : hit.distance === Infinity ? 'なし' : `${ hit.distance.toFixed( 0 ) } m 先の建物`;
+		const target = mapSpot ? `地図の ${ mapSpot.place.name }` : onCard ? ( { close: '札の閉じるボタン', prev: '札の「前へ」', next: '札の「次へ」', grab: '札の上部', card: '札' } )[ onCard.part ] : place ? `ピン ${ place.place.name }` : ! hit ? '-' : hit.flood ? hit.flood.label : hit.distance === Infinity ? 'なし' : `${ hit.distance.toFixed( 0 ) } m 先の建物`;
 		return lines.concat( `指す先: ${ target }` );
 
 	}
@@ -588,6 +599,7 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		[ 'トリガー', '押している間 5 倍速' ],
 		[ '右手で指す', '想定浸水深・ピンの名前を表示' ],
 		[ 'ピンに右トリガー', '説明を開く（札の × で閉じる）' ],
+		[ '札の ◀ ▶ に右トリガー', 'ページをめくる' ],
 		[ '札の上部を右トリガー', 'つかんで動かす（離した所に置く）' ],
 		[ 'A / B（押したまま）', '水面を上げる / 下げる' ],
 		...( hasMenu ? [ [ 'グリップ（右）', '市町村を選ぶ' ] ] : [] ),
@@ -595,10 +607,16 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 		[ 'Y', 'スタート地点に戻る' ],
 		[ 'Meta ボタン長押し', 'VR を終了' ],
 	];
+	// Sized from its text, which is 1.2° (HAND_PX_PER_M): wider than the map under it.
 	const canvas = document.createElement( 'canvas' );
 	const ctx = canvas.getContext( '2d' )!;
-	const pad = 36, row = 64, keyWidth = 340;
-	canvas.width = 1100;
+	const KEY = `bold ${ HAND_FONT_PX }px system-ui, sans-serif`, ACTION = `${ HAND_FONT_PX }px system-ui, sans-serif`;
+	const pad = 32, row = Math.round( HAND_FONT_PX * 1.5 ), gap = 28;
+	ctx.font = KEY;
+	const keyWidth = Math.max( ...lines.map( ( [ key ] ) => ctx.measureText( key ).width ) ) + gap;
+	ctx.font = ACTION;
+	const actionWidth = Math.max( ...lines.map( ( [ , action ] ) => ctx.measureText( action ).width ) );
+	canvas.width = Math.ceil( pad * 2 + keyWidth + actionWidth );
 	canvas.height = pad * 2 + row * lines.length;
 	ctx.fillStyle = 'rgba(20, 26, 36, 0.88)';
 	ctx.beginPath();
@@ -608,10 +626,10 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 	lines.forEach( ( [ key, action ], i ) => {
 
 		const y = pad + row * ( i + 0.5 );
-		ctx.font = 'bold 40px system-ui, sans-serif';
+		ctx.font = KEY;
 		ctx.fillStyle = '#9fd3ff';
-		ctx.fillText( key, pad, y, keyWidth - 20 );
-		ctx.font = '40px system-ui, sans-serif';
+		ctx.fillText( key, pad, y );
+		ctx.font = ACTION;
 		ctx.fillStyle = '#ffffff';
 		ctx.fillText( action, pad + keyWidth, y );
 
@@ -619,7 +637,7 @@ function createHandPanel( renderer: THREE.WebGLRenderer, rig: THREE.Group, minim
 
 	const texture = new THREE.CanvasTexture( canvas );
 	texture.colorSpace = THREE.SRGBColorSpace;
-	const width = 0.16; // m
+	const width = canvas.width / HAND_PX_PER_M; // m
 	const cardHeight = width * canvas.height / canvas.width;
 	const card = new THREE.Mesh(
 		new THREE.PlaneGeometry( width, cardHeight ),

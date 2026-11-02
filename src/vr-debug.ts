@@ -105,7 +105,8 @@ export function createDebugBoard() {
 
 		ctx.font = 'bold 30px system-ui, sans-serif';
 		put( '診断（X で閉じる）', '#9fd3ff' );
-		ctx.font = '26px system-ui, sans-serif';
+		// A developer's tool: it keeps only the type scale's floor, 1.0° at the hand (28 px here).
+		ctx.font = '28px system-ui, sans-serif';
 		put( 'スクリーンショット: 右手の Meta ボタン（丸く平らなボタン）を押したまま、右トリガーを引く。写真はヘッドセットの「ファイル」アプリか、スマホの Meta Horizon アプリで見られる', '#9fb3c8' );
 		y += LINE / 2;
 		ctx.font = '28px ui-monospace, monospace';

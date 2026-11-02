@@ -12,7 +12,7 @@ import { initVR } from './vr';
 import { createLoadingIndicator } from './loading';
 import { AREA, ONLY_CITY, VR_START } from './config';
 import { createPins, placesFor, type Place } from './places';
-import { createTouchPins } from './touch-pins';
+import { createScreenPins } from './screen-pins';
 import { createPlaceDialog } from './place-dialog';
 import { createStreetView } from './street';
 import { createMinimap } from './vr-minimap';
@@ -30,11 +30,11 @@ const GOOGLE_KEY: string | undefined = import.meta.env.VITE_GOOGLE_MAPS_API_KEY 
 // Whether Google's tiles are in use: there is a key, and they haven't failed to load (the day's
 // quota used up, say), in which case the GSI terrain and PLATEAU buildings take over.
 let useGoogle = !! GOOGLE_KEY;
-// On a touch screen (a phone or tablet; or ?ui=touch, to try it on a PC) the pins' labels are
-// HTML over the view, larger to tap, and a pin's description opens as a modal rather than as a
-// card in the scene (src/touch-pins.ts, src/place-dialog.ts). VR is the same either way.
-// The tiles load lighter there, too (addTiles, the loop): a phone's memory for the GPU is small,
-// and textures that no longer fit draw black.
+// A touch screen (a phone or tablet; or ?ui=touch, to try it on a PC): the title and heading a
+// step smaller, the legend folded, a d-pad on the street (style.css). The tiles load lighter there,
+// too (addTiles, the loop): a phone's memory for the GPU is small, and textures that no longer
+// fit draw black. (On any flat screen, PC or phone, the pins' labels and descriptions are HTML:
+// src/screen-pins.ts, src/place-dialog.ts. VR has its own, in the scene.)
 const touchUI = params.get( 'ui' ) === 'touch' || ( params.get( 'ui' ) !== 'desktop' && matchMedia( '(pointer: coarse)' ).matches );
 // Memory for the tiles kept loaded, per tileset, on a touch screen: a third of the library's
 // default (0.3–0.4 GB). iPhone's Safari closes a page that grows past its (small) limit, and
@@ -380,12 +380,14 @@ loadCityTiles();
 const pins = createPins();
 scene.add( pins.group );
 const minimap = createMinimap();
+// On a flat screen the pins' labels are HTML over the view and a pin's description opens as a
+// modal (the type scale's sizes, the browser's zoom); in VR both are in the scene.
 const pinLayer = $( '#pin-layer' );
-const touchPins = createTouchPins( pinLayer );
-const placeDialog = createPlaceDialog( () => touchPins.setActive( null ) );
+const screenPins = createScreenPins( pinLayer );
+const placeDialog = createPlaceDialog( () => screenPins.setActive( null ) );
 function openPlace( place: Place ) {
 
-	touchPins.setActive( place );
+	screenPins.setActive( place );
 	placeDialog.open( place, city.city );
 
 }
@@ -436,7 +438,7 @@ function updateFly( dt: number ) {
 
 }
 
-// Looking around from the street on a phone (src/street.ts).
+// Looking around from the street on a PC or phone (src/street.ts).
 const street = createStreetView( {
 	camera, controls, canvas: renderer.domElement,
 	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
@@ -448,7 +450,7 @@ function loadPlaces() {
 
 	const places = placesFor( city.code ).filter( p => inArea( p.lat, p.lon ) );
 	pins.setPlaces( city.city, places, toLocal );
-	if ( touchUI ) touchPins.setPlaces( places );
+	screenPins.setPlaces( places );
 	minimap.setCity( cityArea(), places );
 
 }
@@ -600,21 +602,28 @@ function buildUI() {
 		legendBox.tabIndex = 0;
 		setFolded( true );
 		legendBox.addEventListener( 'click', () => setFolded( ! legendBox.classList.contains( 'folded' ) ) );
-
-		const enter = $<HTMLButtonElement>( '#street-enter' );
-		enter.hidden = false;
-		gateStreetButton( false );
-		enter.addEventListener( 'click', () => {
-
-			fly = null;
-			street.enter();
-			document.body.classList.add( 'in-street' );
-			$( '#info' ).hidden = true;
-
-		} );
-		$( '#street-exit' ).addEventListener( 'click', leaveStreet );
+		setupDpad();
 
 	}
+
+	const enter = $<HTMLButtonElement>( '#street-enter' );
+	enter.hidden = false;
+	gateStreetButton( false );
+	enter.addEventListener( 'click', () => {
+
+		fly = null;
+		street.enter();
+		document.body.classList.add( 'in-street' );
+		$( '#info' ).hidden = true;
+		$( '#street-hint' ).textContent = touchUI
+			? 'スマホを動かすか、ドラッグで見回す ・ 十字キーで歩く ・ 地面をタップでそこへ移動'
+			: 'ドラッグで見回す ・ W A S D（矢印キー）で歩く、Shift で速く ・ 地面をクリックでそこへ移動';
+
+	} );
+	$( '#street-exit' ).addEventListener( 'click', leaveStreet );
+	// VR remembers the view to come back to as it starts: leave the street first (this listener is
+	// added before VR's).
+	renderer.xr.addEventListener( 'sessionstart', leaveStreet );
 	// On a phone (narrow, or held sideways and so short) the panel starts folded, to leave the map.
 	if ( window.innerWidth < 640 || window.innerHeight < 500 ) document.body.classList.add( 'panel-closed' );
 
@@ -678,6 +687,96 @@ function leaveStreet() {
 	street.exit();
 	document.body.classList.remove( 'in-street' );
 	$( '#info' ).hidden = true;
+
+}
+
+// Moving with keys (PC) or the d-pad (phone): W / ↑ forward, S / ↓ back, A / ← and D / → to the
+// side. From above it slides the map; on the street it walks. Held, it speeds up (and Shift makes
+// it fast at once).
+const keysDown = new Set<string>();
+const dpadDown = new Set<string>();
+const KEY_DIRS: Record<string, string> = {
+	KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down',
+	KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
+};
+window.addEventListener( 'keydown', e => {
+
+	// Not while typing in a field, choosing in a list, or reading a description.
+	const t = e.target instanceof Element ? e.target : null;
+	if ( placeDialog.isOpen || t?.closest( 'input, select, textarea' ) || e.ctrlKey || e.metaKey || e.altKey ) return;
+	const dir = KEY_DIRS[ e.code ];
+	if ( ! dir ) return;
+	keysDown.add( dir );
+	e.preventDefault(); // the arrows would scroll the panel
+	fly = null;
+
+} );
+window.addEventListener( 'keyup', e => keysDown.delete( KEY_DIRS[ e.code ] ) );
+window.addEventListener( 'blur', () => keysDown.clear() );
+let shiftDown = false;
+window.addEventListener( 'keydown', e => ( shiftDown = e.shiftKey ) );
+window.addEventListener( 'keyup', e => ( shiftDown = e.shiftKey ) );
+
+function setupDpad() {
+
+	for ( const button of document.querySelectorAll<HTMLButtonElement>( '#dpad button' ) ) {
+
+		const dir = button.dataset.dir!;
+		const press = ( on: boolean ) => {
+
+			if ( on ) dpadDown.add( dir );
+			else dpadDown.delete( dir );
+			button.classList.toggle( 'pressed', on );
+
+		};
+		button.addEventListener( 'pointerdown', e => {
+
+			press( true );
+			// Keep the finger's events while it is down, even if it slides off the button.
+			try {
+
+				button.setPointerCapture( e.pointerId );
+
+			} catch {}
+
+		} );
+		for ( const type of [ 'pointerup', 'pointercancel', 'lostpointercapture' ] ) button.addEventListener( type, () => press( false ) );
+		button.addEventListener( 'contextmenu', e => e.preventDefault() ); // a long press would open it
+
+	}
+
+}
+
+// The way to move this frame: x to the right, y forward, each -1..1, and whether to go fast.
+const MOVE_RAMP = 3; // s held to reach full speed
+let movingFor = 0;
+function moveInput( dt: number ) {
+
+	const down = new Set( [ ...keysDown, ...dpadDown ] );
+	const x = ( down.has( 'right' ) ? 1 : 0 ) - ( down.has( 'left' ) ? 1 : 0 );
+	const y = ( down.has( 'up' ) ? 1 : 0 ) - ( down.has( 'down' ) ? 1 : 0 );
+	movingFor = x || y ? movingFor + dt : 0;
+	// 0 at first, 1 after MOVE_RAMP seconds held, or at once with Shift.
+	const boost = shiftDown ? 1 : Math.min( movingFor / MOVE_RAMP, 1 );
+	return { x, y, boost };
+
+}
+
+// Slide the view from above over the map: forward is the way the camera faces, flattened. The
+// speed goes with how far away the camera is, so it feels the same zoomed in or out.
+const PAN_SPEED = 0.4; // of the view distance per second, at first
+const forward = new THREE.Vector3(), right = new THREE.Vector3();
+function panView( move: { x: number, y: number, boost: number }, dt: number ) {
+
+	if ( ! move.x && ! move.y ) return;
+	forward.subVectors( controls.target, camera.position ).setY( 0 ).normalize();
+	right.crossVectors( forward, camera.up ).normalize();
+	const speed = camera.position.distanceTo( controls.target ) * PAN_SPEED * ( 1 + 3 * move.boost );
+	const step = forward.multiplyScalar( move.y ).addScaledVector( right, move.x ).normalize().multiplyScalar( speed * dt );
+	const target = controls.target.clone().add( step ).clamp( bounds.min, bounds.max );
+	step.subVectors( target, controls.target );
+	controls.target.add( step );
+	camera.position.add( step );
 
 }
 
@@ -777,86 +876,54 @@ function rayAt( e: PointerEvent ) {
 
 }
 
-// Pressing on an open card's top strip drags the card instead of the view.
 let downAt = { x: 0, y: 0 };
 renderer.domElement.addEventListener( 'pointerdown', e => {
 
 	downAt = { x: e.clientX, y: e.clientY };
 	fly = null; // a touch takes the view back from a glide
-	if ( ! touchUI && pins.startDrag( rayAt( e ) ) ) controls.enabled = false;
 
 } );
 
-// Show a grabbing hand while the view is being dragged (not on a plain click).
-// OrbitControls writes an inline cursor style, so set it inline too rather than via CSS.
+// A grabbing hand while the view is being dragged (not on a plain click), and a pointing hand
+// over a pin's label. OrbitControls writes an inline cursor style, so set it inline too.
 const setCursor = ( c: string ) => ( renderer.domElement.style.cursor = c );
 renderer.domElement.addEventListener( 'pointermove', e => {
 
-	if ( pins.dragging ) pins.dragTo( rayAt( e ) );
-	if ( e.buttons && Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) setCursor( 'grabbing' );
+	if ( e.buttons ) {
+
+		if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) setCursor( 'grabbing' );
+
+	} else if ( e.pointerType === 'mouse' ) {
+
+		setCursor( screenPins.pick( e.clientX, e.clientY ) ? 'pointer' : 'auto' );
+
+	}
 
 } );
-function endCardDrag() {
 
-	if ( ! pins.dragging ) return false;
-	pins.endDrag();
-	pins.hoverPart( null );
-	controls.enabled = true;
-	return true;
-
-}
-
-renderer.domElement.addEventListener( 'pointercancel', () => {
-
-	setCursor( 'auto' );
-	endCardDrag();
-
-} );
+renderer.domElement.addEventListener( 'pointercancel', () => setCursor( 'auto' ) );
 
 renderer.domElement.addEventListener( 'pointerup', e => {
 
 	setCursor( 'auto' );
-	if ( endCardDrag() ) return;
 	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) return;
 	rayAt( e );
 	const info = $( '#info' );
-	if ( touchUI ) {
+	const hit = screenPins.pick( e.clientX, e.clientY );
+	if ( hit ) {
 
-		const hit = touchPins.pick( e.clientX, e.clientY );
-		if ( hit ) {
-
-			if ( 'place' in hit ) openPlace( hit.place );
-			else openCluster( hit.cluster );
-			info.hidden = true;
-			return;
-
-		}
-
-		// On the street, a tap on the ground walks there (and, below, says the depth there).
-		if ( street.active ) {
-
-			const ground = raycaster.intersectObjects( raycastTargets( [ terrain, ...buildings ] ), true )[ 0 ];
-			if ( ground ) street.moveTo( ground.point );
-
-		}
-
-	}
-
-	// The open card is drawn over everything, so a click on it is for the card alone.
-	const onCard = pins.pickCard( raycaster.ray );
-	if ( onCard ) {
-
-		if ( onCard.part === 'close' ) pins.close();
-		return;
-
-	}
-
-	const pin = pins.pick( raycaster.ray );
-	if ( pin ) {
-
-		pins.toggle( pin.place );
+		if ( 'place' in hit ) openPlace( hit.place );
+		else openCluster( hit.cluster );
 		info.hidden = true;
 		return;
+
+	}
+
+	// On the street, a tap on the ground walks there (and, below, says the depth there).
+	if ( street.active ) {
+
+		const ground = raycaster.intersectObjects( raycastTargets( [ terrain, ...buildings ] ), true )[ 0 ];
+		if ( ground ) street.moveTo( ground.point );
 
 	}
 
@@ -877,6 +944,7 @@ window.addEventListener( 'resize', () => {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
+	screenPins.measure(); // the browser's zoom changes the labels' size too
 
 } );
 
@@ -887,7 +955,7 @@ buildUI();
 if ( import.meta.env.DEV ) {
 
 	Object.assign( window, { app: {
-		renderer, scene, world, camera, controls, legend, pins, minimap, toLocal, toLatLon,
+		renderer, scene, world, camera, controls, legend, pins, screenPins, minimap, toLocal, toLatLon,
 		get vr() { return vr; },
 		get city() { return city; },
 		get terrain() { return terrain; },
@@ -1027,14 +1095,13 @@ renderer.setAnimationLoop( () => {
 	waterLevel.value = THREE.MathUtils.clamp( waterTarget, waterLevel.value - step, waterLevel.value + step );
 
 	const xr = renderer.xr;
+	const move = moveInput( dt );
 	if ( xr.isPresenting ) vr.update( dt );
-	else if ( street.active ) street.update( dt );
+	else if ( street.active ) street.update( dt, move );
 	else {
 
-		// As in VR, an open card holds the view in place: it can turn around, but not pan or zoom
-		// away until the card is closed.
-		controls.enablePan = controls.enableZoom = ! pins.isOpen;
 		updateFly( dt );
+		panView( move, dt );
 		controls.update();
 		keepAboveGround( dt );
 
@@ -1081,20 +1148,16 @@ renderer.setAnimationLoop( () => {
 
 	}
 
-	// In VR the pins face the head; on a flat screen they lie flat in it, so they don't fan out.
-	// On a touch screen their labels are HTML, placed on the stems after they are updated.
+	// In VR the pins face the head, with their labels in the scene; on a flat screen the stems lie
+	// flat in it, so they don't fan out, and the labels are HTML, placed on the stems after.
 	const flat = ! xr.isPresenting;
-	pins.update( camera.getWorldPosition( eye ), flat ? camera.getWorldQuaternion( eyeRotation ) : null, ! ( touchUI && flat ) );
-	if ( touchUI ) {
-
-		pinLayer.hidden = ! flat;
-		if ( flat ) pins.showStems( touchPins.update( camera, pins.heads() ) );
-
-	}
+	pins.update( camera.getWorldPosition( eye ), flat ? camera.getWorldQuaternion( eyeRotation ) : null, ! flat );
+	pinLayer.hidden = ! flat;
+	if ( flat ) pins.showStems( screenPins.update( camera, pins.heads() ) );
 	if ( useGoogle ) updateGoogleAttribution( dt );
 	loading.update( dt, busy, xr.isPresenting );
 	gateVRButton( loading.settled );
-	if ( touchUI ) gateStreetButton( loading.settled );
+	gateStreetButton( loading.settled );
 
 	renderer.render( scene, camera );
 

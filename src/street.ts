@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// Looking around from the street on a phone: the camera stands at eye height on a street and turns
-// as the phone is turned (its orientation sensor), like a window onto the town; a sideways drag
-// turns it too (for sitting down), and without the sensor a drag turns and tilts it. A tap on the
-// ground walks there (src/main.ts). Leaving goes back to the view from above as it was.
+// Looking around from the street on a PC or phone: the camera stands at eye height on a street and
+// turns as the phone is turned (its orientation sensor), like a window onto the town; a sideways
+// drag turns it too (for sitting down), and without the sensor (a PC) a drag turns and tilts it.
+// W A S D or the arrow keys (PC) and the d-pad (phone) walk the way the view faces; a tap or
+// click on the ground walks there (src/main.ts). Leaving goes back to the view from above as it was.
 // The heading is relative: when the sensor first reports, the view keeps facing the way it was
 // (down the street), whichever way the phone points. Compass headings differ by browser and
 // need calibrating, and facing down the street is what matters here.
@@ -15,6 +16,7 @@ const DRAG_TURN = 0.005; // rad per px
 const HEAD_ROOM = 2; // m above the feet: the floor is the first surface below this
 const FLOOR_CHECK = 0.3; // s between looking up the floor
 const MAX_STEP = 20; // m: a floor farther than this from the feet is a coarse tile's, not the street's
+const WALK_SPEED = 4; // m/s at first; up to 5 times that held long, or with Shift
 
 type Options = {
 	camera: THREE.PerspectiveCamera,
@@ -65,6 +67,7 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 
 		pitch = 0;
 		sinceFloor = FLOOR_CHECK;
+		floorY = feet.y;
 		device = null;
 		yawOffset = null;
 		walk = null;
@@ -104,22 +107,37 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 
 	const Y = new THREE.Vector3( 0, 1, 0 );
 	const forward = new THREE.Vector3();
+	const right = new THREE.Vector3();
 	const turn = new THREE.Quaternion();
 	const target = new THREE.Quaternion();
-	function update( dt: number ) {
+	// `move`: x to the right, y forward (each -1..1), and `boost` 0..1 for how fast.
+	function update( dt: number, move: { x: number, y: number, boost: number } ) {
+
+		if ( move.x || move.y ) {
+
+			// Walking: forward is the way the view faces, flattened.
+			walk = null;
+			forward.set( 0, 0, - 1 ).applyQuaternion( camera.quaternion ).setY( 0 ).normalize();
+			right.crossVectors( forward, Y );
+			const step = forward.multiplyScalar( move.y ).addScaledVector( right, move.x ).normalize()
+				.multiplyScalar( WALK_SPEED * ( 1 + 4 * move.boost ) * dt );
+			feet.add( step ).clamp( bounds().min, bounds().max );
+
+		}
 
 		if ( walk ) {
 
 			walk.t = Math.min( 1, walk.t + dt / WALK_TIME );
 			const k = walk.t * walk.t * ( 3 - 2 * walk.t );
 			feet.lerpVectors( walk.from, walk.to, k );
+			floorY = feet.y;
 			if ( walk.t === 1 ) walk = null;
 
 		} else {
 
-			// Stand on the ground as it loads: the first tiles are coarse, and their surface can be
-			// meters off the start point's known elevation. Looked up a few times a second (the
-			// raycast is heavy), as in VR.
+			// Stand on the ground as it loads (the first tiles are coarse, and their surface can be
+			// meters off the start point's known elevation) and as the feet walk over it. Looked up
+			// a few times a second (the raycast is heavy), as in VR, and eased towards.
 			sinceFloor += dt;
 			if ( sinceFloor >= FLOOR_CHECK ) {
 
@@ -127,9 +145,11 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 				// A coarse tile that spans the whole region sags kilometers below it, bowed by the
 				// Earth: ignore what is far from where the feet are.
 				const floor = floorUnder( feet.x, feet.y, feet.z );
-				if ( floor !== null && Math.abs( floor - feet.y ) < MAX_STEP ) feet.y = floor;
+				if ( floor !== null && Math.abs( floor - feet.y ) < MAX_STEP ) floorY = floor;
 
 			}
+
+			feet.y += ( floorY - feet.y ) * ( 1 - Math.exp( - dt * 8 ) );
 
 		}
 
@@ -179,6 +199,7 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 	// tree or a bridge doesn't lift the view onto it; if there is none, the feet are inside the
 	// ground (its surface faces up, so a ray from inside misses it), and the floor is above.
 	let sinceFloor = 0;
+	let floorY = 0; // the floor under the feet, as last looked up
 	function floorUnder( x: number, y: number, z: number ): number | null {
 
 		return floorAt( x, y + HEAD_ROOM, z ) ?? floorAt( x, 5000, z );
@@ -186,25 +207,32 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 	}
 
 	// Turning by dragging: sideways turns (with the sensor too, to face somewhere without turning
-	// round in the chair); up and down tilts, without the sensor.
-	let last: { x: number, y: number } | null = null;
+	// round in the chair); up and down tilts, without the sensor. A drag that starts on the d-pad
+	// isn't on the canvas, so walking with one thumb and looking with the other both work.
+	// The first finger (or the mouse) down on the canvas turns the view; followed by its id, since
+	// a thumb already on the d-pad makes it not the "primary" one.
+	let last: { id: number, x: number, y: number } | null = null;
 	canvas.addEventListener( 'pointerdown', e => {
 
-		if ( active && e.isPrimary ) last = { x: e.clientX, y: e.clientY };
+		if ( active && ! last ) last = { id: e.pointerId, x: e.clientX, y: e.clientY };
 
 	} );
 	canvas.addEventListener( 'pointermove', e => {
 
-		if ( ! active || ! last || ! e.isPrimary ) return;
+		if ( ! active || e.pointerId !== last?.id ) return;
 		const dx = e.clientX - last.x, dy = e.clientY - last.y;
-		last = { x: e.clientX, y: e.clientY };
+		last = { id: e.pointerId, x: e.clientX, y: e.clientY };
 		// Dragging the scene: it follows the finger, so the view turns the other way.
 		if ( yawOffset !== null ) yawOffset += dx * DRAG_TURN;
 		yaw += dx * DRAG_TURN;
 		pitch = THREE.MathUtils.clamp( pitch + dy * DRAG_TURN, - 1.4, 1.4 );
 
 	} );
-	const release = () => ( last = null );
+	const release = ( e: PointerEvent ) => {
+
+		if ( e.pointerId === last?.id ) last = null;
+
+	};
 	canvas.addEventListener( 'pointerup', release );
 	canvas.addEventListener( 'pointercancel', release );
 

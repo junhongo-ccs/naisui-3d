@@ -12,8 +12,13 @@ export function createLoadingIndicator( head: THREE.Camera ) {
 
 	const el = document.querySelector( '#loading' ) as HTMLElement;
 
+	// In VR, 1.2 m ahead: the card's 44 px text is 1.2° (label, the type scale in CLAUDE.md), so
+	// the card is CARD_WIDTH wide; the ring sits in the gap left of the text.
+	const DISTANCE = 1.2; // m
+	const CARD_WIDTH = 512 * DISTANCE * Math.tan( THREE.MathUtils.degToRad( 1.2 ) ) / 44; // m, for the 512 px canvas
+	const k = CARD_WIDTH / 0.2; // the ring was laid out for a 0.2 m card
 	const vr = new THREE.Group();
-	vr.position.set( 0, - 0.22, - 1.2 );
+	vr.position.set( 0, - 0.22, - DISTANCE ); // just below the line of sight
 	vr.visible = false;
 	head.add( vr );
 
@@ -25,11 +30,11 @@ export function createLoadingIndicator( head: THREE.Camera ) {
 
 	};
 	const ring = overlay( new THREE.Mesh(
-		new THREE.RingGeometry( 0.011, 0.015, 32, 1, 0, Math.PI * 1.5 ),
+		new THREE.RingGeometry( 0.011 * k, 0.015 * k, 32, 1, 0, Math.PI * 1.5 ),
 		new THREE.MeshBasicMaterial( { color: '#6fb3ec', transparent: true } ),
 	) );
 	// In the gap left of the text.
-	ring.position.set( - 0.077, 0, 0.001 );
+	ring.position.set( - 0.077 * k, 0, 0.001 );
 
 	const canvas = document.createElement( 'canvas' );
 	canvas.width = 512;
@@ -46,7 +51,7 @@ export function createLoadingIndicator( head: THREE.Camera ) {
 	const texture = new THREE.CanvasTexture( canvas );
 	texture.colorSpace = THREE.SRGBColorSpace;
 	const card = overlay( new THREE.Mesh(
-		new THREE.PlaneGeometry( 0.2, 0.2 * canvas.height / canvas.width ),
+		new THREE.PlaneGeometry( CARD_WIDTH, CARD_WIDTH * canvas.height / canvas.width ),
 		new THREE.MeshBasicMaterial( { map: texture, transparent: true } ),
 	) );
 	vr.add( card, ring );

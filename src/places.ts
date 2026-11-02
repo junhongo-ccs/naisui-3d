@@ -54,28 +54,46 @@ export const STORY_LABELS: Record<StoryKind, { label: string, color: string }> =
 };
 const LANDMARK_BG = 'rgba(20, 26, 36, 0.86)';
 
-// Apparent sizes, as a fraction of the distance from the eye (≈ radians).
-const LABEL_SIZE = 0.028;
-const CARD_WIDTH = 0.5;
-const STORY_CARD_WIDTH = 0.5; // of the text column; the card is about 30° tall, so it fits the PC view (55°) and reads in VR
+// Sizes in VR, from the type scale (CLAUDE.md, 文字の大きさ), as angles of view. The cards are
+// drawn at PX_PER_DEG canvas pixels per degree, so a font's px give its angle: FONT holds the
+// scale's roles (title 1.8°, body 1.4°, label 1.2°, caption 1.0°).
+const PX_PER_DEG = 36 / 1.4;
+const FONT = {
+	title: 'bold 46px system-ui, sans-serif',
+	body: '36px system-ui, sans-serif',
+	label: 'bold 31px system-ui, sans-serif',
+	labelPlain: '31px system-ui, sans-serif',
+	caption: '26px system-ui, sans-serif',
+};
+const LINE = { title: 64, body: 61, label: 44, caption: 42 }; // px: each role's font × its line height
+// A pin's label (textLabel: 52 px text on an 84 px canvas) is drawn so its text is 1.2° (label).
+const LABEL_SIZE = THREE.MathUtils.degToRad( 1.2 ) * 84 / 52; // label height / distance
 const PICK_ANGLE = 0.03;
 const SHELTER_NAME_RANGE = 2500; // m; farther shelters show the icon only
-const NAME_SCALE = 0.8; // shelter name height / icon height
+
+// The width (m) at `distance` of a card `px` wide on its canvas.
+function cardWidth( px: number, distance: number ) {
+
+	return 2 * distance * Math.tan( THREE.MathUtils.degToRad( px / PX_PER_DEG ) / 2 );
+
+}
 
 // Pins over a city: landmark names, so the user can tell where they are, and shelters. Each pin is
 // a stem standing on the ground with a label on top, kept the same apparent size at any distance
 // and drawn over the scene, so a landmark behind a hill still shows which way it is.
-// Pointing at a pin and clicking (or pulling the trigger in VR) opens a card describing it; the
-// card's × button (or the pin again) closes it.
+// In VR, pointing at a pin and pulling the trigger opens a card describing it; a story's card
+// shows one part at a time, turned with its ◀ ▶ buttons, and its × button (or the pin again)
+// closes it. On a flat screen only the stems are drawn here; the labels and descriptions are HTML
+// (src/screen-pins.ts, src/place-dialog.ts).
 export function createPins() {
 
 	const group = new THREE.Group();
 	const card = billboard( null, 0.5, - 0.08, 1002 );
 	card.obj.visible = false;
 	group.add( card.obj );
-	// Where the card's close button and grab strip are on its canvas, and how much wider than a
-	// plain text card it is (a story card with a photo has a second column).
-	let cardLayout: CardLayout = { width: 1, height: 1, close: { x: 0, y: 0, size: 0 }, grabHeight: 0, widthScale: 1 };
+	// Where the card's buttons and grab strip are on its canvas.
+	let cardLayout: CardLayout = { width: 1, height: 1, close: { x: 0, y: 0, w: 0, h: 0 }, prev: null, next: null, grabHeight: 0 };
+	let page = 0; // of the open story's card
 	let hoveredPart: CardPart | null = null; // lit while pointed at
 	// Where the user has put the card by dragging its top strip, instead of at its pin; and while
 	// dragging, the point grabbed (on the card, 0..1) and how far along the ray it is.
@@ -124,9 +142,9 @@ export function createPins() {
 			const color = place.kind === 'shelter' ? SHELTER_COLOR : STORY_COLOR;
 			const icon = billboard( place.kind === 'landmark' ? textLabel( place.name, LANDMARK_BG ) : place.kind === 'shelter' ? shelterIcon() : storyIcon(), 0.5, 0, 1001 );
 			const name = place.kind === 'landmark' ? null : billboard( textLabel( place.kind === 'story' ? `解説: ${ place.name }` : place.name, color ), 0, 0, 1001 );
-			// To the right of the round icon (as wide as it is tall), centered on it vertically.
-			// Centers are fractions of the label's own size.
-			name?.center.set( - 0.55 / ( NAME_SCALE * name.aspect ), - ( 1 - NAME_SCALE ) / 2 / NAME_SCALE );
+			// To the right of the round icon (as wide and as tall as the label). Centers are
+			// fractions of the label's own size.
+			name?.center.set( - 0.55 / name.aspect, 0 );
 			group.add( stem, icon.obj, ...( name ? [ name.obj ] : [] ) );
 			return { place, base, head: base.clone(), stem, icon, name, height: 0 };
 
@@ -139,8 +157,8 @@ export function createPins() {
 	// rendering.
 	// On a flat screen the stems, too, stand along the camera's up rather than straight up, so they
 	// stay upright and parallel on screen instead of converging below the view.
-	// Without `labels` only the stems are drawn: on a phone the labels are HTML over the canvas
-	// (src/touch-pins.ts), standing on the stems' heads.
+	// Without `labels` only the stems are drawn: on a flat screen the labels are HTML over the
+	// canvas (src/screen-pins.ts), standing on the stems' heads.
 	function update( eye: THREE.Vector3, facing: THREE.Quaternion | null, labels = true ) {
 
 		pinUp.set( 0, 1, 0 );
@@ -160,7 +178,7 @@ export function createPins() {
 			if ( p.name ) {
 
 				p.name.obj.visible = labels && ( p.place.kind === 'story' || d < SHELTER_NAME_RANGE || p === hovered || p === opened );
-				pose( p.name, p.head, p.height * NAME_SCALE, eye, facing );
+				pose( p.name, p.head, p.height, eye, facing );
 
 			}
 
@@ -172,8 +190,7 @@ export function createPins() {
 			// than above it, where it would mean looking far up. Moved, it stays where it was put.
 			if ( movedTo ) cardAnchor.copy( movedTo );
 			else cardAnchor.copy( opened.head ).addScaledVector( pinUp, eye.distanceTo( opened.head ) * LABEL_SIZE * 1.4 );
-			const d = eye.distanceTo( cardAnchor );
-			const w = d * ( opened.place.kind === 'story' ? STORY_CARD_WIDTH * cardLayout.widthScale : CARD_WIDTH );
+			const w = cardWidth( cardLayout.width, eye.distanceTo( cardAnchor ) );
 			card.center.set( 0.5, opened.place.kind === 'story' ? 0.5 : - 0.08 );
 			pose( card, cardAnchor, w / card.aspect, eye, facing );
 
@@ -210,9 +227,9 @@ export function createPins() {
 
 	}
 
-	// Whether a ray hits the open card, and if so where: its close button, its top strip (to drag
-	// it by), or elsewhere. The card is drawn over everything, so it takes the ray before pins and
-	// the flood behind it.
+	// Whether a ray hits the open card, and if so where: its close button, a page button, its top
+	// strip (to drag it by), or elsewhere. The card is drawn over everything, so it takes the ray
+	// before pins and the flood behind it.
 	const cardRaycaster = new THREE.Raycaster();
 	const hits: THREE.Intersection[] = [];
 	function pickCard( ray: THREE.Ray ): { part: CardPart, distance: number, u: number, v: number } | null {
@@ -224,16 +241,29 @@ export function createPins() {
 		const hit = hits[ 0 ];
 		if ( ! hit?.uv ) return null;
 		const x = hit.uv.x * cardLayout.width, y = ( 1 - hit.uv.y ) * cardLayout.height;
-		const { close } = cardLayout;
-		// A little larger than drawn, to be easy to hit with a wavering hand.
-		const slack = close.size * 0.25;
-		const onClose = x >= close.x - slack && x <= close.x + close.size + slack && y >= close.y - slack && y <= close.y + close.size + slack;
-		const part = onClose ? 'close' : y <= cardLayout.grabHeight ? 'grab' : 'card';
+		// The buttons a little larger than drawn, to be easy to hit with a wavering hand.
+		const on = ( r: Rect | null ) => {
+
+			const slack = r ? Math.min( r.w, r.h ) * 0.25 : 0;
+			return !! r && x >= r.x - slack && x <= r.x + r.w + slack && y >= r.y - slack && y <= r.y + r.h + slack;
+
+		};
+		const part: CardPart = on( cardLayout.close ) ? 'close' : on( cardLayout.prev ) ? 'prev' : on( cardLayout.next ) ? 'next' : y <= cardLayout.grabHeight ? 'grab' : 'card';
 		return { part, distance: hit.distance, u: hit.uv.x, v: hit.uv.y };
 
 	}
 
-	// Light up the part of the card pointed at (VR): the close button or the grab strip.
+	// Turn the open story's card a page back (-1) or on (+1).
+	function flip( delta: number ) {
+
+		const story = opened?.place.story;
+		if ( ! story ) return;
+		page = THREE.MathUtils.clamp( page + delta, 0, storyPages( story ).length - 1 );
+		draw();
+
+	}
+
+	// Light up the part of the card pointed at (VR): a button or the grab strip.
 	function hoverPart( part: CardPart | null ) {
 
 		if ( part === 'card' ) part = null;
@@ -292,6 +322,7 @@ export function createPins() {
 		card.obj.visible = !! opened;
 		hoveredPart = null;
 		movedTo = drag = null;
+		page = 0;
 		if ( opened ) draw();
 
 	}
@@ -309,7 +340,7 @@ export function createPins() {
 
 		// Photos load when first opened; the card shows without it until then.
 		const photo = story.photo && loadPhoto( story.photo.src );
-		show( drawStoryCard( opened.place, story, photo?.complete ? photo : null, hoveredPart ) );
+		show( drawStoryCard( opened.place, story, page, photo?.complete ? photo : null, hoveredPart ) );
 		if ( photo && ! photo.complete ) {
 
 			const shown = opened;
@@ -355,7 +386,7 @@ export function createPins() {
 
 	}
 
-	return { group, setPlaces, update, heads, showStems, pick, pickCard, hoverPart, startDrag, dragTo, endDrag, get dragging() { return !! drag; }, get isOpen() { return !! opened; }, hover, toggle, close };
+	return { group, setPlaces, update, heads, showStems, pick, pickCard, flip, hoverPart, startDrag, dragTo, endDrag, get dragging() { return !! drag; }, get isOpen() { return !! opened; }, hover, toggle, close };
 
 }
 
@@ -488,145 +519,255 @@ function wrap( ctx: CanvasRenderingContext2D, text: string, width: number ): str
 
 }
 
-// A story's card: the photo with its credit on the left (if there is one), and on the right the
-// title, each part under a colored tag, then the sources. Side by side, so the card stays short
-// enough to see whole. Until the photo has loaded, its column holds a placeholder of the same width.
-const STORY_TEXT_WIDTH = 1020; // px
-const PHOTO_WIDTH = 640; // px
-const PHOTO_MAX_HEIGHT = 900; // px; a taller (portrait) photo is narrowed to this
-function drawStoryCard( place: Place, story: Story, photo: HTMLImageElement | null, hovered: CardPart | null ) {
+// The cards in VR. Their text is the type scale's (FONT, LINE); a card is CARD_W px wide (about
+// 30°) and as tall as its text.
+type Rect = { x: number, y: number, w: number, h: number };
+// The parts of an open card that respond to pointing.
+type CardPart = 'close' | 'prev' | 'next' | 'grab' | 'card';
+type CardLayout = { width: number, height: number, close: Rect, prev: Rect | null, next: Rect | null, grabHeight: number };
+type Row = { font: string, color: string, text: string, height: number, tag?: string, image?: { img: HTMLImageElement | null, w: number, h: number } };
 
-	const PAD = 40, GAP = 40, TEXT = STORY_TEXT_WIDTH - 36; // room for punctuation that hangs over
-	const left = story.photo ? PHOTO_WIDTH + GAP : 0;
-	const W = PAD * 2 + left + STORY_TEXT_WIDTH;
-	const TITLE = 'bold 54px system-ui, sans-serif', TAG = 'bold 30px system-ui, sans-serif';
-	const BODY = '36px system-ui, sans-serif', SOURCE = '25px system-ui, sans-serif';
-	const canvas = document.createElement( 'canvas' );
-	const ctx = canvas.getContext( '2d' )!;
+const CARD_W = 760; // px: about 30°
+const PAD = 28; // px
+const TEXT_W = CARD_W - PAD * 2 - 8; // px: room for punctuation that hangs over
+const BUTTON = 62; // px (2.4°): the height of the close and page buttons, to be easy to point at
+const PAGE_BUTTON_W = 210; // px
+const PHOTO_MAX_H = 440; // px
+const GRAB_HEIGHT = 84; // px from the top: the strip that drags the card
+const MUTED = '#9fb3c8';
+// While a card is open the user can turn but not move (src/vr.ts); the card says so.
+const CLOSE_HINT = '× で閉じると移動できます';
+const HINT_COLOR = '#fcd34d';
 
-	// Lay out both columns first, to know the height.
-	type Row = { font: string, color: string, text: string, height: number, tag?: string, image?: { img: HTMLImageElement | null, w: number, h: number } };
-	const photoRows: Row[] = [];
-	if ( story.photo ) {
+// The pages of a story's card: its photo (if there is one), each part, then the sources. One part
+// at a time, so the text can be the scale's size and the card still fit the view.
+type Page = { kind: 'photo' } | { kind: 'section', section: Story[ 'sections' ][ number ] } | { kind: 'sources' };
+function storyPages( story: Story ): Page[] {
 
-		const scale = photo ? Math.min( PHOTO_WIDTH / photo.naturalWidth, PHOTO_MAX_HEIGHT / photo.naturalHeight ) : 0;
-		const w = photo ? photo.naturalWidth * scale : PHOTO_WIDTH, h = photo ? photo.naturalHeight * scale : PHOTO_WIDTH * 0.75;
-		photoRows.push( { font: SOURCE, color: '', text: '', height: h + 14, image: { img: photo, w, h } } );
-		const { caption, author, license } = story.photo;
-		ctx.font = SOURCE;
-		for ( const line of wrap( ctx, caption, PHOTO_WIDTH ) ) photoRows.push( { font: SOURCE, color: '#c8d6e5', text: line, height: 36 } );
-		for ( const line of wrap( ctx, `写真: ${ author }（${ license }、Wikimedia Commons）`, PHOTO_WIDTH ) ) photoRows.push( { font: SOURCE, color: '#9fb3c8', text: line, height: 36 } );
+	return [
+		...( story.photo ? [ { kind: 'photo' } as const ] : [] ),
+		...story.sections.map( section => ( { kind: 'section', section } as const ) ),
+		{ kind: 'sources' },
+	];
 
-	}
+}
 
-	const rows: Row[] = [ { font: TITLE, color: '#ffffff', text: place.name, height: 80 } ];
-	rows.push( { font: SOURCE, color: '#9fb3c8', text: `${ place.town }　標高 約 ${ Math.round( place.elevation ) } m`, height: 52 } );
-	for ( const s of story.sections ) {
+function pageRows( ctx: CanvasRenderingContext2D, story: Story, page: Page, photo: HTMLImageElement | null ): Row[] {
 
-		const { label, color } = STORY_LABELS[ s.kind ];
-		rows.push( { font: TAG, color: '#ffffff', text: label, height: 58, tag: color } );
-		ctx.font = BODY;
-		for ( const line of wrap( ctx, s.text, TEXT ) ) rows.push( { font: BODY, color: '#e5edf5', text: line, height: 50 } );
-		rows[ rows.length - 1 ].height += 14;
+	switch ( page.kind ) {
 
-	}
+		case 'photo': {
 
-	rows.push( { font: SOURCE, color: '#9fb3c8', text: '出典', height: 40 } );
-	ctx.font = SOURCE;
-	for ( const src of story.sources ) for ( const line of wrap( ctx, `・${ src.label }`, TEXT ) ) rows.push( { font: SOURCE, color: '#9fb3c8', text: line, height: 36 } );
-	rows[ rows.length - 1 ].height += 12;
-	rows.push( { font: HINT_FONT, color: HINT_COLOR, text: CLOSE_HINT, height: 40 } );
-
-	const height =( rs: Row[] ) => rs.reduce( ( h, r ) => h + r.height, 0 );
-	canvas.width = W;
-	canvas.height = PAD * 2 + Math.max( height( rows ), height( photoRows ) );
-	ctx.fillStyle = 'rgba(20, 26, 36, 0.94)';
-	ctx.beginPath();
-	ctx.roundRect( 0, 0, W, canvas.height, 28 );
-	ctx.fill();
-	ctx.fillStyle = STORY_COLOR;
-	ctx.fillRect( 0, 24, 12, canvas.height - 48 );
-
-	ctx.textBaseline = 'top';
-	const drawColumn = ( rs: Row[], x: number ) => {
-
-		let y = PAD;
-		for ( const r of rs ) {
-
-			ctx.font = r.font;
-			if ( r.image ) {
-
-				if ( r.image.img ) {
-
-					ctx.drawImage( r.image.img, x, y, r.image.w, r.image.h );
-
-				} else {
-
-					ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-					ctx.fillRect( x, y, r.image.w, r.image.h );
-
-				}
-
-			} else if ( r.tag ) {
-
-				const w = ctx.measureText( r.text ).width + 28;
-				ctx.fillStyle = r.tag;
-				ctx.beginPath();
-				ctx.roundRect( x, y + 4, w, 44, 10 );
-				ctx.fill();
-				ctx.fillStyle = r.color;
-				ctx.fillText( r.text, x + 14, y + 11 );
-
-			} else {
-
-				ctx.fillStyle = r.color;
-				ctx.fillText( r.text, x, y );
-
-			}
-
-			y += r.height;
+			// Until the photo has loaded, a placeholder as tall as the photo may be.
+			const { caption, author, license } = story.photo!;
+			const scale = photo ? Math.min( TEXT_W / photo.naturalWidth, PHOTO_MAX_H / photo.naturalHeight ) : 0;
+			const w = photo ? photo.naturalWidth * scale : TEXT_W, h = photo ? photo.naturalHeight * scale : PHOTO_MAX_H;
+			return [
+				{ font: FONT.caption, color: '', text: '', height: h + 12, image: { img: photo, w, h } },
+				...textRows( ctx, caption, FONT.caption, '#c8d6e5', LINE.caption ),
+				...textRows( ctx, `写真: ${ author }（${ license }、Wikimedia Commons）`, FONT.caption, MUTED, LINE.caption ),
+			];
 
 		}
 
-	};
+		case 'section': {
 
-	drawColumn( photoRows, PAD );
-	drawColumn( rows, PAD + left );
+			const { label, color } = STORY_LABELS[ page.section.kind ];
+			return [
+				{ font: FONT.label, color: '#ffffff', text: label, height: LINE.label + 12, tag: color },
+				...textRows( ctx, page.section.text, FONT.body, '#e5edf5', LINE.body ),
+			];
+
+		}
+
+		case 'sources':
+			return [
+				{ font: FONT.label, color: MUTED, text: '出典', height: LINE.label },
+				...story.sources.flatMap( s => textRows( ctx, `・${ s.label }`, FONT.caption, MUTED, LINE.caption ) ),
+			];
+
+	}
+
+}
+
+// A story's card, at `page`: the title and where it is, the page, and under it ◀ 前へ, which page
+// of how many, 次へ ▶. Every page is as tall as the tallest, so the buttons stay put as the pages
+// turn.
+function drawStoryCard( place: Place, story: Story, page: number, photo: HTMLImageElement | null, hovered: CardPart | null ) {
+
+	const canvas = document.createElement( 'canvas' );
+	const ctx = canvas.getContext( '2d' )!;
+	const pages = storyPages( story );
+	const p = THREE.MathUtils.clamp( page, 0, pages.length - 1 );
+	const head = [
+		...textRows( ctx, place.name, FONT.title, '#ffffff', LINE.title, TEXT_W - BUTTON - 12 ),
+		...textRows( ctx, `${ place.town }　標高 約 ${ Math.round( place.elevation ) } m`, FONT.caption, MUTED, LINE.caption ),
+	];
+	const pageHeight = Math.max( ...pages.map( q => rowsHeight( pageRows( ctx, story, q, photo ) ) ) );
+	const top = PAD + 12; // under the grab bar
+	const pageY = top + rowsHeight( head ) + 16;
+	const navY = pageY + pageHeight + 20;
+	canvas.width = CARD_W;
+	canvas.height = navY + BUTTON + 12 + LINE.caption + PAD - 8;
+	drawCardBack( ctx, STORY_COLOR );
+
+	ctx.textBaseline = 'top';
+	drawRows( ctx, head, PAD, top );
+	drawRows( ctx, pageRows( ctx, story, pages[ p ], photo ), PAD, pageY );
+
+	const prev = { x: PAD, y: navY, w: PAGE_BUTTON_W, h: BUTTON };
+	const next = { x: CARD_W - PAD - PAGE_BUTTON_W, y: navY, w: PAGE_BUTTON_W, h: BUTTON };
+	drawButton( ctx, prev, '◀ 前へ', p > 0, hovered === 'prev' );
+	drawButton( ctx, next, '次へ ▶', p < pages.length - 1, hovered === 'next' );
+	ctx.font = FONT.labelPlain;
+	ctx.fillStyle = '#e5edf5';
+	ctx.textAlign = 'center';
+	ctx.fillText( `${ p + 1 } / ${ pages.length }`, CARD_W / 2, navY + ( BUTTON - fontPx( FONT.labelPlain ) ) / 2 );
+	ctx.textAlign = 'left';
+	drawRows( ctx, textRows( ctx, CLOSE_HINT, FONT.caption, HINT_COLOR, LINE.caption ), PAD, navY + BUTTON + 12 );
 	return {
 		canvas,
-		// Keep the text the same apparent size with or without the photo column.
-		layout: { width: W, height: canvas.height, ...drawCardControls( ctx, W, hovered ), widthScale: W / ( PAD * 2 + STORY_TEXT_WIDTH ) },
+		layout: { width: CARD_W, height: canvas.height, ...drawCardControls( ctx, CARD_W, hovered ), prev: p > 0 ? prev : null, next: p < pages.length - 1 ? next : null },
 	};
 
 }
 
-// The parts of an open card that respond to pointing, and where they are on its canvas (px).
-type CardPart = 'close' | 'grab' | 'card';
-type CardLayout = { width: number, height: number, close: { x: number, y: number, size: number }, grabHeight: number, widthScale: number };
+// A landmark's or shelter's card: the title, what and where it is, and for a shelter the cautions
+// GSI asks to pass on.
+function drawCard( place: Place, cityName: string, hovered: CardPart | null ) {
+
+	const { title, lines, notes } = describePlace( place, cityName );
+	const canvas = document.createElement( 'canvas' );
+	const ctx = canvas.getContext( '2d' )!;
+	const head = textRows( ctx, title, FONT.title, '#ffffff', LINE.title, TEXT_W - BUTTON - 12 );
+	const body = lines.filter( Boolean ).flatMap( line => textRows( ctx, line, FONT.body, '#dbe7f3', LINE.body ) );
+	const small = notes.flatMap( note => textRows( ctx, note, FONT.caption, MUTED, LINE.caption ) );
+	const hint = textRows( ctx, CLOSE_HINT, FONT.caption, HINT_COLOR, LINE.caption );
+	const top = PAD + 12;
+	const bodyY = top + rowsHeight( head ) + 8;
+	const smallY = bodyY + rowsHeight( body ) + 12;
+	const hintY = smallY + rowsHeight( small ) + ( small.length ? 12 : 0 );
+	canvas.width = CARD_W;
+	canvas.height = hintY + rowsHeight( hint ) + PAD - 8;
+	drawCardBack( ctx, place.kind === 'shelter' ? SHELTER_COLOR : null );
+
+	ctx.textBaseline = 'top';
+	drawRows( ctx, head, PAD, top );
+	drawRows( ctx, body, PAD, bodyY );
+	drawRows( ctx, small, PAD, smallY );
+	drawRows( ctx, hint, PAD, hintY );
+	return { canvas, layout: { width: CARD_W, height: canvas.height, ...drawCardControls( ctx, CARD_W, hovered ), prev: null, next: null } };
+
+}
+
+// `text` broken into rows of `font`, each `height` tall.
+function textRows( ctx: CanvasRenderingContext2D, text: string, font: string, color: string, height: number, width = TEXT_W ): Row[] {
+
+	ctx.font = font;
+	return wrap( ctx, text, width ).map( line => ( { font, color, text: line, height } ) );
+
+}
+
+function rowsHeight( rows: Row[] ) {
+
+	return rows.reduce( ( h, r ) => h + r.height, 0 );
+
+}
+
+function fontPx( font: string ) {
+
+	return Number( /(\d+)px/.exec( font )![ 1 ] );
+
+}
+
+// Draw `rows` from (x, y) down, each line's text centered in its row.
+function drawRows( ctx: CanvasRenderingContext2D, rows: Row[], x: number, y: number ) {
+
+	for ( const r of rows ) {
+
+		ctx.font = r.font;
+		const size = fontPx( r.font );
+		if ( r.image ) {
+
+			if ( r.image.img ) {
+
+				ctx.drawImage( r.image.img, x, y, r.image.w, r.image.h );
+
+			} else {
+
+				ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+				ctx.fillRect( x, y, r.image.w, r.image.h );
+
+			}
+
+		} else if ( r.tag ) {
+
+			ctx.fillStyle = r.tag;
+			ctx.beginPath();
+			ctx.roundRect( x, y, ctx.measureText( r.text ).width + 28, LINE.label, 10 );
+			ctx.fill();
+			ctx.fillStyle = r.color;
+			ctx.fillText( r.text, x + 14, y + ( LINE.label - size ) / 2 );
+
+		} else {
+
+			ctx.fillStyle = r.color;
+			ctx.fillText( r.text, x, y + ( r.height - size ) / 2 );
+
+		}
+
+		y += r.height;
+
+	}
+
+}
+
+// The card's dark ground, with a stripe of `stripe` down the left side.
+function drawCardBack( ctx: CanvasRenderingContext2D, stripe: string | null ) {
+
+	const { width, height } = ctx.canvas;
+	ctx.fillStyle = 'rgba(20, 26, 36, 0.94)';
+	ctx.beginPath();
+	ctx.roundRect( 0, 0, width, height, 28 );
+	ctx.fill();
+	if ( ! stripe ) return;
+	ctx.fillStyle = stripe;
+	ctx.fillRect( 0, 24, 12, height - 48 );
+
+}
+
+// A rounded button: lit while pointed at, faint when it can't be used.
+function drawButton( ctx: CanvasRenderingContext2D, r: Rect, text: string, enabled: boolean, lit: boolean ) {
+
+	ctx.fillStyle = lit && enabled ? '#ffffff' : enabled ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.05)';
+	ctx.beginPath();
+	ctx.roundRect( r.x, r.y, r.w, r.h, r.h / 2 );
+	ctx.fill();
+	ctx.font = FONT.label;
+	ctx.fillStyle = lit && enabled ? '#141a24' : enabled ? '#ffffff' : 'rgba(255, 255, 255, 0.3)';
+	ctx.textAlign = 'center';
+	ctx.fillText( text, r.x + r.w / 2, r.y + ( r.h - fontPx( FONT.label ) ) / 2 );
+	ctx.textAlign = 'left';
+
+}
 
 // A round × button in the card's top right corner, and a bar along the top middle that marks the
 // strip to drag the card by; each lit while pointed at.
-const CLOSE_SIZE = 76; // px
-// While a card is open the user can turn but not move (src/vr.ts, src/main.ts); the card says so.
-const CLOSE_HINT = '× で閉じると移動できます';
-const HINT_FONT = 'bold 28px system-ui, sans-serif';
-const HINT_COLOR = '#fcd34d';
-const GRAB_HEIGHT = 120; // px from the top: the strip that drags the card
 function drawCardControls( ctx: CanvasRenderingContext2D, width: number, hovered: CardPart | null ) {
 
-	const barWidth = 220;
+	const barWidth = 200;
 	ctx.fillStyle = hovered === 'grab' ? '#ffffff' : 'rgba(255, 255, 255, 0.35)';
 	ctx.beginPath();
-	ctx.roundRect( ( width - barWidth ) / 2, 12, barWidth, 12, 6 );
+	ctx.roundRect( ( width - barWidth ) / 2, 12, barWidth, 10, 5 );
 	ctx.fill();
 
-	const x = width - 24 - CLOSE_SIZE, y = 24, r = CLOSE_SIZE / 2;
+	const x = width - PAD - BUTTON + 8, y = 22, r = BUTTON / 2;
 	ctx.fillStyle = hovered === 'close' ? '#ffffff' : 'rgba(255, 255, 255, 0.16)';
 	ctx.beginPath();
 	ctx.arc( x + r, y + r, r, 0, Math.PI * 2 );
 	ctx.fill();
 	ctx.strokeStyle = hovered === 'close' ? '#141a24' : '#ffffff';
-	ctx.lineWidth = 7;
+	ctx.lineWidth = 6;
 	ctx.lineCap = 'round';
 	const a = r * 0.42;
 	ctx.beginPath();
@@ -635,57 +776,6 @@ function drawCardControls( ctx: CanvasRenderingContext2D, width: number, hovered
 	ctx.moveTo( x + r + a, y + r - a );
 	ctx.lineTo( x + r - a, y + r + a );
 	ctx.stroke();
-	return { close: { x, y, size: CLOSE_SIZE }, grabHeight: GRAB_HEIGHT };
-
-}
-
-function drawCard( place: Place, cityName: string, hovered: CardPart | null ) {
-
-	const { title, lines, notes } = describePlace( place, cityName );
-	const W = 900, PAD = 36;
-	const canvas = document.createElement( 'canvas' );
-	canvas.width = W;
-	canvas.height = PAD * 2 + 76 + lines.length * 52 + ( notes.length ? 16 + notes.length * 40 : 0 ) + 56;
-	const ctx = canvas.getContext( '2d' )!;
-	ctx.fillStyle = 'rgba(20, 26, 36, 0.92)';
-	ctx.beginPath();
-	ctx.roundRect( 0, 0, W, canvas.height, 28 );
-	ctx.fill();
-	if ( place.kind === 'shelter' ) {
-
-		ctx.fillStyle = SHELTER_COLOR;
-		ctx.fillRect( 0, 24, 12, canvas.height - 48 );
-
-	}
-
-	ctx.textBaseline = 'top';
-	let y = PAD;
-	ctx.fillStyle = '#ffffff';
-	ctx.font = 'bold 56px system-ui, sans-serif';
-	ctx.fillText( title, PAD, y, W - PAD * 2 - CLOSE_SIZE );
-	y += 76;
-	ctx.font = '38px system-ui, sans-serif';
-	for ( const line of lines ) {
-
-		ctx.fillStyle = '#dbe7f3';
-		ctx.fillText( line, PAD, y, W - PAD * 2 );
-		y += 52;
-
-	}
-
-	y += 16;
-	ctx.font = '30px system-ui, sans-serif';
-	for ( const note of notes ) {
-
-		ctx.fillStyle = '#9fb3c8';
-		ctx.fillText( note, PAD, y, W - PAD * 2 );
-		y += 40;
-
-	}
-
-	ctx.font = HINT_FONT;
-	ctx.fillStyle = HINT_COLOR;
-	ctx.fillText( CLOSE_HINT, PAD, canvas.height - PAD - 30 );
-	return { canvas, layout: { width: W, height: canvas.height, ...drawCardControls( ctx, W, hovered ), widthScale: 1 } };
+	return { close: { x, y, w: BUTTON, h: BUTTON }, grabHeight: GRAB_HEIGHT };
 
 }

@@ -7,7 +7,13 @@ const ZOOM = 16; // about 2 m per pixel at Kamakura
 export const MINIMAP_WIDTH = 0.16; // m
 const WINDOW_METERS = 800; // across the map, centered on the user
 const PICK_RADIUS = 22; // px on the source map: how near a spot the ray must point
-const LEGEND_HEIGHT = 0.022; // m
+// Text sizes from the type scale (CLAUDE.md, 文字の大きさ), for the map in the hand about 0.4 m
+// from the eyes. On the map (about 2560 px per m of plane), 22 px is 1.2° (label); on the legend
+// (6400 px per m), 54 px is 1.2° and 45 px 1.0° (caption).
+const MAP_FONT = 'bold 22px system-ui, sans-serif';
+const LEGEND_LABEL = 'bold 54px system-ui, sans-serif';
+const LEGEND_CAPTION = '45px system-ui, sans-serif';
+const LEGEND_HEIGHT = 0.026; // m: two rows
 
 // Web Mercator pixel coordinates at zoom z.
 function mercator( lat: number, lon: number, z: number ) {
@@ -134,7 +140,7 @@ export function createMinimap() {
 			ctx.lineWidth = 3;
 			ctx.stroke();
 			if ( p.kind === 'shelter' ) continue;
-			ctx.font = `bold ${ p.kind === 'story' ? 22 : 19 }px system-ui, sans-serif`;
+			ctx.font = MAP_FONT;
 			ctx.lineWidth = 5;
 			ctx.strokeText( p.name, x + r + 6, y );
 			ctx.fillStyle = p.kind === 'story' ? STORY_COLOR : '#1d2733';
@@ -233,7 +239,8 @@ export function createMinimap() {
 
 }
 
-// The strip under the map: what the dots are, how to jump to one, and the map's source.
+// The strip under the map, in two rows: what the dots are and the map's source, then how to jump
+// to a spot.
 function legendTexture() {
 
 	const canvas = document.createElement( 'canvas' );
@@ -245,31 +252,31 @@ function legendTexture() {
 	ctx.roundRect( 0, 0, canvas.width, canvas.height, 18 );
 	ctx.fill();
 	ctx.textBaseline = 'middle';
-	let x = 22;
-	const y = canvas.height / 2;
+	const pad = 22, row1 = canvas.height * 0.3, row2 = canvas.height * 0.72;
+	let x = pad;
 	for ( const [ color, label ] of [ [ STORY_COLOR, '解説' ], [ '#1d2733', '目印' ], [ SHELTER_COLOR, '避難所' ] ] ) {
 
 		ctx.beginPath();
-		ctx.arc( x + 11, y, 11, 0, Math.PI * 2 );
+		ctx.arc( x + 16, row1, 16, 0, Math.PI * 2 );
 		ctx.fillStyle = color;
 		ctx.fill();
 		ctx.strokeStyle = '#ffffff';
-		ctx.lineWidth = 3;
+		ctx.lineWidth = 4;
 		ctx.stroke();
-		ctx.font = 'bold 28px system-ui, sans-serif';
+		ctx.font = LEGEND_LABEL;
 		ctx.fillStyle = '#ffffff';
-		ctx.fillText( label, x + 30, y );
-		x += 30 + ctx.measureText( label ).width + 26;
+		ctx.fillText( label, x + 42, row1 );
+		x += 42 + ctx.measureText( label ).width + 34;
 
 	}
 
-	ctx.font = '24px system-ui, sans-serif';
-	ctx.fillStyle = '#fcd34d';
-	ctx.fillText( '解説・目印を指して右トリガーで移動', x + 6, y );
+	ctx.font = LEGEND_CAPTION;
 	ctx.textAlign = 'right';
 	ctx.fillStyle = '#9fb3c8';
-	ctx.font = '20px system-ui, sans-serif';
-	ctx.fillText( '地理院タイル', canvas.width - 18, y );
+	ctx.fillText( '地理院タイル', canvas.width - pad, row1 );
+	ctx.textAlign = 'left';
+	ctx.fillStyle = '#fcd34d';
+	ctx.fillText( '解説・目印を指して右トリガーで移動', pad, row2 );
 	const texture = new THREE.CanvasTexture( canvas );
 	texture.colorSpace = THREE.SRGBColorSpace;
 	return texture;

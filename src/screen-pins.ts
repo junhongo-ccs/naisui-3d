@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import type { Place } from './places';
 
-// The pins' labels on a phone: HTML over the canvas, standing on the 3D stems' heads. A small icon
-// (or, for a landmark, its name), but a tap anywhere near it counts, so it is easy to hit without
-// covering the map. The labels let touches through, so a drag that starts on one still turns the
-// view; taps are matched to them by position (pick).
+// The pins' labels on a PC or phone: HTML over the canvas, standing on the 3D stems' heads, so the
+// text keeps the sizes of the type scale (CLAUDE.md) and follows the browser's zoom; in VR the
+// labels are in the scene (src/places.ts). A small icon (or, for a landmark, its name), but a tap
+// or click anywhere near it counts, so it is easy to hit without covering the map. The labels let
+// touches and clicks through, so a drag that starts on one still turns the view; taps are
+// matched to them by position (pick).
 // Icons that would overlap are gathered into one disc showing how many there are; tapped, the
 // view closes in on them (src/main.ts). Names are shown only where there is room: story names,
 // then landmarks, then shelter names, each left out where it would overlap one already placed.
@@ -28,9 +30,9 @@ type Marker = {
 // Icons drawn as one: at the first one's place, which keeps its stem.
 type Group = { members: Marker[], rect: Rect, solo: boolean };
 
-export type TouchPick = { place: Place } | { cluster: Place[] };
+export type ScreenPick = { place: Place } | { cluster: Place[] };
 
-export function createTouchPins( layer: HTMLElement ) {
+export function createScreenPins( layer: HTMLElement ) {
 
 	let markers: Marker[] = [];
 	let groups: Group[] = [];
@@ -68,11 +70,23 @@ export function createTouchPins( layer: HTMLElement ) {
 
 		} );
 
-		// The labels' text doesn't change: measure once.
+		measure();
+
+	}
+
+	// Measure the labels for laying them out. Their text doesn't change, but their size does with
+	// the browser's zoom: call again on resize.
+	function measure() {
+
 		for ( const m of markers ) {
 
+			const hidden = [ m.el.hidden, m.name?.hidden ?? false ];
+			m.el.hidden = false;
+			if ( m.name ) m.name.hidden = false;
 			const r = ( m.name ?? m.el ).getBoundingClientRect();
 			m.nameSize = { w: r.width, h: r.height };
+			m.el.hidden = hidden[ 0 ];
+			if ( m.name ) m.name.hidden = hidden[ 1 ];
 
 		}
 
@@ -189,15 +203,15 @@ export function createTouchPins( layer: HTMLElement ) {
 
 	// What a tap at (x, y) is for: the place whose label is nearest, or the places gathered in a
 	// disc; nothing if it is near none.
-	function pick( x: number, y: number ): TouchPick | null {
+	function pick( x: number, y: number ): ScreenPick | null {
 
 		// Distance from the tap to a rectangle's center, or to its nearest edge (0 inside), if no
 		// more than `limit`.
 		const within = ( d: number, limit: number ) => ( d <= limit ? d : Infinity );
 		const toCenter = ( r: Rect | null ) => ( r ? Math.hypot( x - r.x - r.w / 2, y - r.y - r.h / 2 ) : Infinity );
 		const toEdge = ( r: Rect | null ) => ( r ? Math.hypot( Math.max( r.x - x, 0, x - r.x - r.w ), Math.max( r.y - y, 0, y - r.y - r.h ) ) : Infinity );
-		let best: TouchPick | null = null, bestDistance = Infinity;
-		const consider = ( pick: TouchPick, d: number ) => {
+		let best: ScreenPick | null = null, bestDistance = Infinity;
+		const consider = ( pick: ScreenPick, d: number ) => {
 
 			if ( d < bestDistance ) {
 
@@ -233,6 +247,6 @@ export function createTouchPins( layer: HTMLElement ) {
 
 	}
 
-	return { setPlaces, update, pick, setActive };
+	return { setPlaces, measure, update, pick, setActive };
 
 }

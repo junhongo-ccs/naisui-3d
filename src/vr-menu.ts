@@ -12,6 +12,11 @@ export function createCityMenu( cities: CityItem[] ) {
 	const PAD = 32, HEADER = 96, CELL_W = 300, CELL_H = 100, GAP = 12;
 	const WIDTH = 1.4; // m
 	const DISTANCE = 1.4; // m in front of the head
+	// Text sizes from the type scale (CLAUDE.md, 文字の大きさ): 1.4 m wide at 1.4 m, the canvas
+	// has about 22.7 px per degree, so 41 px is 1.8° (title), 27 px 1.2° (label), 23 px 1.0° (caption).
+	const TITLE = 'bold 41px system-ui, sans-serif';
+	const LABEL = 'bold 27px system-ui, sans-serif';
+	const CAPTION = '23px system-ui, sans-serif';
 
 	const canvas = document.createElement( 'canvas' );
 	canvas.width = PAD * 2 + COLS * CELL_W + ( COLS - 1 ) * GAP;
@@ -48,10 +53,10 @@ export function createCityMenu( cities: CityItem[] ) {
 
 		ctx.textBaseline = 'middle';
 		ctx.fillStyle = '#ffffff';
-		ctx.font = 'bold 44px system-ui, sans-serif';
+		ctx.font = TITLE;
 		ctx.fillText( '市町村を選ぶ', PAD, PAD + HEADER / 2 - 8 );
 		ctx.fillStyle = '#9fb3c8';
-		ctx.font = '30px system-ui, sans-serif';
+		ctx.font = CAPTION;
 		const hint = '右手で指してトリガー　グリップで閉じる';
 		ctx.fillText( hint, canvas.width - PAD - ctx.measureText( hint ).width, PAD + HEADER / 2 - 8 );
 
@@ -72,11 +77,11 @@ export function createCityMenu( cities: CityItem[] ) {
 			}
 
 			ctx.fillStyle = i === hovered ? '#e6f3ff' : '#9fb3c8';
-			ctx.font = '26px system-ui, sans-serif';
-			ctx.fillText( c.pref, x + 20, y + 30 );
+			ctx.font = CAPTION;
+			ctx.fillText( c.pref, x + 20, y + 32 );
 			ctx.fillStyle = '#ffffff';
-			ctx.font = 'bold 38px system-ui, sans-serif';
-			ctx.fillText( c.city, x + 20, y + 68 );
+			ctx.font = LABEL;
+			ctx.fillText( c.city, x + 20, y + 66 );
 
 		} );
 
