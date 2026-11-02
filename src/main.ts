@@ -43,7 +43,8 @@ const TOUCH_CACHE = { min: 100e6, max: 150e6 }; // bytes
 
 const cities = ONLY_CITY ? catalog.cities.filter( c => c.code === ONLY_CITY ) : catalog.cities;
 // 鎌倉市: hilly with valleys, close to the Shinagawa PoC area's terrain.
-let city: City = cities.find( c => c.code === params.get( 'city' ) ) ?? cities.find( c => c.code === '14204' ) ?? cities[ 0 ];
+const DEFAULT_CITY = ( cities.find( c => c.code === '14204' ) ?? cities[ 0 ] ).code;
+let city: City = cities.find( c => c.code === ( params.get( 'city' ) ?? DEFAULT_CITY ) ) ?? cities.find( c => c.code === DEFAULT_CITY )!;
 
 // Picking (tap, VR pointer) raycasts the dense flood meshes; without an index three.js tests every
 // triangle, which is too slow to do several times a second on a headset.
@@ -197,7 +198,8 @@ frameCity();
 // PLATEAU b3dm tiles are Draco-compressed glTF with CESIUM_RTC centers. Google's tiles are Draco too.
 const dracoLoader = new DRACOLoader().setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/' );
 
-let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : 'photo';
+const DEFAULT_BASE: BaseMapKey = 'photo';
+let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : DEFAULT_BASE;
 // The ground: GSI terrain, or Google's 3D tiles (ground and buildings in one).
 function createGround() {
 
@@ -540,11 +542,17 @@ function setBaseMap( key: BaseMapKey ) {
 
 // ─── UI ─────────────────────────────────────────────────────────────────────
 
+// Keep in the URL what the page shows that it wouldn't open with, so a link or a reload opens the
+// same view and the plain URL stays plain: the city, when there is a choice of cities; the base
+// map, when the GSI terrain is shown (Google's tiles have none to choose); ?ui= if it was given.
 function syncURL() {
 
-	const q = new URLSearchParams( { city: city.code, base: baseMap } );
+	const q = new URLSearchParams();
+	if ( cities.length > 1 && city.code !== DEFAULT_CITY ) q.set( 'city', city.code );
+	if ( ! useGoogle && baseMap !== DEFAULT_BASE ) q.set( 'base', baseMap );
 	if ( params.has( 'ui' ) ) q.set( 'ui', params.get( 'ui' )! );
-	history.replaceState( null, '', `?${ q }` );
+	const search = q.toString();
+	history.replaceState( null, '', location.pathname + ( search ? `?${ search }` : '' ) + location.hash );
 
 }
 
