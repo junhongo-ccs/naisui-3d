@@ -629,7 +629,7 @@ function buildUI() {
 		legendBox.tabIndex = 0;
 		setFolded( true );
 		legendBox.addEventListener( 'click', () => setFolded( ! legendBox.classList.contains( 'folded' ) ) );
-		setupDpad();
+		setupStick();
 
 	}
 
@@ -643,7 +643,7 @@ function buildUI() {
 		document.body.classList.add( 'in-street' );
 		$( '#info' ).hidden = true;
 		$( '#street-hint' ).textContent = touchUI
-			? 'スマホを動かすか、ドラッグで見回す ・ 十字キーで歩く ・ 地面をタップでそこへ移動'
+			? '右半分: 押したまま動かして歩く ・ 左半分: ドラッグで見回す（スマホを動かしても見回せる）'
 			: 'ドラッグで見回す ・ W A S D（矢印キー）で歩く、Shift で速く ・ 地面をクリックでそこへ移動';
 
 	} );
@@ -717,11 +717,10 @@ function leaveStreet() {
 
 }
 
-// Moving with keys (PC) or the d-pad (phone): W / ↑ forward, S / ↓ back, A / ← and D / → to the
-// side. From above it slides the map; on the street it walks. Held, it speeds up (and Shift makes
-// it fast at once).
+// Moving with keys (PC) or the stick (phone, on the street): W / ↑ forward, S / ↓ back, A / ← and
+// D / → to the side; the stick any way round. From above it slides the map; on the street it
+// walks. Held, it speeds up (and Shift makes it fast at once).
 const keysDown = new Set<string>();
-const dpadDown = new Set<string>();
 const KEY_DIRS: Record<string, string> = {
 	KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down',
 	KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
@@ -744,78 +743,94 @@ let shiftDown = false;
 window.addEventListener( 'keydown', e => ( shiftDown = e.shiftKey ) );
 window.addEventListener( 'keyup', e => ( shiftDown = e.shiftKey ) );
 
-// The d-pad is one touch area, as a real one is under the thumb: the way is where the thumb is
-// from the middle, in eight sectors (a corner walks diagonally), and it follows the thumb as it
-// rolls round without being lifted. A little dead zone in the middle stops.
-const DPAD_DEAD = 0.12; // of the pad's width, from its middle
-const DPAD_SECTOR = Math.sin( Math.PI / 8 ); // a way counts beyond 22.5° off its axis
-function setupDpad() {
+// The floating stick on a phone, as in games and metaverse apps: the right half of the screen
+// takes the thumb, the base comes to where it lands, and the way to walk is where the thumb has
+// gone from there, any way round (the left half of the view turns it: src/street.ts). Let go, it
+// stops, and the base goes back to wait at the bottom right. A thumb that lands on a pin opens it
+// instead, as anywhere else.
+const STICK_RADIUS = 48; // px: how far the knob goes from the base's middle
+const STICK_DEAD = 8; // px from the middle that don't walk
+const stick = { x: 0, y: 0 }; // the way, as a unit vector: x to the right, y forward (0, 0 at rest)
+function setupStick() {
 
-	const pad = $( '#dpad' );
-	const arrows = [ ...pad.querySelectorAll<HTMLElement>( '[data-dir]' ) ];
+	const zone = $( '#stick-zone' ), base = $( '#stick-base' ), knob = $( '#stick-knob' );
 	let finger: number | null = null;
-	const aim = ( e: PointerEvent | null ) => {
+	let origin = { x: 0, y: 0 };
+	let pinTap: ReturnType<typeof screenPins.pick> = null; // a pin under the thumb as it landed
+	const reset = () => {
 
-		dpadDown.clear();
-		if ( e ) {
-
-			const r = pad.getBoundingClientRect();
-			const dx = e.clientX - ( r.left + r.width / 2 ), dy = e.clientY - ( r.top + r.height / 2 );
-			const d = Math.hypot( dx, dy );
-			if ( d > r.width * DPAD_DEAD ) {
-
-				if ( Math.abs( dx ) / d > DPAD_SECTOR ) dpadDown.add( dx > 0 ? 'right' : 'left' );
-				if ( Math.abs( dy ) / d > DPAD_SECTOR ) dpadDown.add( dy > 0 ? 'down' : 'up' );
-
-			}
-
-		}
-
-		for ( const a of arrows ) a.classList.toggle( 'pressed', dpadDown.has( a.dataset.dir! ) );
+		finger = null;
+		pinTap = null;
+		stick.x = stick.y = 0;
+		zone.classList.remove( 'active' );
+		base.style.left = base.style.top = base.style.right = base.style.bottom = '';
+		knob.style.transform = '';
 
 	};
-	pad.addEventListener( 'pointerdown', e => {
+	zone.addEventListener( 'pointerdown', e => {
 
 		if ( finger !== null ) return;
 		finger = e.pointerId;
-		// Keep the thumb's events while it is down, even if it slides off the pad.
+		origin = { x: e.clientX, y: e.clientY };
+		// Keep the thumb's events while it is down, even if it slides out of the zone.
 		try {
 
-			pad.setPointerCapture( e.pointerId );
+			zone.setPointerCapture( e.pointerId );
 
 		} catch {}
-		aim( e );
+		pinTap = screenPins.pick( e.clientX, e.clientY );
+		if ( pinTap ) return;
+		const r = zone.getBoundingClientRect();
+		zone.classList.add( 'active' );
+		base.style.left = `${ e.clientX - r.left }px`;
+		base.style.top = `${ e.clientY - r.top }px`;
+		base.style.right = base.style.bottom = 'auto';
 
 	} );
-	pad.addEventListener( 'pointermove', e => {
+	zone.addEventListener( 'pointermove', e => {
 
-		if ( e.pointerId === finger ) aim( e );
+		if ( e.pointerId !== finger || pinTap ) return;
+		const dx = e.clientX - origin.x, dy = e.clientY - origin.y;
+		const d = Math.hypot( dx, dy );
+		const k = d > STICK_RADIUS ? STICK_RADIUS / d : 1;
+		knob.style.transform = `translate(${ dx * k }px, ${ dy * k }px)`;
+		stick.x = d > STICK_DEAD ? dx / d : 0;
+		stick.y = d > STICK_DEAD ? - dy / d : 0;
 
 	} );
-	for ( const type of [ 'pointerup', 'pointercancel', 'lostpointercapture' ] ) {
+	zone.addEventListener( 'pointerup', e => {
 
-		pad.addEventListener( type, e => {
+		if ( e.pointerId !== finger ) return;
+		const tap = pinTap && Math.hypot( e.clientX - origin.x, e.clientY - origin.y ) <= TAP_SLOP.touch ? pinTap : null;
+		reset();
+		if ( ! tap ) return;
+		if ( 'place' in tap ) openPlace( tap.place );
+		else openCluster( tap.cluster );
 
-			if ( ( e as PointerEvent ).pointerId !== finger ) return;
-			finger = null;
-			aim( null );
+	} );
+	for ( const type of [ 'pointercancel', 'lostpointercapture' ] ) {
+
+		zone.addEventListener( type, e => {
+
+			if ( ( e as PointerEvent ).pointerId === finger ) reset();
 
 		} );
 
 	}
 
-	pad.addEventListener( 'contextmenu', e => e.preventDefault() ); // a long press would open it
+	zone.addEventListener( 'contextmenu', e => e.preventDefault() ); // a long press would open it
 
 }
 
-// The way to move this frame: x to the right, y forward, each -1..1, and whether to go fast.
+// The way to move this frame: x to the right, y forward (a unit or zero vector, or each -1..1 from
+// keys), and how fast.
 const MOVE_RAMP = 3; // s held to reach full speed
 let movingFor = 0;
 function moveInput( dt: number ) {
 
-	const down = new Set( [ ...keysDown, ...dpadDown ] );
-	const x = ( down.has( 'right' ) ? 1 : 0 ) - ( down.has( 'left' ) ? 1 : 0 );
-	const y = ( down.has( 'up' ) ? 1 : 0 ) - ( down.has( 'down' ) ? 1 : 0 );
+	let x = ( keysDown.has( 'right' ) ? 1 : 0 ) - ( keysDown.has( 'left' ) ? 1 : 0 );
+	let y = ( keysDown.has( 'up' ) ? 1 : 0 ) - ( keysDown.has( 'down' ) ? 1 : 0 );
+	if ( stick.x || stick.y ) ( { x, y } = stick );
 	movingFor = x || y ? movingFor + dt : 0;
 	// 0 at first, 1 after MOVE_RAMP seconds held, or at once with Shift.
 	const boost = shiftDown ? 1 : Math.min( movingFor / MOVE_RAMP, 1 );
@@ -937,10 +952,17 @@ function rayAt( e: PointerEvent ) {
 
 }
 
+// A tap: a press and release that moved less than TAP_SLOP. A fingertip rolls a few pixels even
+// on a plain tap, more than a mouse does. The pin is picked where the finger came down, among the
+// labels as they were then: even a slight roll turns the view (about 9° for 10 px on a phone held
+// sideways) and carries the labels off from under the finger.
+const TAP_SLOP = { mouse: 6, touch: 12 }; // px
 let downAt = { x: 0, y: 0 };
+let downPick: ReturnType<typeof screenPins.pick> = null;
 renderer.domElement.addEventListener( 'pointerdown', e => {
 
 	downAt = { x: e.clientX, y: e.clientY };
+	downPick = screenPins.pick( e.clientX, e.clientY );
 	fly = null; // a touch takes the view back from a glide
 
 } );
@@ -967,10 +989,11 @@ renderer.domElement.addEventListener( 'pointercancel', () => setCursor( 'auto' )
 renderer.domElement.addEventListener( 'pointerup', e => {
 
 	setCursor( 'auto' );
-	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > 6 ) return;
+	const slop = e.pointerType === 'mouse' ? TAP_SLOP.mouse : TAP_SLOP.touch;
+	if ( Math.hypot( e.clientX - downAt.x, e.clientY - downAt.y ) > slop ) return;
 	rayAt( e );
 	const info = $( '#info' );
-	const hit = screenPins.pick( e.clientX, e.clientY );
+	const hit = downPick;
 	if ( hit ) {
 
 		if ( 'place' in hit ) openPlace( hit.place );

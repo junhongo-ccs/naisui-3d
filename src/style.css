@@ -383,41 +383,51 @@ body.in-street #street-bar {
 }
 #street-bar p { margin: 0; line-height: var(--lh-label); }
 #street-exit { flex: none; }
-/* On the street the legend moves up out of the bar's way; on a phone, to the bottom right, where
-   the button to come down to the street was (the d-pad takes the bottom left). */
+/* On the street the legend moves up out of the bar's way. */
 body.in-street #legend { bottom: 92px; }
-body.in-street.touch-ui #legend { left: auto; right: max(12px, env(safe-area-inset-right)); bottom: 30px; }
-body.in-street.touch-ui #street-bar { max-width: calc(100vw - 2 * 165px); }
+body.in-street.touch-ui #street-bar { max-width: calc(100vw - 2 * 150px); }
 
-/* The d-pad for walking on the street, on a phone held sideways (src/main.ts). The whole square
-   takes the thumb, corners too (diagonals); the arrows only show the ways and light up. */
-#dpad { display: none; }
-body.in-street.touch-ui #dpad {
+/* The floating stick for walking on the street, on a phone held sideways (src/main.ts): the right
+   half of the screen takes the thumb; the base comes to where it lands and the knob follows it.
+   At rest the base waits, faint, at the bottom right, to show where to walk from. */
+#stick-zone { display: none; }
+body.in-street.touch-ui #stick-zone {
 	position: fixed;
-	left: max(16px, env(safe-area-inset-left));
-	bottom: 30px;
-	display: grid;
-	grid-template: repeat(3, 45px) / repeat(3, 45px);
+	top: 0;
+	right: 0;
+	bottom: 0;
+	display: block;
+	width: 50%;
 	touch-action: none;
 	user-select: none;
 	-webkit-user-select: none;
 	-webkit-tap-highlight-color: transparent;
 }
-#dpad span {
-	display: grid;
-	place-items: center;
-	border: 1px solid rgb(255 255 255 / 0.5);
-	background: rgb(20 26 36 / 0.62);
-	color: #ffffff;
-	font-size: var(--fs-label); /* the arrows */
+#stick-base {
+	position: absolute;
+	right: max(28px, env(safe-area-inset-right));
+	bottom: 36px;
+	width: 112px;
+	height: 112px;
+	margin: 0;
+	border: 2px solid rgb(255 255 255 / 0.55);
+	border-radius: 50%;
+	background: rgb(20 26 36 / 0.3);
+	opacity: 0.6;
 	pointer-events: none;
 }
-#dpad span.pressed { background: #1f6fb2; }
-#dpad [data-dir="up"] { grid-area: 1 / 2; border-radius: 12px 12px 0 0; }
-#dpad [data-dir="left"] { grid-area: 2 / 1; border-radius: 12px 0 0 12px; }
-#dpad [data-dir="right"] { grid-area: 2 / 3; border-radius: 0 12px 12px 0; }
-#dpad [data-dir="down"] { grid-area: 3 / 2; border-radius: 0 0 12px 12px; }
-#dpad::after { content: ""; grid-area: 2 / 2; background: rgb(20 26 36 / 0.62); }
+#stick-zone.active #stick-base { opacity: 1; margin: -56px 0 0 -56px; } /* centered on the thumb (left/top set in main.ts) */
+#stick-knob {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 48px;
+	height: 48px;
+	margin: -24px 0 0 -24px;
+	border-radius: 50%;
+	background: rgb(255 255 255 / 0.85);
+	box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
 
 /* The pins' labels on a PC or phone (src/screen-pins.ts): placed by transform each frame, top
    left at the origin. They let touches and clicks through to the view. */
@@ -496,7 +506,7 @@ body.in-street.touch-ui #dpad {
 
 /* A place's description on a PC or phone (src/place-dialog.ts). Dark, like the card in VR. */
 #place-dialog {
-	width: min(800px, calc(100vw - 24px));
+	width: min(50rem, calc(100vw - 24px));
 	max-height: calc(100dvh - 24px);
 	padding: 0;
 	border: none;
@@ -509,6 +519,10 @@ body.in-street.touch-ui #dpad {
 	line-height: var(--lh-body);
 }
 #place-dialog[open] { display: flex; flex-direction: column; }
+/* As wide as what it holds: a story with a photo takes the photo and the text side by side
+   (narrower on a phone); a shelter, a landmark or the list of places says little. */
+#place-dialog[data-size="compact"] { width: min(30rem, calc(100vw - 24px)); }
+body.touch-ui #place-dialog[data-size="wide"] { width: min(40rem, calc(100vw - 24px)); }
 #place-dialog::backdrop { background: rgb(0 0 0 / 0.35); }
 #place-dialog .dialog-head {
 	display: flex;

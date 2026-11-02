@@ -17,6 +17,12 @@
 		<!-- On a touch screen, the pins' labels (src/touch-pins.ts). Taps reach them by position. -->
 		<div id="pin-layer" aria-hidden="true"></div>
 
+		<!-- On a phone, on the street: the right half is a floating stick for walking (main.ts); the
+		     left half of the view turns it. Under the rest of the page's controls. -->
+		<div id="stick-zone" aria-label="右半分を押したまま動かして歩く">
+			<div id="stick-base"><div id="stick-knob"></div></div>
+		</div>
+
 		<aside id="panel">
 			<button id="panel-toggle" type="button" aria-label="パネルを開閉">☰</button>
 			<div class="panel-body">
@@ -104,14 +110,6 @@
 		<div id="street-bar">
 			<p id="street-hint"></p>
 			<button id="street-exit" type="button">上から見る</button>
-		</div>
-		<!-- On a phone, the d-pad for walking (main.ts): one touch area; the thumb's place on it sets
-		     the way, and it can roll from one way to the next without lifting. -->
-		<div id="dpad" role="group" aria-label="歩く（十字キー）">
-			<span data-dir="up" aria-hidden="true">▲</span>
-			<span data-dir="left" aria-hidden="true">◀</span>
-			<span data-dir="right" aria-hidden="true">▶</span>
-			<span data-dir="down" aria-hidden="true">▼</span>
 		</div>
 
 		<div id="context-lost" role="alert" hidden>

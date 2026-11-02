@@ -17,7 +17,11 @@ export function createPlaceDialog( onClose: () => void ) {
 	} );
 
 	// Show `body` under a title and the × button, with a stripe of `color` down the left side.
-	function show( titleText: string, color: string, body: HTMLElement ) {
+	// `size`: 'wide' for a story (photo and text side by side), 'compact' for the rest, which say
+	// little (style.css).
+	function show( titleText: string, color: string, body: HTMLElement, size: 'wide' | 'compact' ) {
+
+		dialog.dataset.size = size;
 
 		const head = el( 'header', 'dialog-head' );
 		const title = el( 'h2', '', titleText );
@@ -84,7 +88,7 @@ export function createPlaceDialog( onClose: () => void ) {
 			columns.append( text );
 			body.append( columns );
 
-			show( place.name, STORY_COLOR, body );
+			show( place.name, STORY_COLOR, body, story.photo ? 'wide' : 'compact' );
 
 		} else {
 
@@ -98,7 +102,7 @@ export function createPlaceDialog( onClose: () => void ) {
 
 			}
 
-			show( place.name, place.kind === 'shelter' ? SHELTER_COLOR : 'transparent', body );
+			show( place.name, place.kind === 'shelter' ? SHELTER_COLOR : 'transparent', body, 'compact' );
 
 		}
 
@@ -126,7 +130,7 @@ export function createPlaceDialog( onClose: () => void ) {
 		}
 
 		body.append( list );
-		show( 'この近くの場所', 'transparent', body );
+		show( 'この近くの場所', 'transparent', body, 'compact' );
 
 	}
 
