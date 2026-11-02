@@ -63,9 +63,10 @@ export function createPlaceDialog( onClose: () => void ) {
 
 			for ( const s of story.sections ) {
 
-				const { label, color } = STORY_LABELS[ s.kind ];
+				const { label, color, text: ink } = STORY_LABELS[ s.kind ];
 				const tag = el( 'span', 'dialog-tag', label );
 				tag.style.background = color;
+				tag.style.color = ink;
 				text.append( tag, el( 'p', '', s.text ) );
 
 			}

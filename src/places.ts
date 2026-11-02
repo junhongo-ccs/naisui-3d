@@ -43,14 +43,17 @@ export function placesFor( code: string ): Place[] {
 
 export const SHELTER_COLOR = '#15803d';
 export const STORY_COLOR = '#1d4ed8';
-export const STORY_LABELS: Record<StoryKind, { label: string, color: string }> = {
-	terrain: { label: '地形', color: '#64748b' },
-	mechanism: { label: 'しくみ', color: '#0f766e' },
-	simulation: { label: 'この色（想定）', color: '#2563eb' },
-	river: { label: '川があふれた場合の想定（県。この色とは別）', color: '#7c3aed' },
-	study: { label: '市の検討（シミュレーション）', color: '#475569' },
-	record: { label: '実際の被害（記録）', color: '#c2410c' },
-	plan: { label: 'これからの対策', color: '#15803d' },
+// The parts' tags: neighbors of the story pins' blue (cyan to indigo), told apart by lightness and
+// saturation rather than by hue. The record of what actually happened is the one light tag, so it
+// stands apart from the simulations. White text on each is at least 5.4:1.
+export const STORY_LABELS: Record<StoryKind, { label: string, color: string, text: string }> = {
+	terrain: { label: '地形', color: '#52627a', text: '#ffffff' },
+	mechanism: { label: 'しくみ', color: '#0e7490', text: '#ffffff' },
+	simulation: { label: '地図の色（想定）', color: '#1d4ed8', text: '#ffffff' },
+	river: { label: '川があふれたら（県の想定）', color: '#4f46e5', text: '#ffffff' },
+	study: { label: '市の検討（シミュレーション）', color: '#3a5a85', text: '#ffffff' },
+	record: { label: '実際の被害（記録）', color: '#dbeafe', text: '#102a5c' },
+	plan: { label: 'これからの対策', color: '#0369a1', text: '#ffffff' },
 };
 const LANDMARK_BG = 'rgba(20, 26, 36, 0.86)';
 
@@ -572,9 +575,9 @@ function pageRows( ctx: CanvasRenderingContext2D, story: Story, page: Page, phot
 
 		case 'section': {
 
-			const { label, color } = STORY_LABELS[ page.section.kind ];
+			const { label, color, text } = STORY_LABELS[ page.section.kind ];
 			return [
-				{ font: FONT.label, color: '#ffffff', text: label, height: LINE.label + 12, tag: color },
+				{ font: FONT.label, color: text, text: label, height: LINE.label + 12, tag: color },
 				...textRows( ctx, page.section.text, FONT.body, '#e5edf5', LINE.body ),
 			];
 

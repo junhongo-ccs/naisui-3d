@@ -48,8 +48,22 @@
 
 				<label class="check"><input id="show-buildings" type="checkbox" checked /> 建物を表示</label>
 
-				<p class="hint">ドラッグ／1本指: 回転 ・ 右ドラッグ／2本指: 移動 ・ W A S D（矢印キー）: 移動 ・ ホイール／ピンチ: ズーム ・ クリック／タップ: 浸水深を表示、ピン（目印・避難所・青い i の解説）の説明を開く ・ 「まちの中から見る」: 道路の高さから見回す</p>
-				<p id="vr-hint" class="hint" hidden>VR: 左スティックで移動、右スティック左右で向きを変える、上下で高さ、トリガーで加速。右手で浸水域を指すと想定浸水深、ピンを指して右トリガーで説明（◀ ▶ でページをめくる、× で閉じる）。A／B を押している間、水面が上がる／下がる。左手の地図の点を指して右トリガーでそこへ移動。X で診断、Y で出発点。Meta ボタン長押しで終了</p>
+				<!-- How to move, for the device in hand: mouse and keys, or fingers (style.css). -->
+				<dl class="controls controls-pc">
+					<dt>回転</dt><dd>左ドラッグ</dd>
+					<dt>移動</dt><dd>右ドラッグ、W A S D・矢印キー（Shift で速く）</dd>
+					<dt>ズーム</dt><dd>ホイール</dd>
+					<dt>浸水深</dt><dd>色の付いた所をクリック</dd>
+					<dt>説明</dt><dd>ピンをクリック</dd>
+				</dl>
+				<dl class="controls controls-touch">
+					<dt>回転</dt><dd>1 本指でドラッグ</dd>
+					<dt>移動</dt><dd>2 本指でドラッグ</dd>
+					<dt>ズーム</dt><dd>ピンチ</dd>
+					<dt>浸水深</dt><dd>色の付いた所をタップ</dd>
+					<dt>説明</dt><dd>ピンをタップ</dd>
+				</dl>
+				<p id="vr-hint" class="hint" hidden>VR: ENTER VR で入ると、左手に操作の説明が出ます。</p>
 			</div>
 		</aside>
 

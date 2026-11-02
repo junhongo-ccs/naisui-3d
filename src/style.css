@@ -108,6 +108,22 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 
 .hint { margin: 10px 0 0; color: var(--muted); font-size: var(--fs-caption); line-height: var(--lh-caption); }
 
+/* How to move, as "action: how" rows, for a PC or a phone (body.touch-ui) only. */
+.controls {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 2px 12px;
+	margin: 12px 0 0;
+	padding-top: 10px;
+	border-top: 1px solid var(--line);
+	font-size: var(--fs-caption);
+	line-height: var(--lh-caption);
+}
+.controls dt { color: var(--muted); }
+.controls dd { margin: 0; }
+.controls-touch, body.touch-ui .controls-pc { display: none; }
+body.touch-ui .controls-touch { display: grid; }
+
 #app-close { margin: 0 0 12px; }
 #app-close[hidden] { display: none; }
 #app-close-button {
