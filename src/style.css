@@ -383,18 +383,20 @@ body.in-street #street-bar {
 }
 #street-bar p { margin: 0; line-height: var(--lh-label); }
 #street-exit { flex: none; }
-/* On the street the legend moves up out of the bar's way. */
+/* On the street the legend moves up out of the bar's way; on a phone, to the bottom right, out
+   of the stick's way. */
 body.in-street #legend { bottom: 92px; }
+body.in-street.touch-ui #legend { left: auto; right: max(12px, env(safe-area-inset-right)); bottom: 30px; }
 body.in-street.touch-ui #street-bar { max-width: calc(100vw - 2 * 150px); }
 
-/* The floating stick for walking on the street, on a phone held sideways (src/main.ts): the right
-   half of the screen takes the thumb; the base comes to where it lands and the knob follows it.
-   At rest the base waits, faint, at the bottom right, to show where to walk from. */
+/* The floating stick for walking on the street, on a phone held sideways (src/main.ts): the left
+   half of the screen takes the thumb, as in most games; the base comes to where it lands and the
+   knob follows it. At rest the base waits, faint, at the bottom left, to show where to walk from. */
 #stick-zone { display: none; }
 body.in-street.touch-ui #stick-zone {
 	position: fixed;
 	top: 0;
-	right: 0;
+	left: 0;
 	bottom: 0;
 	display: block;
 	width: 50%;
@@ -405,7 +407,7 @@ body.in-street.touch-ui #stick-zone {
 }
 #stick-base {
 	position: absolute;
-	right: max(28px, env(safe-area-inset-right));
+	left: max(28px, env(safe-area-inset-left));
 	bottom: 36px;
 	width: 112px;
 	height: 112px;

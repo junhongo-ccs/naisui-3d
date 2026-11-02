@@ -643,7 +643,7 @@ function buildUI() {
 		document.body.classList.add( 'in-street' );
 		$( '#info' ).hidden = true;
 		$( '#street-hint' ).textContent = touchUI
-			? '右半分: 押したまま動かして歩く ・ 左半分: ドラッグで見回す（スマホを動かしても見回せる）'
+			? '左半分: 押したまま動かして歩く ・ 右半分: ドラッグで見回す（スマホを動かしても見回せる）'
 			: 'ドラッグで見回す ・ W A S D（矢印キー）で歩く、Shift で速く ・ 地面をクリックでそこへ移動';
 
 	} );
@@ -743,11 +743,11 @@ let shiftDown = false;
 window.addEventListener( 'keydown', e => ( shiftDown = e.shiftKey ) );
 window.addEventListener( 'keyup', e => ( shiftDown = e.shiftKey ) );
 
-// The floating stick on a phone, as in games and metaverse apps: the right half of the screen
-// takes the thumb, the base comes to where it lands, and the way to walk is where the thumb has
-// gone from there, any way round (the left half of the view turns it: src/street.ts). Let go, it
-// stops, and the base goes back to wait at the bottom right. A thumb that lands on a pin opens it
-// instead, as anywhere else.
+// The floating stick on a phone, as in games and metaverse apps: the left half of the screen takes
+// the thumb (as in most games), the base comes to where it lands, and the way to walk is where the
+// thumb has gone from there, any way round (the right half of the view turns it: src/street.ts).
+// Let go, it stops, and the base goes back to wait at the bottom left. A thumb that lands on a pin
+// opens it instead, as anywhere else.
 const STICK_RADIUS = 48; // px: how far the knob goes from the base's middle
 const STICK_DEAD = 8; // px from the middle that don't walk
 const stick = { x: 0, y: 0 }; // the way, as a unit vector: x to the right, y forward (0, 0 at rest)
