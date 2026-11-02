@@ -436,13 +436,13 @@ function openCluster( places: Place[] ) {
 
 // Glide the view from above to look at `target` from `distance`, from the same direction.
 const FLY_TIME = 0.8; // s
-let fly: { fromPosition: THREE.Vector3, fromTarget: THREE.Vector3, toPosition: THREE.Vector3, toTarget: THREE.Vector3, t: number } | null = null;
+let fly: { fromPosition: THREE.Vector3, fromTarget: THREE.Vector3, toPosition: THREE.Vector3, toTarget: THREE.Vector3, t: number, time: number } | null = null;
 function flyTo( target: THREE.Vector3, distance: number ) {
 
 	const toward = camera.position.clone().sub( controls.target ).normalize();
 	fly = {
 		fromPosition: camera.position.clone(), fromTarget: controls.target.clone(),
-		toPosition: target.clone().addScaledVector( toward, distance ), toTarget: target.clone(), t: 0,
+		toPosition: target.clone().addScaledVector( toward, distance ), toTarget: target.clone(), t: 0, time: FLY_TIME,
 	};
 
 }
@@ -450,7 +450,7 @@ function flyTo( target: THREE.Vector3, distance: number ) {
 function updateFly( dt: number ) {
 
 	if ( ! fly ) return;
-	fly.t = Math.min( 1, fly.t + dt / FLY_TIME );
+	fly.t = Math.min( 1, fly.t + dt / fly.time );
 	const k = fly.t * fly.t * ( 3 - 2 * fly.t );
 	camera.position.lerpVectors( fly.fromPosition, fly.toPosition, k );
 	controls.target.lerpVectors( fly.fromTarget, fly.toTarget, k );
@@ -463,7 +463,6 @@ const street = createStreetView( {
 	camera, controls, canvas: renderer.domElement,
 	groundTargets: () => raycastTargets( [ terrain, ...buildings ] ),
 	bounds: () => bounds,
-	startPose: vrStartPose,
 } );
 
 function loadPlaces() {
@@ -647,10 +646,10 @@ function buildUI() {
 			: 'ドラッグで見回す ・ W A S D（矢印キー）で歩く、Shift で速く ・ 地面をクリックでそこへ移動';
 
 	} );
-	$( '#street-exit' ).addEventListener( 'click', leaveStreet );
+	$( '#street-exit' ).addEventListener( 'click', () => leaveStreet( true ) );
 	// VR remembers the view to come back to as it starts: leave the street first (this listener is
 	// added before VR's).
-	renderer.xr.addEventListener( 'sessionstart', leaveStreet );
+	renderer.xr.addEventListener( 'sessionstart', () => leaveStreet() );
 	// On a phone (narrow, or held sideways and so short) the panel starts folded, to leave the map.
 	if ( window.innerWidth < 640 || window.innerHeight < 500 ) document.body.classList.add( 'panel-closed' );
 
@@ -709,11 +708,38 @@ function gateStreetButton( settled: boolean ) {
 
 }
 
-function leaveStreet() {
+// Leave the street for the view from above, over where the user stood, facing the way they faced:
+// rising to it (`glide`, from the 上から見る button), or at once (entering VR, which remembers the
+// view as it starts; switching cities, which frames the new one after).
+const RISE_DISTANCE = 500; // m from the spot
+const RISE_PITCH = 50 * DEG; // looking down
+const RISE_TIME = 1.2; // s
+function leaveStreet( glide = false ) {
 
-	street.exit();
+	const left = street.exit();
 	document.body.classList.remove( 'in-street' );
 	$( '#info' ).hidden = true;
+	if ( ! left ) return;
+	const { feet, forward } = left;
+	const toPosition = feet.clone()
+		.addScaledVector( forward, - RISE_DISTANCE * Math.cos( RISE_PITCH ) )
+		.setY( feet.y + RISE_DISTANCE * Math.sin( RISE_PITCH ) );
+	if ( glide ) {
+
+		// From the eye, looking a little way ahead, up to the view over the spot.
+		fly = {
+			fromPosition: camera.position.clone(), fromTarget: camera.position.clone().addScaledVector( forward, 10 ),
+			toPosition, toTarget: feet.clone(), t: 0, time: RISE_TIME,
+		};
+
+	} else {
+
+		camera.position.copy( toPosition );
+		controls.target.copy( feet );
+
+	}
+
+	controls.update();
 
 }
 

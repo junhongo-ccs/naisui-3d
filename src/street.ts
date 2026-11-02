@@ -4,8 +4,9 @@ import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // Looking around from the street on a PC or phone: the camera stands at eye height on a street and
 // turns as the phone is turned (its orientation sensor), like a window onto the town; a sideways
 // drag turns it too (for sitting down), and without the sensor (a PC) a drag turns and tilts it.
-// W A S D or the arrow keys (PC) and the d-pad (phone) walk the way the view faces; a tap or
-// click on the ground walks there (src/main.ts). Leaving goes back to the view from above as it was.
+// W A S D or the arrow keys (PC) and the stick (phone) walk the way the view faces; a tap or
+// click on the ground walks there (src/main.ts). Leaving hands back where the user stood and which
+// way they faced, for the view from above to rise over it (src/main.ts).
 // The heading is relative: when the sensor first reports, the view keeps facing the way it was
 // (down the street), whichever way the phone points. Compass headings differ by browser and
 // need calibrating, and facing down the street is what matters here.
@@ -17,6 +18,7 @@ const HEAD_ROOM = 2; // m above the feet: the floor is the first surface below t
 const FLOOR_CHECK = 0.3; // s between looking up the floor
 const MAX_STEP = 20; // m: a floor farther than this from the feet is a coarse tile's, not the street's
 const WALK_SPEED = 4; // m/s at first; up to 5 times that held long, or with Shift
+const DESCENT_TIME = 1.2; // s to come down from the view above
 
 type Options = {
 	camera: THREE.PerspectiveCamera,
@@ -24,17 +26,15 @@ type Options = {
 	canvas: HTMLElement,
 	groundTargets: () => THREE.Object3D[],
 	bounds: () => THREE.Box3,
-	// Where to stand and which way to face when entering: the city's start point, if it has one.
-	startPose: () => { position: THREE.Vector3, yaw: number } | null,
 };
 
-export function createStreetView( { camera, controls, canvas, groundTargets, bounds, startPose }: Options ) {
+export function createStreetView( { camera, controls, canvas, groundTargets, bounds }: Options ) {
 
 	let active = false;
 	const feet = new THREE.Vector3();
 	let walk: { from: THREE.Vector3, to: THREE.Vector3, t: number } | null = null;
-	// The view from above, to go back to.
-	const saved = { position: new THREE.Vector3(), target: new THREE.Vector3() };
+	// Coming down from the view above, as it started (the reverse of rising when leaving).
+	let descent: { position: THREE.Vector3, quaternion: THREE.Quaternion, t: number } | null = null;
 
 	// Which way the view faces: yaw (turned left from north) and pitch (up from level), from drags;
 	// with the sensor, its rotation turned by `yaw` instead.
@@ -47,24 +47,17 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 		// iPhone asks the user first, and only from a tap: this must run in the button's handler.
 		const ask = ( DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> } ).requestPermission;
 		const allowed = ask ? ask().then( r => r === 'granted' ).catch( () => false ) : Promise.resolve( true );
-		saved.position.copy( camera.position );
-		saved.target.copy( controls.target );
 		controls.enabled = false;
-		const pose = startPose();
-		if ( pose ) {
-
-			feet.copy( pose.position );
-			yaw = pose.yaw;
-
-		} else {
-
-			const { x, z } = controls.target;
-			feet.set( x, floorAt( x, 5000, z ) ?? controls.target.y, z );
-			const toward = controls.target.clone().sub( camera.position );
-			yaw = Math.atan2( - toward.x, - toward.z );
-
-		}
-
+		// Come down on the spot the view from above is centered on, facing the way it faced. The
+		// first surface from above may be a roof (Google's tiles are one mesh, buildings and ground
+		// alike, so it can't be told apart); walking off it brings the feet down to the street.
+		const { x, z } = controls.target;
+		const floor = floorAt( x, 5000, z );
+		floorKnown = isFloor( floor );
+		feet.set( x, floorKnown ? floor! : controls.target.y, z );
+		const toward = controls.target.clone().sub( camera.position );
+		yaw = Math.atan2( - toward.x, - toward.z );
+		descent = { position: camera.position.clone(), quaternion: camera.quaternion.clone(), t: 0 };
 		pitch = 0;
 		sinceFloor = FLOOR_CHECK;
 		floorY = feet.y;
@@ -76,15 +69,18 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 
 	}
 
-	function exit() {
+	// Leave the street: where the feet were and which way the view faced (flat), or null if not on
+	// the street. The view from above takes over from there.
+	function exit(): { feet: THREE.Vector3, forward: THREE.Vector3 } | null {
 
-		if ( ! active ) return;
+		if ( ! active ) return null;
 		active = false;
+		descent = null;
 		window.removeEventListener( 'deviceorientation', onOrientation );
-		camera.position.copy( saved.position );
-		controls.target.copy( saved.target );
 		controls.enabled = true;
-		controls.update();
+		const facing = new THREE.Vector3( 0, 0, - 1 ).applyQuaternion( camera.quaternion ).setY( 0 );
+		if ( facing.lengthSq() < 1e-6 ) facing.set( 0, 0, - 1 ); // looking straight down: face north
+		return { feet: feet.clone(), forward: facing.normalize() };
 
 	}
 
@@ -107,11 +103,24 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 
 	const Y = new THREE.Vector3( 0, 1, 0 );
 	const forward = new THREE.Vector3();
+	const eye = new THREE.Vector3();
 	const right = new THREE.Vector3();
 	const turn = new THREE.Quaternion();
 	const target = new THREE.Quaternion();
 	// `move`: x to the right, y forward (each -1..1), and `boost` 0..1 for how fast.
 	function update( dt: number, move: { x: number, y: number, boost: number } ) {
+
+		if ( descent ) {
+
+			// Glide from the view above down to eye height, turning to look ahead level.
+			descent.t = Math.min( 1, descent.t + dt / DESCENT_TIME );
+			const k = descent.t * descent.t * ( 3 - 2 * descent.t );
+			camera.position.lerpVectors( descent.position, eye.copy( feet ).setY( feet.y + EYE_HEIGHT ), k );
+			camera.quaternion.slerpQuaternions( descent.quaternion, target.setFromEuler( euler.set( 0, yaw, 0, 'YXZ' ) ), k );
+			if ( descent.t === 1 ) descent = null;
+			return;
+
+		}
 
 		if ( move.x || move.y ) {
 
@@ -142,10 +151,15 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 			if ( sinceFloor >= FLOOR_CHECK ) {
 
 				sinceFloor = 0;
-				// A coarse tile that spans the whole region sags kilometers below it, bowed by the
-				// Earth: ignore what is far from where the feet are.
+				// Once the floor is known, a sudden jump is a coarse tile's surface, not the street's:
+				// ignore what is far from where the feet are. Until then, take the first floor found.
 				const floor = floorUnder( feet.x, feet.y, feet.z );
-				if ( floor !== null && Math.abs( floor - feet.y ) < MAX_STEP ) floorY = floor;
+				if ( isFloor( floor ) && ( ! floorKnown || Math.abs( floor! - feet.y ) < MAX_STEP ) ) {
+
+					floorY = floor!;
+					floorKnown = true;
+
+				}
 
 			}
 
@@ -181,7 +195,8 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 	function moveTo( point: THREE.Vector3 ) {
 
 		const to = point.clone().clamp( bounds().min, bounds().max );
-		to.y = floorUnder( to.x, point.y, to.z ) ?? point.y;
+		const floor = floorUnder( to.x, point.y, to.z );
+		to.y = isFloor( floor ) ? floor! : point.y;
 		walk = { from: feet.clone(), to, t: 0 };
 
 	}
@@ -200,6 +215,14 @@ export function createStreetView( { camera, controls, canvas, groundTargets, bou
 	// ground (its surface faces up, so a ray from inside misses it), and the floor is above.
 	let sinceFloor = 0;
 	let floorY = 0; // the floor under the feet, as last looked up
+	let floorKnown = false; // whether a real floor has been found since coming down
+	// A coarse tile that spans the whole region sags kilometers below it, bowed by the Earth, and
+	// is what a ray hits before the finer tiles load: no floor lies below the bounds.
+	function isFloor( y: number | null ) {
+
+		return y !== null && y > bounds().min.y;
+
+	}
 	function floorUnder( x: number, y: number, z: number ): number | null {
 
 		return floorAt( x, y + HEAD_ROOM, z ) ?? floorAt( x, 5000, z );
