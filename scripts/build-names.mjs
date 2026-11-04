@@ -43,8 +43,8 @@ const tileY = ( lat, z ) => {
 // The name to show: Japanese where the map has it, and nothing for a name only in Latin letters.
 function nameOf( p ) {
 
-	// 小町一丁目 → 小町: one name per town.
-	const name = ( p[ 'name:ja' ] || p.name )?.replace( /[一二三四五六七八九十]+丁目$/, '' );
+	// 小町一丁目 → 小町: one name per town. 神奈川県道21号横浜鎌倉線 → 横浜鎌倉線: one per road.
+	const name = ( p[ 'name:ja' ] || p.name )?.replace( /[一二三四五六七八九十]+丁目$/, '' ).replace( /^神奈川県道\d+号/, '' );
 	if ( ! name || ! /[^\x00-\x7f]/.test( name ) ) return null;
 	return p.subclass === 'station' && ! name.endsWith( '駅' ) ? `${ name }駅` : name; // 鎌倉 is the town too
 

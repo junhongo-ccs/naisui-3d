@@ -1,5 +1,5 @@
 {
-	"generatedAt": "2026-11-04T07:54:19.921Z",
+	"generatedAt": "2026-11-04T08:25:19.761Z",
 	"names": [
 		{
 			"kind": "landmark",
@@ -593,15 +593,6 @@
 			"lat": 35.323494,
 			"lon": 139.558216,
 			"elevation": 10.3,
-			"range": 1500
-		},
-		{
-			"kind": "landmark",
-			"name": "神奈川県道21号横浜鎌倉線",
-			"town": "",
-			"lat": 35.327897,
-			"lon": 139.555995,
-			"elevation": 22.4,
 			"range": 1500
 		},
 		{
