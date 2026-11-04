@@ -47,7 +47,7 @@ PC とスマホでは、ピンの名前と説明は HTML（`screen-pins.ts`・`p
 | `src/data/names/<コード>.json` | PLATEAU 版の地名（`scripts/build-names.mjs` が生成。手で編集しない）。ピンの `landmark` として出し、PC は HTML、VR は板の「ラベル」の大きさになる。施設は公共のものだけ（駅、市役所、公立の学校・文化施設、警察、図書館など）。`range` より遠いと出さず、視点が低いほど短くなる（`FULL_REACH_HEIGHT`） |
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
 | `src/install.ts` | スマホでホーム画面に追加する案内（Android は `beforeinstallprompt`、iPhone は Safari の手順を表示）。設定は `public/manifest.webmanifest`（全画面・横向き）とアイコン `public/icons/`。Service Worker は使っていない（Google のタイルの通信をすべて経由させたくないため） |
-| `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込み（VR の出発点から見た建物も含む）が終わるまで VR ボタンを止める（時間の上限なし） |
+| `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込みが終わったら、視点を動かしたときの細かな読み込みでは出さない（社内で試してもらい、表示が出るほうがストレスと分かった）。背景地図を替えたときはまた出す。最初の読み込み（VR の出発点から見た建物も含む）が終わるまで VR ボタンを止める（時間の上限なし） |
 | `src/flood.ts` | 浸水深ラベルの解析と配色 |
 | `src/vr.ts` | Quest コントローラーでの移動、ボタン操作、指さし、操作説明の板 |
 | `src/vr-debug.ts` | VR の診断ボード（X ボタン。エラー、入力、指さしの状態を左手の上に出す。エラーが出ると自動で開く） |

@@ -286,6 +286,7 @@ function fallBackFromGoogle() {
 	terrain.dispose();
 	terrain = addTiles( createGround() );
 	buildings = createBuildings();
+	viewLoading();
 	renderGroundUI();
 
 }
@@ -577,6 +578,7 @@ function switchCity( code: string ) {
 	clipToBounds();
 	terrain = addTiles( createGround() );
 	loadCityTiles();
+	viewLoading();
 	loadPlaces();
 	renderCityUI();
 	renderLegend();
@@ -626,6 +628,7 @@ function setBaseMap( key: BaseChoice ) {
 	world.remove( terrain.group );
 	terrain.dispose();
 	terrain = addTiles( createGround() );
+	viewLoading();
 	syncURL();
 
 }
@@ -1312,6 +1315,16 @@ const TOUCH_DETAIL = 0.65;
 const TOUCH_DETAIL_STREET = 1;
 const drawingBuffer = new THREE.Vector2();
 const loading = createLoadingIndicator( camera );
+// The view is whole (the first load is done, buildings and all), so what still loads as the user
+// moves about goes unannounced. Until the ground is replaced.
+let viewWhole = false;
+function viewLoading() {
+
+	viewWhole = false;
+	loading.restart();
+
+}
+
 renderer.setAnimationLoop( () => {
 
 	const dt = Math.min( clock.getDelta(), 0.1 );
@@ -1385,7 +1398,7 @@ renderer.setAnimationLoop( () => {
 	pinLayer.hidden = ! flat;
 	if ( flat ) pins.showStems( screenPins.update( camera, pins.heads() ) );
 	if ( useGoogle ) updateGoogleAttribution( dt );
-	loading.update( dt, busy, xr.isPresenting );
+	loading.update( dt, busy, xr.isPresenting, viewWhole );
 	if ( buildingsWaiting && loading.settled ) {
 
 		buildingsWaiting = false;
@@ -1397,6 +1410,7 @@ renderer.setAnimationLoop( () => {
 
 	// Everything is in: for /plateau, with the buildings (VR opens on them, not on a flat town).
 	const settled = loading.settled && ! buildingsWaiting && ( ! PLATEAU_VIEW || buildings.every( t => tileStats( t ).visible > 0 ) );
+	viewWhole ||= settled;
 	if ( buildingsArriving && settled ) {
 
 		buildingsArriving = false;

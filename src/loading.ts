@@ -3,8 +3,9 @@ import * as THREE from 'three';
 // "Loading" shown while the tilesets fetch and parse: a pill at the top of the page, and in VR,
 // where the page can't be seen, a turning ring and a card just below the line of sight.
 // No percentage: the total grows as tiles come into view, so any figure would mislead.
-// Short loads (panning, turning the head) don't flash it: it shows after a moment of loading
-// and hides after a moment of quiet.
+// Short loads don't flash it: it shows after a moment of loading and hides after a moment of quiet.
+// Once the view is whole it stays away (`quiet`): turning or moving only fetches finer tiles, the
+// town is there already, and people found the pill coming back more of a bother than the wait.
 export function createLoadingIndicator( head: THREE.Camera ) {
 
 	const SHOW_AFTER = 0.3; // s
@@ -60,13 +61,13 @@ export function createLoadingIndicator( head: THREE.Camera ) {
 	let everBusy = false;
 	let shown = false;
 
-	function update( dt: number, loading: boolean, inXR: boolean ) {
+	function update( dt: number, loading: boolean, inXR: boolean, quiet: boolean ) {
 
 		busyFor = loading ? busyFor + dt : 0;
 		idleFor = loading ? 0 : idleFor + dt;
 		everBusy ||= loading;
-		if ( ! shown && busyFor >= SHOW_AFTER ) shown = true;
-		if ( shown && idleFor >= HIDE_AFTER ) shown = false;
+		if ( ! shown && busyFor >= SHOW_AFTER && ! quiet ) shown = true;
+		if ( shown && ( idleFor >= HIDE_AFTER || quiet ) ) shown = false;
 
 		el.hidden = ! shown || inXR;
 		vr.visible = shown && inXR;
@@ -76,6 +77,13 @@ export function createLoadingIndicator( head: THREE.Camera ) {
 
 	return {
 		update,
+		// The ground has been replaced: wait for it to load again.
+		restart() {
+
+			everBusy = false;
+			idleFor = 0;
+
+		},
 		// Something has loaded and nothing has for a moment.
 		get settled() {
 
