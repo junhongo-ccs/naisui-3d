@@ -9,6 +9,9 @@ export type Place = {
 	lat: number,
 	lon: number,
 	elevation: number, // m above the geoid
+	// A name on /plateau's map: how far away it still shows, in meters. Without one, a pin that
+	// always shows.
+	range?: number,
 	story?: Story,
 };
 
@@ -38,6 +41,15 @@ export function placesFor( code: string ): Place[] {
 		...where, kind: 'story', story: { sections, sources, photo },
 	} ) );
 	return [ ...( f ? [ ...f.landmarks, ...f.shelters ] : [] ), ...stories ];
+
+}
+
+// The names over /plateau's map: src/data/names/<city code>.json, written by scripts/build-names.mjs.
+const nameFiles = import.meta.glob<{ names: Place[] }>( './data/names/*.json', { import: 'default', eager: true } );
+
+export function namesFor( code: string ): Place[] {
+
+	return nameFiles[ `./data/names/${ code }.json` ]?.names ?? [];
 
 }
 
@@ -88,6 +100,9 @@ function cardWidth( px: number, distance: number ) {
 // shows one part at a time, turned with its ◀ ▶ buttons, and its × button (or the pin again)
 // closes it. On a flat screen only the stems are drawn here; the labels and descriptions are HTML
 // (src/screen-pins.ts, src/place-dialog.ts).
+const FULL_REACH_HEIGHT = 300; // m: from this high a map's names show out to their full range
+const MIN_REACH = 0.15; // of their range, at street level
+
 export function createPins() {
 
 	const group = new THREE.Group();
@@ -111,6 +126,7 @@ export function createPins() {
 		icon: Billboard,
 		name: Billboard | null, // shelters and stories: the name next to the icon
 		height: number, // of the icon, as last drawn
+		near: boolean, // within the place's range, as last drawn
 	};
 	let pins: Pin[] = [];
 	let hovered: Pin | null = null;
@@ -149,7 +165,7 @@ export function createPins() {
 			// fractions of the label's own size.
 			name?.center.set( - 0.55 / name.aspect, 0 );
 			group.add( stem, icon.obj, ...( name ? [ name.obj ] : [] ) );
-			return { place, base, head: base.clone(), stem, icon, name, height: 0 };
+			return { place, base, head: base.clone(), stem, icon, name, height: 0, near: true };
 
 		} );
 
@@ -166,17 +182,21 @@ export function createPins() {
 
 		pinUp.set( 0, 1, 0 );
 		if ( facing ) pinUp.applyQuaternion( facing );
+		// Down on the street a map's names reach less far: what's beyond is behind the buildings.
+		const reach = THREE.MathUtils.clamp( eye.y / FULL_REACH_HEIGHT, MIN_REACH, 1 );
 		for ( const p of pins ) {
 
 			const d = eye.distanceTo( p.base );
 			p.height = Math.max( d * LABEL_SIZE, 0.05 ) * ( p === hovered ? 1.3 : 1 );
-			const stemHeight = THREE.MathUtils.clamp( d * 0.05, 3, 400 );
+			p.near = d <= ( p.place.range ?? Infinity ) * reach;
+			// A map's name lies on its spot on a flat screen, with no stem to stand on.
+			const stemHeight = facing && p.place.range ? 0 : THREE.MathUtils.clamp( d * 0.05, 3, 400 );
 			p.stem.scale.y = stemHeight;
-			p.stem.visible = true;
+			p.stem.visible = p.near;
 			if ( facing ) p.stem.quaternion.copy( facing );
 			else p.stem.quaternion.identity();
 			p.head.copy( p.base ).addScaledVector( pinUp, stemHeight );
-			p.icon.obj.visible = labels;
+			p.icon.obj.visible = labels && p.near;
 			pose( p.icon, p.head, p.height, eye, facing );
 			if ( p.name ) {
 
@@ -211,6 +231,7 @@ export function createPins() {
 		let best: Pin | null = null, bestAngle = PICK_ANGLE, bestDistance = Infinity;
 		for ( const p of pins ) {
 
+			if ( ! p.near ) continue;
 			// Aim at the middle of the label, not its bottom edge.
 			toHead.copy( p.head ).addScaledVector( pinUp, p.height / 2 ).sub( ray.origin );
 			const along = toHead.dot( ray.direction );
@@ -375,7 +396,7 @@ export function createPins() {
 
 	// Where each pin stands on the ground, and where its label stands (the top of its stem) as
 	// last drawn.
-	function heads(): readonly { place: Place, base: THREE.Vector3, head: THREE.Vector3 }[] {
+	function heads(): readonly { place: Place, base: THREE.Vector3, head: THREE.Vector3, near: boolean }[] {
 
 		return pins;
 

@@ -10,6 +10,12 @@ export const AREA: Record<string, [ number, number, number, number ]> = {
 	'14204': [ 139.530, 35.302, 139.572, 35.342 ],
 };
 
+// /plateau's buildings, per city: the LOD2 tileset without textures (the catalog's cities.json has
+// the textured one), shown as plain gray models over a map.
+export const PLAIN_BUILDINGS: Record<string, string> = {
+	'14204': 'https://assets.cms.plateau.reearth.io/assets/0b/89cea0-eaae-40c2-9707-84c01ef3a6c9/14204_kamakura-shi_city_2024_citygml_1_op_bldg_3dtiles_lod2_no_texture/tileset.json',
+};
+
 // Where VR starts, per city: a point on a street ([lat, lon], with its elevation in meters above
 // the geoid) and a point to face. Take them from the street's centerline (e.g. OpenStreetMap), not
 // from a landmark: a place-name point can sit inside a building, and with Google's tiles that puts

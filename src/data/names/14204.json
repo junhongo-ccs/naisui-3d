@@ -1,0 +1,2093 @@
+{
+	"generatedAt": "2026-11-04T05:39:48.767Z",
+	"names": [
+		{
+			"kind": "landmark",
+			"name": "小町",
+			"town": "",
+			"lat": 35.321511,
+			"lon": 139.55312,
+			"elevation": 8.3,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "雪ノ下",
+			"town": "",
+			"lat": 35.323485,
+			"lon": 139.55372,
+			"elevation": 10.1,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "扇ガ谷",
+			"town": "",
+			"lat": 35.323315,
+			"lon": 139.548115,
+			"elevation": 28.6,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "御成町",
+			"town": "",
+			"lat": 35.318474,
+			"lon": 139.548485,
+			"elevation": 6.9,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "大町",
+			"town": "",
+			"lat": 35.316749,
+			"lon": 139.555678,
+			"elevation": 27.3,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "由比ガ浜",
+			"town": "",
+			"lat": 35.315624,
+			"lon": 139.545164,
+			"elevation": 9,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "佐助",
+			"town": "",
+			"lat": 35.319419,
+			"lon": 139.542654,
+			"elevation": 22.9,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "材木座",
+			"town": "",
+			"lat": 35.313142,
+			"lon": 139.551086,
+			"elevation": 4,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "笹目町",
+			"town": "",
+			"lat": 35.316613,
+			"lon": 139.541699,
+			"elevation": 14.4,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "西御門",
+			"town": "",
+			"lat": 35.32893,
+			"lon": 139.559627,
+			"elevation": 32.2,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "長谷",
+			"town": "",
+			"lat": 35.319537,
+			"lon": 139.537922,
+			"elevation": 18.2,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "梶原",
+			"town": "",
+			"lat": 35.327363,
+			"lon": 139.538802,
+			"elevation": 68,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "山ノ内",
+			"town": "",
+			"lat": 35.335551,
+			"lon": 139.548512,
+			"elevation": 26.3,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "浄明寺",
+			"town": "",
+			"lat": 35.320063,
+			"lon": 139.565458,
+			"elevation": 48.7,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "今泉台",
+			"town": "",
+			"lat": 35.337621,
+			"lon": 139.558457,
+			"elevation": 86.6,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "小坪",
+			"town": "",
+			"lat": 35.30514,
+			"lon": 139.560324,
+			"elevation": 40,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "常盤",
+			"town": "",
+			"lat": 35.323582,
+			"lon": 139.530482,
+			"elevation": 55.8,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "二階堂",
+			"town": "",
+			"lat": 35.328991,
+			"lon": 139.570613,
+			"elevation": 57.7,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "台",
+			"town": "",
+			"lat": 35.339319,
+			"lon": 139.537026,
+			"elevation": 32.2,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "坂ノ下",
+			"town": "",
+			"lat": 35.308673,
+			"lon": 139.533175,
+			"elevation": 5,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "久木",
+			"town": "",
+			"lat": 35.307631,
+			"lon": 139.568955,
+			"elevation": 20.3,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "今泉",
+			"town": "",
+			"lat": 35.340453,
+			"lon": 139.570854,
+			"elevation": 98.5,
+			"range": 6000
+		},
+		{
+			"kind": "landmark",
+			"name": "扇川",
+			"town": "",
+			"lat": 35.322584,
+			"lon": 139.551027,
+			"elevation": 7.6,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "平家池",
+			"town": "",
+			"lat": 35.324378,
+			"lon": 139.554788,
+			"elevation": 10,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "源平池",
+			"town": "",
+			"lat": 35.323875,
+			"lon": 139.555517,
+			"elevation": 10,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "源氏山",
+			"town": "",
+			"lat": 35.324558,
+			"lon": 139.546275,
+			"elevation": 92.9,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "佐助川",
+			"town": "",
+			"lat": 35.317174,
+			"lon": 139.548082,
+			"elevation": 4.5,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "柳原神池",
+			"town": "",
+			"lat": 35.325175,
+			"lon": 139.556542,
+			"elevation": 9.7,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "滑川",
+			"town": "",
+			"lat": 35.315274,
+			"lon": 139.550217,
+			"elevation": 1,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "大臣山",
+			"town": "",
+			"lat": 35.326724,
+			"lon": 139.557433,
+			"elevation": 48.7,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "名越川",
+			"town": "",
+			"lat": 35.313457,
+			"lon": 139.557647,
+			"elevation": 6.6,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "燕碧池",
+			"town": "",
+			"lat": 35.332129,
+			"lon": 139.555421,
+			"elevation": 40.3,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "大御堂川",
+			"town": "",
+			"lat": 35.32187,
+			"lon": 139.562507,
+			"elevation": 12,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "古川",
+			"town": "",
+			"lat": 35.30996,
+			"lon": 139.549177,
+			"elevation": 1.3,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "大覚池",
+			"town": "",
+			"lat": 35.332488,
+			"lon": 139.558586,
+			"elevation": 59,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "二階堂川",
+			"town": "",
+			"lat": 35.324181,
+			"lon": 139.564626,
+			"elevation": 9.6,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "釈迦堂川",
+			"town": "",
+			"lat": 35.320724,
+			"lon": 139.564766,
+			"elevation": 16,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "桔梗山",
+			"town": "",
+			"lat": 35.32493,
+			"lon": 139.536586,
+			"elevation": 114.3,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "白鷺池",
+			"town": "",
+			"lat": 35.336755,
+			"lon": 139.545684,
+			"elevation": 20.4,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "心字池",
+			"town": "",
+			"lat": 35.338269,
+			"lon": 139.548624,
+			"elevation": 42.4,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "妙香池",
+			"town": "",
+			"lat": 35.338575,
+			"lon": 139.548764,
+			"elevation": 41.6,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "衣張山",
+			"town": "",
+			"lat": 35.315611,
+			"lon": 139.566826,
+			"elevation": 119.6,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "稲瀬川",
+			"town": "",
+			"lat": 35.310494,
+			"lon": 139.537783,
+			"elevation": 0.9,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "美奈能瀬川",
+			"town": "",
+			"lat": 35.309548,
+			"lon": 139.538614,
+			"elevation": 0.7,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "豆腐川",
+			"town": "",
+			"lat": 35.304243,
+			"lon": 139.552149,
+			"elevation": 2.1,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "谷戸の池",
+			"town": "",
+			"lat": 35.334488,
+			"lon": 139.53612,
+			"elevation": 36.1,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "杉ノ川",
+			"town": "",
+			"lat": 35.331416,
+			"lon": 139.568306,
+			"elevation": 26.1,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "卍池",
+			"town": "",
+			"lat": 35.312731,
+			"lon": 139.533395,
+			"elevation": 16.6,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "小袋谷川",
+			"town": "",
+			"lat": 35.339669,
+			"lon": 139.541055,
+			"elevation": 13.2,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "殿入川",
+			"town": "",
+			"lat": 35.322107,
+			"lon": 139.530632,
+			"elevation": 19.9,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "峯山",
+			"town": "",
+			"lat": 35.324886,
+			"lon": 139.53046,
+			"elevation": 94.7,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "散在ガ池",
+			"town": "",
+			"lat": 35.340846,
+			"lon": 139.562352,
+			"elevation": 44,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "吉が沢",
+			"town": "",
+			"lat": 35.341472,
+			"lon": 139.56137,
+			"elevation": 33.4,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "池ノ谷戸下の池",
+			"town": "",
+			"lat": 35.335389,
+			"lon": 139.530122,
+			"elevation": 29.3,
+			"range": 3000
+		},
+		{
+			"kind": "landmark",
+			"name": "今小路",
+			"town": "",
+			"lat": 35.323376,
+			"lon": 139.550609,
+			"elevation": 10.8,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "小町通り",
+			"town": "",
+			"lat": 35.320435,
+			"lon": 139.5518,
+			"elevation": 7.1,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "かつら小路",
+			"town": "",
+			"lat": 35.320614,
+			"lon": 139.552674,
+			"elevation": 7.4,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "若宮大路",
+			"town": "",
+			"lat": 35.320671,
+			"lon": 139.553012,
+			"elevation": 6.2,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "市役所通り",
+			"town": "",
+			"lat": 35.319406,
+			"lon": 139.548689,
+			"elevation": 6.8,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "御成通り",
+			"town": "",
+			"lat": 35.318526,
+			"lon": 139.549933,
+			"elevation": 5.3,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "小町大路",
+			"town": "",
+			"lat": 35.319502,
+			"lon": 139.554246,
+			"elevation": 7.3,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "佐助トンネル",
+			"town": "",
+			"lat": 35.321997,
+			"lon": 139.545813,
+			"elevation": 26.4,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "御成隧道",
+			"town": "",
+			"lat": 35.319756,
+			"lon": 139.546194,
+			"elevation": 12.5,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "横浜鎌倉線",
+			"town": "",
+			"lat": 35.326247,
+			"lon": 139.555324,
+			"elevation": 14.1,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "化粧坂切通",
+			"town": "",
+			"lat": 35.325971,
+			"lon": 139.545207,
+			"elevation": 53.9,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "金沢鎌倉線",
+			"town": "",
+			"lat": 35.323494,
+			"lon": 139.558216,
+			"elevation": 10.3,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "神奈川県道21号横浜鎌倉線",
+			"town": "",
+			"lat": 35.327897,
+			"lon": 139.555995,
+			"elevation": 22.4,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "亀ヶ谷坂切通",
+			"town": "",
+			"lat": 35.330295,
+			"lon": 139.550105,
+			"elevation": 48.8,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉葉山線",
+			"town": "",
+			"lat": 35.314009,
+			"lon": 139.544086,
+			"elevation": 10.3,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "新佐助隧道",
+			"town": "",
+			"lat": 35.321087,
+			"lon": 139.540266,
+			"elevation": 24,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "明月院通り",
+			"town": "",
+			"lat": 35.334821,
+			"lon": 139.548436,
+			"elevation": 24.6,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "長谷隧道",
+			"town": "",
+			"lat": 35.321244,
+			"lon": 139.537793,
+			"elevation": 27.3,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "釈迦堂口切通",
+			"town": "",
+			"lat": 35.317808,
+			"lon": 139.564637,
+			"elevation": 61.2,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "藤沢鎌倉線",
+			"town": "",
+			"lat": 35.315611,
+			"lon": 139.535192,
+			"elevation": 10.2,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "住友常磐住宅一番通り",
+			"town": "",
+			"lat": 35.31987,
+			"lon": 139.533797,
+			"elevation": 48.9,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "名越切通",
+			"town": "",
+			"lat": 35.308209,
+			"lon": 139.564208,
+			"elevation": 80,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "国道134号",
+			"town": "",
+			"lat": 35.302202,
+			"lon": 139.552647,
+			"elevation": 6.4,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "御霊小路",
+			"town": "",
+			"lat": 35.311527,
+			"lon": 139.533545,
+			"elevation": 6.6,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "星の井通り",
+			"town": "",
+			"lat": 35.309899,
+			"lon": 139.533877,
+			"elevation": 5.7,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "極楽寺坂切通",
+			"town": "",
+			"lat": 35.309526,
+			"lon": 139.530669,
+			"elevation": 19.9,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "金沢逗子線",
+			"town": "",
+			"lat": 35.305122,
+			"lon": 139.569288,
+			"elevation": 13.2,
+			"range": 1500
+		},
+		{
+			"kind": "landmark",
+			"name": "巽神社",
+			"town": "",
+			"lat": 35.32205,
+			"lon": 139.550373,
+			"elevation": 9.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "正宗稲荷社",
+			"town": "",
+			"lat": 35.322859,
+			"lon": 139.550352,
+			"elevation": 11.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鏑木清方記念美術館",
+			"town": "",
+			"lat": 35.322973,
+			"lon": 139.552352,
+			"elevation": 10.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "大里書店",
+			"town": "",
+			"lat": 35.320347,
+			"lon": 139.551698,
+			"elevation": 6.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "吉兆庵美術館",
+			"town": "",
+			"lat": 35.320417,
+			"lon": 139.552063,
+			"elevation": 7.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "八坂大神社",
+			"town": "",
+			"lat": 35.323827,
+			"lon": 139.550223,
+			"elevation": 12.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "災害復興支援広場　リバスク",
+			"town": "",
+			"lat": 35.322842,
+			"lon": 139.552932,
+			"elevation": 9.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "寿福寺",
+			"town": "",
+			"lat": 35.324321,
+			"lon": 139.55011,
+			"elevation": 12.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市川喜多映画記念館",
+			"town": "",
+			"lat": 35.324269,
+			"lon": 139.55247,
+			"elevation": 12.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉",
+			"town": "",
+			"lat": 35.319183,
+			"lon": 139.550427,
+			"elevation": 8.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "護国寺",
+			"town": "",
+			"lat": 35.324925,
+			"lon": 139.551033,
+			"elevation": 13,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "たらば書房",
+			"town": "",
+			"lat": 35.319082,
+			"lon": 139.549665,
+			"elevation": 5.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "神奈川県鎌倉県税事務所",
+			"town": "",
+			"lat": 35.319454,
+			"lon": 139.549,
+			"elevation": 6.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "英勝寺",
+			"town": "",
+			"lat": 35.325109,
+			"lon": 139.549837,
+			"elevation": 12.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "養生院清川病院",
+			"town": "",
+			"lat": 35.321314,
+			"lon": 139.5543,
+			"elevation": 8.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "島森書店",
+			"town": "",
+			"lat": 35.318776,
+			"lon": 139.552197,
+			"elevation": 5.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉歴史文化交流館",
+			"town": "",
+			"lat": 35.322474,
+			"lon": 139.547503,
+			"elevation": 23.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "松林堂書店",
+			"town": "",
+			"lat": 35.318338,
+			"lon": 139.551247,
+			"elevation": 6.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "文教堂",
+			"town": "",
+			"lat": 35.318194,
+			"lon": 139.55092,
+			"elevation": 6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "大巧寺",
+			"town": "",
+			"lat": 35.318509,
+			"lon": 139.552765,
+			"elevation": 7.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "妙隆寺",
+			"town": "",
+			"lat": 35.320689,
+			"lon": 139.554938,
+			"elevation": 8.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "浄光明寺",
+			"town": "",
+			"lat": 35.326431,
+			"lon": 139.551178,
+			"elevation": 14.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "志一稲荷社",
+			"town": "",
+			"lat": 35.325398,
+			"lon": 139.553854,
+			"elevation": 24.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "蛭子神社",
+			"town": "",
+			"lat": 35.31871,
+			"lon": 139.554251,
+			"elevation": 7.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "ふれあい鎌倉ホスピタル",
+			"town": "",
+			"lat": 35.317905,
+			"lon": 139.548839,
+			"elevation": 6.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市役所",
+			"town": "",
+			"lat": 35.31917,
+			"lon": 139.547246,
+			"elevation": 8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉文華館 鶴岡ミュージアム",
+			"town": "",
+			"lat": 35.324737,
+			"lon": 139.55497,
+			"elevation": 10.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "末広自治会館",
+			"town": "",
+			"lat": 35.31994,
+			"lon": 139.546527,
+			"elevation": 11.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "本覚寺",
+			"town": "",
+			"lat": 35.317261,
+			"lon": 139.552588,
+			"elevation": 6.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "諏訪神社",
+			"town": "",
+			"lat": 35.319901,
+			"lon": 139.54643,
+			"elevation": 11.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "旗上弁財天社",
+			"town": "",
+			"lat": 35.323901,
+			"lon": 139.555968,
+			"elevation": 9.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "妙伝寺",
+			"town": "",
+			"lat": 35.327319,
+			"lon": 139.552256,
+			"elevation": 29.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市立御成小学校",
+			"town": "",
+			"lat": 35.31822,
+			"lon": 139.546977,
+			"elevation": 9.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "稲荷社",
+			"town": "",
+			"lat": 35.323258,
+			"lon": 139.556451,
+			"elevation": 10.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "祖霊社",
+			"town": "",
+			"lat": 35.325757,
+			"lon": 139.555512,
+			"elevation": 11.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鶴岡八幡宮宝物殿",
+			"town": "",
+			"lat": 35.324864,
+			"lon": 139.556311,
+			"elevation": 10.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鶴岡八幡宮",
+			"town": "",
+			"lat": 35.325184,
+			"lon": 139.556177,
+			"elevation": 11.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "教恩寺",
+			"town": "",
+			"lat": 35.315817,
+			"lon": 139.552481,
+			"elevation": 8.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "若宮",
+			"town": "",
+			"lat": 35.325516,
+			"lon": 139.556397,
+			"elevation": 12.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉国宝館",
+			"town": "",
+			"lat": 35.324667,
+			"lon": 139.557009,
+			"elevation": 10.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "薬王寺",
+			"town": "",
+			"lat": 35.32837,
+			"lon": 139.5493,
+			"elevation": 24,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "延命寺",
+			"town": "",
+			"lat": 35.315292,
+			"lon": 139.5507,
+			"elevation": 4.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "青梅聖天社",
+			"town": "",
+			"lat": 35.327775,
+			"lon": 139.554439,
+			"elevation": 39.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市中央図書館",
+			"town": "",
+			"lat": 35.317388,
+			"lon": 139.545969,
+			"elevation": 8.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "常栄寺",
+			"town": "",
+			"lat": 35.315847,
+			"lon": 139.554321,
+			"elevation": 12.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "白旗神社",
+			"town": "",
+			"lat": 35.325446,
+			"lon": 139.557116,
+			"elevation": 12.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "公文堂書店",
+			"town": "",
+			"lat": 35.315847,
+			"lon": 139.547583,
+			"elevation": 7.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "横浜国立大学教育学部附属鎌倉小学校",
+			"town": "",
+			"lat": 35.324343,
+			"lon": 139.557674,
+			"elevation": 12.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉大谷記念美術館(休館)",
+			"town": "",
+			"lat": 35.318194,
+			"lon": 139.545025,
+			"elevation": 20.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "宝戒寺",
+			"town": "",
+			"lat": 35.322115,
+			"lon": 139.55828,
+			"elevation": 10.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鶴岡文庫",
+			"town": "",
+			"lat": 35.327214,
+			"lon": 139.556445,
+			"elevation": 20.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "八雲神社",
+			"town": "",
+			"lat": 35.315125,
+			"lon": 139.554455,
+			"elevation": 10.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "さすけほいくえん",
+			"town": "",
+			"lat": 35.320509,
+			"lon": 139.543292,
+			"elevation": 16.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "妙本寺",
+			"town": "",
+			"lat": 35.317178,
+			"lon": 139.557223,
+			"elevation": 24.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "三峰神社　御嶽神社",
+			"town": "",
+			"lat": 35.315046,
+			"lon": 139.554815,
+			"elevation": 14.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "円応寺",
+			"town": "",
+			"lat": 35.329709,
+			"lon": 139.552943,
+			"elevation": 49.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉女学院",
+			"town": "",
+			"lat": 35.313895,
+			"lon": 139.55003,
+			"elevation": 4.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "横浜国立大学教育学部附属鎌倉中学校",
+			"town": "",
+			"lat": 35.325044,
+			"lon": 139.558924,
+			"elevation": 12.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市立第一小学校",
+			"town": "",
+			"lat": 35.314101,
+			"lon": 139.547734,
+			"elevation": 7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "由比ガ浜公会堂",
+			"town": "",
+			"lat": 35.314814,
+			"lon": 139.54636,
+			"elevation": 8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "別願寺",
+			"town": "",
+			"lat": 35.314381,
+			"lon": 139.554976,
+			"elevation": 10.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "今宮",
+			"town": "",
+			"lat": 35.328094,
+			"lon": 139.557481,
+			"elevation": 32.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "海蔵寺",
+			"town": "",
+			"lat": 35.32886,
+			"lon": 139.545261,
+			"elevation": 29.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "上行寺",
+			"town": "",
+			"lat": 35.313843,
+			"lon": 139.55482,
+			"elevation": 8.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉ヒロ病院",
+			"town": "",
+			"lat": 35.312993,
+			"lon": 139.551618,
+			"elevation": 4.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "太神宮",
+			"town": "",
+			"lat": 35.321253,
+			"lon": 139.560061,
+			"elevation": 44.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "新宮神社",
+			"town": "",
+			"lat": 35.328265,
+			"lon": 139.557593,
+			"elevation": 40.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "私立鎌倉学園高等学校",
+			"town": "",
+			"lat": 35.331044,
+			"lon": 139.553093,
+			"elevation": 41.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "大宝寺",
+			"town": "",
+			"lat": 35.315353,
+			"lon": 139.557502,
+			"elevation": 15.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "私立鎌倉学園中学校",
+			"town": "",
+			"lat": 35.331114,
+			"lon": 139.552959,
+			"elevation": 41.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "下之水神宮",
+			"town": "",
+			"lat": 35.325831,
+			"lon": 139.542477,
+			"elevation": 42.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "第六天社",
+			"town": "",
+			"lat": 35.33135,
+			"lon": 139.551339,
+			"elevation": 42.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "銭洗弁財天宇賀福神社",
+			"town": "",
+			"lat": 35.325757,
+			"lon": 139.542262,
+			"elevation": 43.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "長寿寺",
+			"town": "",
+			"lat": 35.33153,
+			"lon": 139.550352,
+			"elevation": 37.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "本興寺",
+			"town": "",
+			"lat": 35.312792,
+			"lon": 139.554005,
+			"elevation": 7.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "奥宮",
+			"town": "",
+			"lat": 35.325809,
+			"lon": 139.542015,
+			"elevation": 55.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市立御成中学校",
+			"town": "",
+			"lat": 35.317782,
+			"lon": 139.542139,
+			"elevation": 31.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉学園中学校・高等学校",
+			"town": "",
+			"lat": 35.331604,
+			"lon": 139.553184,
+			"elevation": 43.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "和田塚",
+			"town": "",
+			"lat": 35.313711,
+			"lon": 139.545502,
+			"elevation": 9.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市立第二中学校",
+			"town": "",
+			"lat": 35.328243,
+			"lon": 139.558961,
+			"elevation": 28.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "神奈川県鎌倉保健福祉事務所(葉山福祉事務所・鎌倉保健所)",
+			"town": "",
+			"lat": 35.312617,
+			"lon": 139.54716,
+			"elevation": 10.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "大倉稲荷社",
+			"town": "",
+			"lat": 35.322102,
+			"lon": 139.561225,
+			"elevation": 37.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "サンズインターナショナルプレスクール",
+			"town": "",
+			"lat": 35.312582,
+			"lon": 139.54658,
+			"elevation": 11.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "葛原岡神社",
+			"town": "",
+			"lat": 35.328807,
+			"lon": 139.542874,
+			"elevation": 84.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "右卿記念館",
+			"town": "",
+			"lat": 35.33009,
+			"lon": 139.557974,
+			"elevation": 39.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "横浜地方裁判所鎌倉簡易裁判所",
+			"town": "",
+			"lat": 35.311531,
+			"lon": 139.547616,
+			"elevation": 7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "清泉小学校",
+			"town": "",
+			"lat": 35.32496,
+			"lon": 139.562008,
+			"elevation": 13.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "啓運寺",
+			"town": "",
+			"lat": 35.310669,
+			"lon": 139.552824,
+			"elevation": 5.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "来迎寺",
+			"town": "",
+			"lat": 35.32784,
+			"lon": 139.561064,
+			"elevation": 34.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "佐助稲荷神社",
+			"town": "",
+			"lat": 35.324391,
+			"lon": 139.539247,
+			"elevation": 48.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "烏森稲荷社",
+			"town": "",
+			"lat": 35.333845,
+			"lon": 139.548742,
+			"elevation": 25.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "妙長寺",
+			"town": "",
+			"lat": 35.310131,
+			"lon": 139.553447,
+			"elevation": 6.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "建長寺",
+			"town": "",
+			"lat": 35.332444,
+			"lon": 139.557534,
+			"elevation": 51.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "浄智寺",
+			"town": "",
+			"lat": 35.333398,
+			"lon": 139.546242,
+			"elevation": 39.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "吉屋信子記念館",
+			"town": "",
+			"lat": 35.314898,
+			"lon": 139.540819,
+			"elevation": 10.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "妙法寺",
+			"town": "",
+			"lat": 35.312775,
+			"lon": 139.559358,
+			"elevation": 17.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "額田記念会額田記念病院",
+			"town": "",
+			"lat": 35.312013,
+			"lon": 139.558602,
+			"elevation": 11.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "向福寺",
+			"town": "",
+			"lat": 35.309382,
+			"lon": 139.552401,
+			"elevation": 4.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "安国論寺",
+			"town": "",
+			"lat": 35.311299,
+			"lon": 139.558688,
+			"elevation": 16,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "浅間神社",
+			"town": "",
+			"lat": 35.320251,
+			"lon": 139.53782,
+			"elevation": 49,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "由比ヶ浜",
+			"town": "",
+			"lat": 35.31277,
+			"lon": 139.541366,
+			"elevation": 8.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "葉祥明美術館",
+			"town": "",
+			"lat": 35.335289,
+			"lon": 139.549161,
+			"elevation": 26.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "東慶寺",
+			"town": "",
+			"lat": 35.334497,
+			"lon": 139.545352,
+			"elevation": 33,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉文学館",
+			"town": "",
+			"lat": 35.315331,
+			"lon": 139.538984,
+			"elevation": 23,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "荏柄天神社",
+			"town": "",
+			"lat": 35.325735,
+			"lon": 139.564251,
+			"elevation": 22.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "長勝寺",
+			"town": "",
+			"lat": 35.30996,
+			"lon": 139.557862,
+			"elevation": 12.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "実相寺",
+			"town": "",
+			"lat": 35.308366,
+			"lon": 139.553812,
+			"elevation": 7.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "五所神社",
+			"town": "",
+			"lat": 35.308642,
+			"lon": 139.55512,
+			"elevation": 13.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "材木座公会堂",
+			"town": "",
+			"lat": 35.30771,
+			"lon": 139.55254,
+			"elevation": 5.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市立第二小学校",
+			"town": "",
+			"lat": 35.323472,
+			"lon": 139.565517,
+			"elevation": 16.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "九品寺",
+			"town": "",
+			"lat": 35.30739,
+			"lon": 139.551671,
+			"elevation": 4.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "名越やすらぎセンター",
+			"town": "",
+			"lat": 35.308738,
+			"lon": 139.557443,
+			"elevation": 42.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "北鎌倉古民家ミュージアム",
+			"town": "",
+			"lat": 35.336357,
+			"lon": 139.546693,
+			"elevation": 25.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉青少年会館",
+			"town": "",
+			"lat": 35.321713,
+			"lon": 139.566059,
+			"elevation": 15.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "秋葉神社",
+			"town": "",
+			"lat": 35.31449,
+			"lon": 139.537289,
+			"elevation": 23.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "甘縄神明神社",
+			"town": "",
+			"lat": 35.314294,
+			"lon": 139.537128,
+			"elevation": 16.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "覚園寺",
+			"town": "",
+			"lat": 35.33114,
+			"lon": 139.564111,
+			"elevation": 37.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉宮",
+			"town": "",
+			"lat": 35.325932,
+			"lon": 139.566681,
+			"elevation": 20.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "補陀洛寺",
+			"town": "",
+			"lat": 35.305924,
+			"lon": 139.552755,
+			"elevation": 4.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "長谷公会堂",
+			"town": "",
+			"lat": 35.313987,
+			"lon": 139.536951,
+			"elevation": 8.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "円覚寺",
+			"town": "",
+			"lat": 35.337936,
+			"lon": 139.547819,
+			"elevation": 39.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "村上社",
+			"town": "",
+			"lat": 35.326151,
+			"lon": 139.566874,
+			"elevation": 20.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "杉本寺",
+			"town": "",
+			"lat": 35.322628,
+			"lon": 139.567443,
+			"elevation": 35.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "北鎌倉",
+			"town": "",
+			"lat": 35.337403,
+			"lon": 139.545159,
+			"elevation": 22.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "山中稲荷社",
+			"town": "",
+			"lat": 35.336847,
+			"lon": 139.543678,
+			"elevation": 23.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "富士愛育園",
+			"town": "",
+			"lat": 35.305004,
+			"lon": 139.55357,
+			"elevation": 4.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "名越クリーンセンター",
+			"town": "",
+			"lat": 35.307986,
+			"lon": 139.561327,
+			"elevation": 23.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉病院",
+			"town": "",
+			"lat": 35.315449,
+			"lon": 139.534741,
+			"elevation": 12.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "北鎌倉女子学園中学校",
+			"town": "",
+			"lat": 35.33714,
+			"lon": 139.541516,
+			"elevation": 37.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "北鎌倉女子学園高等学校",
+			"town": "",
+			"lat": 35.33714,
+			"lon": 139.541516,
+			"elevation": 37.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "今泉台町内会館",
+			"town": "",
+			"lat": 35.338466,
+			"lon": 139.558012,
+			"elevation": 85.8,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "大太刀稲荷神社",
+			"town": "",
+			"lat": 35.310402,
+			"lon": 139.537166,
+			"elevation": 7.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "報国寺",
+			"town": "",
+			"lat": 35.319524,
+			"lon": 139.568902,
+			"elevation": 27.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "収玄寺",
+			"town": "",
+			"lat": 35.311969,
+			"lon": 139.535277,
+			"elevation": 5.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉オルゴール堂",
+			"town": "",
+			"lat": 35.312757,
+			"lon": 139.534484,
+			"elevation": 7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "光明寺",
+			"town": "",
+			"lat": 35.303371,
+			"lon": 139.55453,
+			"elevation": 7.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "熊野神社",
+			"town": "",
+			"lat": 35.323639,
+			"lon": 139.570098,
+			"elevation": 52.7,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "稲荷神社",
+			"town": "",
+			"lat": 35.336873,
+			"lon": 139.538346,
+			"elevation": 57.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "光照寺",
+			"town": "",
+			"lat": 35.338724,
+			"lon": 139.540701,
+			"elevation": 23.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市立第一中学校",
+			"town": "",
+			"lat": 35.302815,
+			"lon": 139.55577,
+			"elevation": 27.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "長谷寺",
+			"town": "",
+			"lat": 35.312267,
+			"lon": 139.533309,
+			"elevation": 21.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "浄妙寺",
+			"town": "",
+			"lat": 35.32338,
+			"lon": 139.571321,
+			"elevation": 33.4,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "一条恵観山荘",
+			"town": "",
+			"lat": 35.32036,
+			"lon": 139.57138,
+			"elevation": 18.3,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "長谷寺宝物館",
+			"town": "",
+			"lat": 35.312293,
+			"lon": 139.53296,
+			"elevation": 22.9,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "光則寺",
+			"town": "",
+			"lat": 35.313195,
+			"lon": 139.532263,
+			"elevation": 20.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌足稲荷神社",
+			"town": "",
+			"lat": 35.322544,
+			"lon": 139.571997,
+			"elevation": 39.5,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "石上神社",
+			"town": "",
+			"lat": 35.311234,
+			"lon": 139.532842,
+			"elevation": 10.2,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "御霊神社",
+			"town": "",
+			"lat": 35.311054,
+			"lon": 139.532772,
+			"elevation": 10.1,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "法性寺",
+			"town": "",
+			"lat": 35.307338,
+			"lon": 139.567705,
+			"elevation": 29,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "鎌倉市立山崎小学校",
+			"town": "",
+			"lat": 35.338693,
+			"lon": 139.533309,
+			"elevation": 28.6,
+			"range": 1000
+		},
+		{
+			"kind": "landmark",
+			"name": "神明神社",
+			"town": "",
+			"lat": 35.339941,
+			"lon": 139.534231,
+			"elevation": 27.1,
+			"range": 1000
+		}
+	]
+}

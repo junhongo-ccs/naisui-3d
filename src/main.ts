@@ -8,11 +8,12 @@ import { GLTFExtensionsPlugin } from '3d-tiles-renderer/three/plugins';
 import { acceleratedRaycast, computeBoundsTree } from 'three-mesh-bvh';
 import catalog from './data/cities.json';
 import { depthColor, featureLabel, parseDepthLabel, surfaceHeight } from './flood';
-import { BASE_MAPS, createGoogleTiles, createTerrain, maskTo, type BaseMapKey } from './terrain';
+import { BASE_MAPS, COARSE_DEM, LASER_DEM, createGoogleTiles, createTerrain, gsiMap, maskTo, type BaseMapKey } from './terrain';
+import { createPlainMap, plainMapTiles } from './plain-map';
 import { initVR } from './vr';
 import { createLoadingIndicator } from './loading';
-import { AREA, ONLY_CITY, VR_START } from './config';
-import { createPins, placesFor, preloadPhotos, type Place } from './places';
+import { AREA, ONLY_CITY, PLAIN_BUILDINGS, VR_START } from './config';
+import { createPins, namesFor, placesFor, preloadPhotos, type Place } from './places';
 import { createScreenPins } from './screen-pins';
 import { createPlaceDialog } from './place-dialog';
 import { createStreetView } from './street';
@@ -28,14 +29,18 @@ const $ = <T extends HTMLElement>( sel: string ) => document.querySelector( sel 
 // With a Google Map Tiles API key (in .env, never committed), Google's photorealistic 3D tiles
 // stand in for the GSI terrain and the PLATEAU buildings; without one, those are used.
 const GOOGLE_KEY: string | undefined = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || undefined;
+// /plateau/ (plateau/index.html): for PC and VR, PLATEAU's plain gray buildings over a map with
+// its names as labels, never Google's tiles (so it doesn't touch the day's quota). A map to know
+// the place by, rather than a photo of it.
+const PLATEAU_VIEW = document.body.dataset.view === 'plateau';
 // Whether Google's tiles are in use: there is a key, and they haven't failed to load (the day's
 // quota used up, say), in which case the GSI terrain and PLATEAU buildings take over.
-let useGoogle = !! GOOGLE_KEY;
+let useGoogle = !! GOOGLE_KEY && ! PLATEAU_VIEW;
 // A touch screen (a phone or tablet; or ?ui=touch, to try it on a PC): the title and heading a
 // step smaller, the legend folded, a stick on the street (style.css). (On any flat screen, PC or
 // phone, the pins' labels and descriptions are HTML: src/screen-pins.ts, src/place-dialog.ts.
 // VR has its own, in the scene.)
-const touchUI = params.get( 'ui' ) === 'touch' || ( params.get( 'ui' ) !== 'desktop' && matchMedia( '(pointer: coarse)' ).matches );
+const touchUI = ! PLATEAU_VIEW && ( params.get( 'ui' ) === 'touch' || ( params.get( 'ui' ) !== 'desktop' && matchMedia( '(pointer: coarse)' ).matches ) );
 // Whether VR can be entered here (a headset's browser), once the browser has said so. Quest's
 // browser can count as a touch screen too (its controllers' rays act as fingers), but it is no
 // phone: it needs the full memory for VR's fine tiles, and the start point loaded beforehand.
@@ -208,6 +213,15 @@ controls.enableDamping = true;
 controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 20;
 controls.screenSpacePanning = false;
+// /plateau is a map to hold: the left button grabs it and the right turns it. It has no view from
+// the street (plain gray walls all around), so the view stays above the roofs.
+if ( PLATEAU_VIEW ) {
+
+	controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+	controls.minDistance = 80;
+	controls.maxPolarAngle = Math.PI * 0.42;
+
+}
 
 // Look down over the area from the south.
 let framedCity = '';
@@ -229,8 +243,12 @@ frameCity();
 // PLATEAU b3dm tiles are Draco-compressed glTF with CESIUM_RTC centers. Google's tiles are Draco too.
 const dracoLoader = new DRACOLoader().setDecoderPath( 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/' );
 
-const DEFAULT_BASE: BaseMapKey = 'photo';
-let baseMap: BaseMapKey = ( params.get( 'base' ) as BaseMapKey ) in BASE_MAPS ? params.get( 'base' ) as BaseMapKey : DEFAULT_BASE;
+// /plateau's map, where OpenFreeMap answers; 'osm' among the base maps there.
+const plainMapURL = PLATEAU_VIEW ? await plainMapTiles() : null;
+type BaseChoice = BaseMapKey | 'osm';
+const DEFAULT_BASE: BaseChoice = plainMapURL ? 'osm' : PLATEAU_VIEW ? 'pale' : 'photo';
+const askedBase = params.get( 'base' ) as BaseChoice | null;
+let baseMap: BaseChoice = askedBase && ( askedBase in BASE_MAPS || ( askedBase === 'osm' && plainMapURL ) ) ? askedBase : DEFAULT_BASE;
 // How fine the ground's tiles load: the screen error, in pixels, a tile may show before its finer
 // children are loaded instead (the library's default is 16). Smaller is finer, and loads and holds
 // more. 12 balances detail and loading; ?detail= can still override it for comparison.
@@ -239,7 +257,8 @@ const detail = Number( params.get( 'detail' ) ) > 0 ? Number( params.get( 'detai
 // The ground: GSI terrain, or Google's 3D tiles (ground and buildings in one).
 function createGround() {
 
-	const tiles = ! GOOGLE_KEY || ! useGoogle ? createTerrain( city.geoidHeight, baseMap, terrainArea() ) : googleTiles( GOOGLE_KEY );
+	const overlay = () => ( baseMap === 'osm' ? createPlainMap( plainMapURL! ) : gsiMap( baseMap ) );
+	const tiles = ! GOOGLE_KEY || ! useGoogle ? createTerrain( city.geoidHeight, overlay(), terrainArea(), PLATEAU_VIEW ? LASER_DEM : COARSE_DEM ) : googleTiles( GOOGLE_KEY );
 	tiles.errorTarget = detail;
 	return tiles;
 
@@ -304,12 +323,17 @@ const floodMaterial = new THREE.MeshBasicMaterial( {
 // Scene y is up, and the tiles are unscaled, so the scene's up turned into model space is the offset.
 const waterLevel = { value: 0 };
 let waterTarget = 0;
+// On /plateau's laser-surveyed ground the polygons lie almost exactly on the surface, a few
+// centimeters over or under it from place to place, so they sit this far above it to show whole.
+// (polygonOffset does nothing with the logarithmic depth buffer.)
+const waterBase = { value: PLATEAU_VIEW ? 0.6 : 0 }; // m
 floodMaterial.onBeforeCompile = shader => {
 
 	shader.uniforms.waterLevel = waterLevel;
+	shader.uniforms.waterBase = waterBase;
 	shader.vertexShader = shader.vertexShader
-		.replace( '#include <common>', '#include <common>\nattribute float lift;\nuniform float waterLevel;' )
-		.replace( '#include <begin_vertex>', '#include <begin_vertex>\ntransformed += normalize( transpose( mat3( modelMatrix ) ) * vec3( 0.0, 1.0, 0.0 ) ) * lift * waterLevel;' );
+		.replace( '#include <common>', '#include <common>\nattribute float lift;\nuniform float waterLevel;\nuniform float waterBase;' )
+		.replace( '#include <begin_vertex>', '#include <begin_vertex>\ntransformed += normalize( transpose( mat3( modelMatrix ) ) * vec3( 0.0, 1.0, 0.0 ) ) * ( lift * waterLevel + waterBase );' );
 
 };
 
@@ -397,15 +421,24 @@ function floodTiles( f: City[ 'floods' ][ number ], i: number ) {
 
 }
 
+// /plateau's buildings: one gray, their faces flat so roofs and walls read by the light alone.
+const plainBuilding = new THREE.MeshLambertMaterial( { color: '#b4b9c4', flatShading: true } );
+
 function createBuildings() {
 
 	const showBuildings = $<HTMLInputElement>( '#show-buildings' ).checked;
 	// Google's tiles have the buildings already.
 	return useGoogle ? [] : city.buildings.map( b => {
 
-		const tiles = plateauTiles( b.url );
+		const plain = PLATEAU_VIEW ? PLAIN_BUILDINGS[ city.code ] : undefined;
+		const tiles = plateauTiles( plain ?? b.url );
 		tiles.errorTarget = 8;
 		tiles.group.visible = showBuildings;
+		if ( plain ) tiles.addEventListener( 'load-model', ( { scene: model }: { scene: THREE.Object3D } ) => model.traverse( obj => {
+
+			if ( ( obj as THREE.Mesh ).isMesh ) ( obj as THREE.Mesh ).material = plainBuilding;
+
+		} ) );
 		return tiles;
 
 	} );
@@ -494,10 +527,13 @@ let photosToLoad: Place[] | null = null; // the story photos to fetch when the t
 
 function loadPlaces() {
 
-	const places = placesFor( city.code ).filter( p => inArea( p.lat, p.lon ) );
+	const pinned = placesFor( city.code );
+	const taken = new Set( pinned.map( p => p.name ) );
+	const names = PLATEAU_VIEW ? namesFor( city.code ).filter( p => ! taken.has( p.name ) ) : [];
+	const places = [ ...pinned, ...names ].filter( p => inArea( p.lat, p.lon ) );
 	pins.setPlaces( city.city, places, toLocal );
 	screenPins.setPlaces( places );
-	minimap.setCity( cityArea(), places );
+	minimap.setCity( cityArea(), places.filter( p => ! p.range ) );
 	photosToLoad = places;
 
 }
@@ -578,7 +614,7 @@ function allTiles() {
 
 }
 
-function setBaseMap( key: BaseMapKey ) {
+function setBaseMap( key: BaseChoice ) {
 
 	baseMap = key;
 	world.remove( terrain.group );
@@ -612,7 +648,7 @@ function renderGroundUI() {
 	$( '#base' ).closest( 'label' )!.hidden = useGoogle;
 	$( '#show-buildings' ).closest( 'label' )!.hidden = useGoogle;
 	$( '#google-attribution' ).hidden = ! useGoogle;
-	$( '#ground-note' ).hidden = useGoogle || ! GOOGLE_KEY;
+	$( '#ground-note' ).hidden = useGoogle || ! GOOGLE_KEY || PLATEAU_VIEW;
 
 }
 
@@ -630,8 +666,9 @@ function buildUI() {
 
 	const baseSel = $<HTMLSelectElement>( '#base' );
 	renderGroundUI();
+	if ( plainMapURL ) baseSel.add( new Option( 'OpenStreetMap', 'osm', false, baseMap === 'osm' ) );
 	for ( const [ key, b ] of Object.entries( BASE_MAPS ) ) baseSel.add( new Option( b.label, key, false, key === baseMap ) );
-	baseSel.addEventListener( 'change', () => setBaseMap( baseSel.value as BaseMapKey ) );
+	baseSel.addEventListener( 'change', () => setBaseMap( baseSel.value as BaseChoice ) );
 
 	const bldg = $<HTMLInputElement>( '#show-buildings' );
 	bldg.addEventListener( 'change', () => buildings.forEach( t => ( t.group.visible = bldg.checked ) ) );
@@ -664,7 +701,7 @@ function buildUI() {
 	}
 
 	const enter = $<HTMLButtonElement>( '#street-enter' );
-	enter.hidden = false;
+	enter.hidden = PLATEAU_VIEW;
 	gateStreetButton( false );
 	enter.addEventListener( 'click', () => {
 
@@ -684,7 +721,7 @@ function buildUI() {
 	// On a phone (narrow, or held sideways and so short) the panel starts folded, to leave the map.
 	if ( window.innerWidth < 640 || window.innerHeight < 500 ) document.body.classList.add( 'panel-closed' );
 
-	offerInstall();
+	if ( ! PLATEAU_VIEW ) offerInstall();
 
 	// The folded credits line on a phone (style.css) opens on a tap; the first tap only opens it,
 	// rather than following a link it happened to land on.
@@ -897,15 +934,28 @@ function moveInput( dt: number ) {
 
 // Slide the view from above over the map: forward is the way the camera faces, flattened. The
 // speed goes with how far away the camera is, so it feels the same zoomed in or out.
+// On /plateau the keys ease it into motion, and let go it glides on to a stop.
 const PAN_SPEED = 0.4; // of the view distance per second, at first
+const PAN_EASE_IN = 0.25; // s: how soon it takes up the speed
+const PAN_GLIDE = 0.5; // s: how slowly it comes to rest
+const panVelocity = new THREE.Vector3(); // m/s
 const forward = new THREE.Vector3(), right = new THREE.Vector3();
 function panView( move: { x: number, y: number, boost: number }, dt: number ) {
 
-	if ( ! move.x && ! move.y ) return;
+	const moving = !! ( move.x || move.y );
+	if ( ! moving && ! PLATEAU_VIEW ) return;
 	forward.subVectors( controls.target, camera.position ).setY( 0 ).normalize();
 	right.crossVectors( forward, camera.up ).normalize();
 	const speed = camera.position.distanceTo( controls.target ) * PAN_SPEED * ( 1 + 3 * move.boost );
-	const step = forward.multiplyScalar( move.y ).addScaledVector( right, move.x ).normalize().multiplyScalar( speed * dt );
+	const wanted = moving ? forward.multiplyScalar( move.y ).addScaledVector( right, move.x ).normalize().multiplyScalar( speed ) : forward.set( 0, 0, 0 );
+	if ( PLATEAU_VIEW ) {
+
+		panVelocity.lerp( wanted, 1 - Math.exp( - dt / ( moving ? PAN_EASE_IN : PAN_GLIDE ) ) );
+		if ( ! moving && panVelocity.lengthSq() < 0.01 ) panVelocity.set( 0, 0, 0 );
+
+	}
+
+	const step = ( PLATEAU_VIEW ? panVelocity.clone() : wanted ).multiplyScalar( dt );
 	const target = controls.target.clone().add( step ).clamp( bounds.min, bounds.max );
 	step.subVectors( target, controls.target );
 	controls.target.add( step );
@@ -1021,6 +1071,7 @@ renderer.domElement.addEventListener( 'pointerdown', e => {
 	downAt = { x: e.clientX, y: e.clientY };
 	downPick = screenPins.pick( e.clientX, e.clientY );
 	fly = null; // a touch takes the view back from a glide
+	panVelocity.set( 0, 0, 0 );
 
 } );
 

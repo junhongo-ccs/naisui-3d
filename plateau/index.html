@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<title>内水浸水 3D｜PLATEAU 版</title>
+		<meta name="description" content="鎌倉市中心部の内水浸水想定を、PLATEAU の建物と地図に重ねて見るビューア（PC・VR）。" />
+		<meta name="theme-color" content="#14243a" />
+	</head>
+	<body data-view="plateau">
+		<!-- On a touch screen, the pins' labels (src/touch-pins.ts). Taps reach them by position. -->
+		<div id="pin-layer" aria-hidden="true"></div>
+
+		<!-- On a phone, on the street: the left half is a floating stick for walking (main.ts), as in
+		     most games; the right half of the view turns it. Under the rest of the page's controls. -->
+		<div id="stick-zone" aria-label="左半分を押したまま動かして歩く">
+			<div id="stick-base"><div id="stick-knob"></div></div>
+		</div>
+
+		<aside id="panel">
+			<button id="panel-toggle" type="button" aria-label="パネルを開閉">☰</button>
+			<div class="panel-body">
+				<h1>内水浸水 3D（PLATEAU 版）</h1>
+				<p id="title" class="sub"></p>
+				<div id="app-close" hidden>
+					<button id="app-close-button" type="button">アプリを閉じる</button>
+					<p id="app-close-help" class="hint" hidden>このアプリは、スマホの操作で閉じてください。iPhone は画面いちばん下の横線を上にスワイプ、Android は戻る操作（画面の端から内側へスワイプ）です。</p>
+				</div>
+
+				<label class="field">市町村
+					<select id="city"></select>
+				</label>
+
+				<fieldset class="field">
+					<legend>内水浸水想定区域</legend>
+					<div id="floods"></div>
+				</fieldset>
+
+				<label class="field">浸水の不透明度
+					<input id="opacity" type="range" min="0.1" max="1" step="0.05" value="0.8" />
+				</label>
+
+				<label class="check"><input id="raise-water" type="checkbox" /> 水面を想定浸水深まで上げる</label>
+
+				<label class="field">背景地図
+					<select id="base"></select>
+				</label>
+
+				<label class="check"><input id="show-buildings" type="checkbox" checked /> 建物を表示</label>
+
+				<!-- How to move, for the device in hand: mouse and keys, or fingers (style.css). -->
+				<dl class="controls controls-pc">
+					<dt>移動</dt><dd>左ドラッグ、W A S D・矢印キー（Shift で速く）</dd>
+					<dt>回転</dt><dd>右ドラッグ</dd>
+					<dt>ズーム</dt><dd>ホイール</dd>
+					<dt>浸水深</dt><dd>色の付いた所をクリック</dd>
+					<dt>説明</dt><dd>ピンをクリック</dd>
+				</dl>
+				<dl class="controls controls-touch">
+					<dt>回転</dt><dd>1 本指でドラッグ</dd>
+					<dt>移動</dt><dd>2 本指でドラッグ</dd>
+					<dt>ズーム</dt><dd>ピンチ</dd>
+					<dt>浸水深</dt><dd>色の付いた所をタップ</dd>
+					<dt>説明</dt><dd>ピンをタップ</dd>
+				</dl>
+				<p class="hint"><a href="../">Google 3D 版を開く</a></p>
+				<p id="vr-hint" class="hint" hidden>VR: ENTER VR で入ると、左手に操作の説明が出ます。</p>
+			</div>
+		</aside>
+
+		<div id="install" hidden>
+			<button id="install-go" type="button" title="ホーム画面から開くと、全画面で見られます">ホーム画面に追加</button>
+			<button id="install-close" type="button" aria-label="閉じる">×</button>
+			<p id="install-ios" hidden>Safari の共有ボタン（□に↑）から「ホーム画面に追加」を選んでください</p>
+		</div>
+
+		<div id="rotate" role="dialog" aria-label="横向きにしてください">
+			<div class="rotate-phone" aria-hidden="true"></div>
+			<p>スマホを横向きにしてご覧ください</p>
+			<p class="rotate-note">横にしても画面が回らないとき（LINE などのアプリの中で開いたときなど）は、Safari や Chrome で開き直すか、「縦のまま見る」を押してください</p>
+			<button id="rotate-lock" type="button" hidden>全画面・横向きで見る</button>
+			<button id="rotate-dismiss" type="button">縦のまま見る</button>
+		</div>
+
+		<!-- The flood depths' colors (as the tiles load, main.ts), and what the pins are. -->
+		<section id="legend">
+			<div id="legend-depth" hidden>
+				<h2>想定浸水深</h2>
+				<ul id="legend-items"></ul>
+			</div>
+			<div class="legend-pins">
+				<h2>ピン</h2>
+				<ul>
+					<li class="pin-story"><span class="pin-icon" aria-hidden="true"></span>解説</li>
+					<li class="pin-landmark"><span class="legend-chip" aria-hidden="true"></span>目印</li>
+					<li class="pin-shelter"><span class="pin-icon" aria-hidden="true"></span>避難所</li>
+				</ul>
+			</div>
+		</section>
+
+		<div id="info" hidden></div>
+
+		<!-- Looking around from the street (src/street.ts). The hint is set for PC or phone (main.ts). -->
+		<button id="street-enter" type="button" hidden>まちの中から見る</button>
+		<div id="street-bar">
+			<p id="street-hint"></p>
+			<button id="street-exit" type="button">上から見る</button>
+		</div>
+
+		<div id="context-lost" role="alert" hidden>
+			<p>表示に使うメモリが足りなくなり、3D の表示が止まりました。</p>
+			<button id="context-lost-reload" type="button">読み込み直す</button>
+		</div>
+
+		<div id="loading" role="status" hidden>
+			<span class="spinner" aria-hidden="true"></span>
+			<span class="loading-label">読み込み中</span>
+			<span class="loading-bar" aria-hidden="true"><span></span></span>
+		</div>
+
+		<!-- Google's credit comes first, so it stays in view when the line is folded on a phone. -->
+		<footer id="attribution">
+			<span id="google-attribution" hidden></span>
+			<span id="ground-note" hidden>地理院の地形と PLATEAU の建物で表示しています（Google 3D が読めなかったため。1 日の上限など） ／ </span>
+			出典: <a href="https://www.mlit.go.jp/plateau/" target="_blank" rel="noopener">国土交通省 PLATEAU</a>
+			／ 地図: <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+			／ <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>
+			／ <a href="https://www.gsi.go.jp/bousaichiri/hinanbasho.html" target="_blank" rel="noopener">指定避難所データ（国土地理院）</a>
+		</footer>
+
+		<script type="module" src="/src/main.ts"></script>
+	</body>
+</html>

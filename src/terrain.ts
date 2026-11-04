@@ -1,7 +1,7 @@
 import { TilesRenderer, type OBB } from '3d-tiles-renderer/three';
 import type { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/core/plugins';
-import { GLTFExtensionsPlugin, LoadRegionPlugin, OBBRegion, TerrainRGBMeshPlugin, XYZTilesOverlay } from '3d-tiles-renderer/three/plugins';
+import { GLTFExtensionsPlugin, LoadRegionPlugin, OBBRegion, TerrainRGBMeshPlugin, XYZTilesOverlay, type ImageOverlay } from '3d-tiles-renderer/three/plugins';
 
 // GSI elevation PNG tiles (https://maps.gsi.go.jp/development/demtile.html).
 // Encoding: x = R·2^16 + G·2^8 + B; h = x·0.01 m, two's complement at 2^23, and 2^23 = no data (sea).
@@ -29,7 +29,13 @@ class GSITerrainPlugin extends TerrainRGBMeshPlugin {
 }
 
 const GSI_XYZ = 'https://cyberjapandata.gsi.go.jp/xyz/';
-const DEM_URL = `${ GSI_XYZ }dem_png/`;
+// The ordinary DEM, from contour lines on a 10 m grid, and the 1 m one from aerial laser survey.
+// The first runs 3–5 m above the real ground on Kamakura's valley floor, flat, with no road cuts,
+// so it buries the flood polygons, which follow the real ground. The underpass on 若宮大路 is
+// 1.3 m there, and 9 m on the 10 m grid. The laser one stands out at z16 (about 2 m a pixel).
+export const COARSE_DEM = { url: `${ GSI_XYZ }dem_png/`, maxZoom: 14 };
+export const LASER_DEM = { url: `${ GSI_XYZ }dem1a_png/`, maxZoom: 16 };
+const IS_DEM = /\/dem\w*_png\//;
 
 // A 256 px PNG filled with one color.
 function solidTile( color: string ): Promise<Blob> {
@@ -57,7 +63,7 @@ window.fetch = async ( input, init ) => {
 	const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
 	if ( res.ok || ! url.startsWith( GSI_XYZ ) ) return res;
 
-	const tile = url.startsWith( DEM_URL ) ? ( noDataTile ??= solidTile( 'rgb(128,0,0)' ) ) : ( blankTile ??= solidTile( '#c9ccc4' ) );
+	const tile = IS_DEM.test( url ) ? ( noDataTile ??= solidTile( 'rgb(128,0,0)' ) ) : ( blankTile ??= solidTile( '#c9ccc4' ) );
 	return new Response( await tile, { headers: { 'Content-Type': 'image/png' } } );
 
 };
@@ -83,16 +89,21 @@ export function maskTo( tiles: TilesRenderer, area: OBB ) {
 
 }
 
-export function createTerrain( geoidHeight: number, baseMap: BaseMapKey, area: OBB ): TilesRenderer {
+export function gsiMap( baseMap: BaseMapKey ) {
 
-	const { url, levels } = BASE_MAPS[ baseMap ];
+	return new XYZTilesOverlay( BASE_MAPS[ baseMap ] );
+
+}
+
+export function createTerrain( geoidHeight: number, overlay: ImageOverlay, area: OBB, dem = COARSE_DEM ): TilesRenderer {
+
 	const tiles = new TilesRenderer();
 	maskTo( tiles, area );
 	tiles.registerPlugin( new GSITerrainPlugin( {
-		url: `${ DEM_URL }{z}/{x}/{y}.png`,
-		maxZoom: 14,
+		url: `${ dem.url }{z}/{x}/{y}.png`,
+		maxZoom: dem.maxZoom,
 		geoidHeight,
-		overlay: new XYZTilesOverlay( { url, levels } ),
+		overlay,
 		applyOverlayTexture: true,
 	} ) );
 	return tiles;

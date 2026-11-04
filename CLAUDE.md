@@ -4,6 +4,8 @@ PLATEAU の内水浸水想定区域モデル（`ifld`）を、地面・建物の
 PC・スマホのブラウザと、Meta Quest（WebXR）で同じページを見る。
 兄弟プロジェクト: [naisui](https://github.com/junhongo-ccs/naisui)（品川区 中延・二葉の内水氾濫 PoC）。
 
+ページは 2 つ。`/` は Google 版（内容寄り）、`/plateau/` は PLATEAU 版（行政の目線で比べるため。PC と VR のみ、スマホは対象外）。同じ `main.ts` を、`plateau/index.html` の `<body data-view="plateau">` で切り替える（`PLATEAU_VIEW`）。PLATEAU 版は Google を読まず、テクスチャなしの LOD2（`PLAIN_BUILDINGS`）を灰色で出し、下に OpenStreetMap の地図を敷く。地面は 1 m の航空レーザー測量の DEM（`LASER_DEM`。Google を使わないときの `dem_png` は 10 m で、鎌倉の谷底で実際より 3〜5 m 高く平らなので、浸水想定が地面の下に埋まり、若宮大路の高架下のくぼみも出ない）。「まちの中から見る」は出さない（地上は灰色の壁に囲まれるだけで面白くないため。視点も屋根より上に保つ）。操作は地図と同じで、左ドラッグでつかんで移動、右ドラッグで回転、ホイールでズーム。W A S D は動き出しがなめらかで、離すと惰性で止まる（`PAN_EASE_IN`, `PAN_GLIDE`）。
+
 ## コマンド
 
 ```bash
@@ -12,6 +14,7 @@ npm run dev:https   # LAN 公開 + 自己署名 HTTPS（Quest 実機確認用）
 npm run build       # tsc + vite build → dist/
 npm run typecheck
 npm run catalog     # src/data/cities.json を PLATEAU カタログ API から作り直す
+node --use-system-ca scripts/build-names.mjs   # src/data/names/ を作り直す（PLATEAU 版の地名）
 ```
 
 テストは無い。変更後は `npm run typecheck` と、ブラウザで実際に表示して確認する。
@@ -40,6 +43,8 @@ PC とスマホでは、ピンの名前と説明は HTML（`screen-pins.ts`・`p
 | `src/place-dialog.ts` | PC・スマホでの説明のモーダル（`<dialog>`。×・外側のタップ・Esc／戻るで閉じる。動かせない）。横向きでは写真と本文を二列に並べ、出典はリンクにする。まとめた丸の一覧もここ |
 | `src/street.ts` | PC・スマホの「まちの中から見る」。見下ろしの視点の中心の地点へ、見ていた向きのまま目の高さまで降り（1.2 秒）、「上から見る」で今いた地点の上空（500 m、50° 見下ろす）へ昇る（`leaveStreet`）。降りた先は上から最初に当たる面なので、屋根の上のことがある（Google 3D は建物と地面を見分けられない）。歩けば地面に降りる。ドラッグとスマホの向き（`deviceorientation`、iPhone は許可を求める）で見回す。向きは相対（最初は降りたときの向き）。W A S D・スティックで見ている向きに歩き、地面のタップ・クリックでそこへ移動。足元は VR と同じく測り直すが、20 m を超える変化は粗いタイルとみなして無視する。最初の読み込みが終わるまでボタンを止める |
 | `src/billboard.ts` | ピンのラベル・札・VR の浸水深ラベルに使う板。VR ではいつも直立し、目の位置の方を向く（Sprite と違い、頭を傾けても一緒に回らない。VR で見やすくするため）。PC・スマホではカメラと同じ向きで画面に平行に置き、ピンの棒もカメラの上向きに立てる（目の位置に向けると画面の端ほど傾いて扇形に広がるため） |
+| `src/plain-map.ts` | PLATEAU 版の地図。OpenFreeMap のベクトルタイルを自前の色で描く（文字は描かない。地図の画像の中の文字は文字の表を守れないため）。OpenFreeMap に稼働の保証は無いので、読めなければ地理院の淡色地図になる |
+| `src/data/names/<コード>.json` | PLATEAU 版の地名（`scripts/build-names.mjs` が生成。手で編集しない）。ピンの `landmark` として出し、PC は HTML、VR は板の「ラベル」の大きさになる。`range` より遠いと出さず、視点が低いほど短くなる（`FULL_REACH_HEIGHT`） |
 | `src/terrain.ts` | 地理院 DEM（`dem_png`）を `TerrainRGBMeshPlugin` で地形にし、背景地図を貼る |
 | `src/install.ts` | スマホでホーム画面に追加する案内（Android は `beforeinstallprompt`、iPhone は Safari の手順を表示）。設定は `public/manifest.webmanifest`（全画面・横向き）とアイコン `public/icons/`。Service Worker は使っていない（Google のタイルの通信をすべて経由させたくないため） |
 | `src/loading.ts` | 読み込み中の表示（画面上部と VR の目の前）。最初の読み込み（VR の出発点から見た建物も含む）が終わるまで VR ボタンを止める（時間の上限なし） |

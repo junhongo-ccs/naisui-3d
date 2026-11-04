@@ -107,6 +107,7 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 .check input { margin-top: 4px; }
 
 .hint { margin: 10px 0 0; color: var(--muted); font-size: var(--fs-caption); line-height: var(--lh-caption); }
+.hint a { color: inherit; }
 
 /* How to move, as "action: how" rows, for a PC or a phone (body.touch-ui) only. */
 .controls {
@@ -474,6 +475,16 @@ body.in-street.touch-ui #stick-zone {
 	padding: 4px 7px;
 	border-radius: 6px;
 	box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+/* A name on /plateau's map: ink on the map with a white edge, rather than a chip. */
+.pin-landmark.pin-map {
+	padding: 0 2px;
+	background: none;
+	box-shadow: none;
+	color: #111827;
+	font-weight: normal;
+	-webkit-text-stroke: 3px #ffffff;
+	paint-order: stroke fill;
 }
 .pin-story .pin-name { background: #1d4ed8; }
 .pin-shelter .pin-name { background: #15803d; font-weight: normal; }

@@ -47,7 +47,7 @@ export function createScreenPins( layer: HTMLElement ) {
 		markers = places.map( place => {
 
 			const el = document.createElement( 'div' );
-			el.className = `pin pin-${ place.kind }`;
+			el.className = `pin pin-${ place.kind }${ place.range ? ' pin-map' : '' }`;
 			let name: HTMLElement | null = null;
 			if ( place.kind === 'landmark' ) {
 
@@ -96,7 +96,7 @@ export function createScreenPins( layer: HTMLElement ) {
 	// Place the labels on the stems' heads (`heads`, in the same order as the places given) as seen by
 	// `camera`. Call every frame after the pins are updated. Returns which stems to show: those of
 	// the labels shown on their own, and of the first of each gathered disc.
-	function update( camera: THREE.Camera, heads: readonly { head: THREE.Vector3 }[] ): boolean[] {
+	function update( camera: THREE.Camera, heads: readonly { head: THREE.Vector3, near: boolean }[] ): boolean[] {
 
 		const W = window.innerWidth, H = window.innerHeight;
 		for ( let i = 0; i < markers.length; i ++ ) {
@@ -105,7 +105,7 @@ export function createScreenPins( layer: HTMLElement ) {
 			v.copy( heads[ i ].head ).project( camera );
 			m.x = ( v.x + 1 ) / 2 * W;
 			m.y = ( 1 - v.y ) / 2 * H;
-			m.visible = v.z < 1 && m.x > - 100 && m.x < W + 100 && m.y > - 50 && m.y < H + 50;
+			m.visible = heads[ i ].near && v.z < 1 && m.x > - 100 && m.x < W + 100 && m.y > - 50 && m.y < H + 50;
 			m.icon = m.label = null;
 
 		}
@@ -142,8 +142,10 @@ export function createScreenPins( layer: HTMLElement ) {
 		// Then the names, where there is room.
 		const placed = groups.map( g => g.rect );
 		const free = ( r: Rect ) => placed.every( p => r.x + r.w <= p.x || p.x + p.w <= r.x || r.y + r.h <= p.y || p.y + p.h <= r.y );
+		// A pin before a map's names, and the names that reach furthest (the ones that matter most) first.
+		const reach = ( m: Marker ) => m.place.range ?? 1e9;
 		const byKind = ( kind: Place[ 'kind' ] ) => markers.filter( m => m.visible && m.place.kind === kind )
-			.sort( ( a, b ) => Number( b.place === active ) - Number( a.place === active ) || b.y - a.y );
+			.sort( ( a, b ) => Number( b.place === active ) - Number( a.place === active ) || reach( b ) - reach( a ) || b.y - a.y );
 		for ( const kind of [ 'story', 'landmark', 'shelter' ] as const ) {
 
 			for ( const m of byKind( kind ) ) {
@@ -186,7 +188,7 @@ export function createScreenPins( layer: HTMLElement ) {
 		for ( let i = gathered.length; i < discs.length; i ++ ) discs[ i ].hidden = true;
 
 		const firsts = new Set( groups.map( g => g.members[ 0 ] ) );
-		return markers.map( m => !! m.icon || firsts.has( m ) );
+		return markers.map( m => ! m.place.range && ( !! m.icon || firsts.has( m ) ) );
 
 	}
 
