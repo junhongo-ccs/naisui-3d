@@ -459,6 +459,14 @@ function loadPhoto( src: string ) {
 
 }
 
+// Fetch the story photos once the tiles have settled, so they don't compete for the network and a
+// card opens with its photo in place. The dialog's <img> takes it from the browser's cache.
+export function preloadPhotos( places: Place[] ) {
+
+	for ( const place of places ) if ( place.story?.photo ) loadPhoto( place.story.photo.src );
+
+}
+
 // A white "i" on a blue disc.
 function storyIcon() {
 

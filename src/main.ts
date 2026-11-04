@@ -12,7 +12,7 @@ import { BASE_MAPS, createGoogleTiles, createTerrain, maskTo, type BaseMapKey } 
 import { initVR } from './vr';
 import { createLoadingIndicator } from './loading';
 import { AREA, ONLY_CITY, VR_START } from './config';
-import { createPins, placesFor, type Place } from './places';
+import { createPins, placesFor, preloadPhotos, type Place } from './places';
 import { createScreenPins } from './screen-pins';
 import { createPlaceDialog } from './place-dialog';
 import { createStreetView } from './street';
@@ -490,12 +490,15 @@ const street = createStreetView( {
 	bounds: () => bounds,
 } );
 
+let photosToLoad: Place[] | null = null; // the story photos to fetch when the tiles settle
+
 function loadPlaces() {
 
 	const places = placesFor( city.code ).filter( p => inArea( p.lat, p.lon ) );
 	pins.setPlaces( city.city, places, toLocal );
 	screenPins.setPlaces( places );
 	minimap.setCity( cityArea(), places );
+	photosToLoad = places;
 
 }
 
@@ -1327,6 +1330,12 @@ renderer.setAnimationLoop( () => {
 	loading.update( dt, busy, xr.isPresenting );
 	gateVRButton( loading.settled );
 	gateStreetButton( loading.settled );
+	if ( photosToLoad && loading.settled ) {
+
+		preloadPhotos( photosToLoad );
+		photosToLoad = null;
+
+	}
 
 	renderer.render( scene, camera );
 

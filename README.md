@@ -167,7 +167,7 @@ URL の `?base=photo|pale|std` で背景地図を切り替えられます（Goog
 | `src/data/cities.json` | 28 市町村のタイルセットの URL・中心・ジオイド高 | `npm run catalog`（PLATEAU データカタログ API から） |
 | `src/data/places/<コード>.json` | 目印と避難所（町名・標高付き） | `node --use-system-ca scripts/build-places.mjs 14204`（国土地理院の API から。目印の名前はスクリプトの `LANDMARKS` に書く） |
 | `src/data/stories/<コード>.json` | 解説のピンの文・出典・写真 | 手で書く |
-| `public/photos/` | 解説の写真（幅 1000 px に縮めたもの） | Wikimedia Commons から |
+| `public/photos/` | 解説の写真（幅 1000 px に縮めた WebP、品質 80） | Wikimedia Commons から |
 
 解説や写真を足すときの決まり:
 

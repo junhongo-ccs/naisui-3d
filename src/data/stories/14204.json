@@ -3,7 +3,7 @@
 	"stories": [
 		{
 			"name": "鎌倉の中心部と浸水",
-			"photo": { "src": "photos/dankazura.jpg", "caption": "段葛から海の方を見る（三の鳥居から一の鳥居）", "author": "Naokijp", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Tsurugaoka_Hachimangu_From_Third_Torii_until_First_Torii.jpg" },
+			"photo": { "src": "photos/dankazura.webp", "caption": "段葛から海の方を見る（三の鳥居から一の鳥居）", "author": "Naokijp", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Tsurugaoka_Hachimangu_From_Third_Torii_until_First_Torii.jpg" },
 			"lat": 35.3230,
 			"lon": 139.5543,
 			"town": "雪ノ下一丁目",
@@ -22,7 +22,7 @@
 		},
 		{
 			"name": "若宮大路・小町",
-			"photo": { "src": "photos/wakamiya.jpg", "caption": "若宮大路から鶴岡八幡宮の方を見る", "author": "Quercus acuta", "license": "CC0", "url": "https://commons.wikimedia.org/wiki/File:Wakamiya_Oji.jpg" },
+			"photo": { "src": "photos/wakamiya.webp", "caption": "若宮大路から鶴岡八幡宮の方を見る", "author": "Quercus acuta", "license": "CC0", "url": "https://commons.wikimedia.org/wiki/File:Wakamiya_Oji.jpg" },
 			"lat": 35.31883,
 			"lon": 139.55193,
 			"town": "小町一丁目",
@@ -41,7 +41,7 @@
 		},
 		{
 			"name": "由比ガ浜の海沿い",
-			"photo": { "src": "photos/yuigahama.jpg", "caption": "由比ガ浜歩道橋の近く（若宮大路の海側）", "author": "DimiTalen", "license": "CC0", "url": "https://commons.wikimedia.org/wiki/File:Looking_up_Wakamiya_Oji_near_Yuigahama_Hodokyo,_Kamakura,_2016.jpg" },
+			"photo": { "src": "photos/yuigahama.webp", "caption": "由比ガ浜歩道橋の近く（若宮大路の海側）", "author": "DimiTalen", "license": "CC0", "url": "https://commons.wikimedia.org/wiki/File:Looking_up_Wakamiya_Oji_near_Yuigahama_Hodokyo,_Kamakura,_2016.jpg" },
 			"lat": 35.3108,
 			"lon": 139.5478,
 			"town": "由比ガ浜二丁目",
@@ -60,7 +60,7 @@
 		},
 		{
 			"name": "長谷・稲瀬川",
-			"photo": { "src": "photos/inase.jpg", "caption": "海に注ぐ手前の稲瀬川", "author": "Vano111ru", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Inase_River_(26590).jpg" },
+			"photo": { "src": "photos/inase.webp", "caption": "海に注ぐ手前の稲瀬川", "author": "Vano111ru", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Inase_River_(26590).jpg" },
 			"lat": 35.3116,
 			"lon": 139.5368,
 			"town": "長谷二丁目",
@@ -78,7 +78,7 @@
 		},
 		{
 			"name": "滑川が谷を出る所（東勝寺橋）",
-			"photo": { "src": "photos/toshoji.jpg", "caption": "東勝寺橋のあたりの滑川", "author": "Guilhem Vellut", "license": "CC BY 2.0", "url": "https://commons.wikimedia.org/wiki/File:Kamakura_(13897636491).jpg" },
+			"photo": { "src": "photos/toshoji.webp", "caption": "東勝寺橋のあたりの滑川", "author": "Guilhem Vellut", "license": "CC BY 2.0", "url": "https://commons.wikimedia.org/wiki/File:Kamakura_(13897636491).jpg" },
 			"lat": 35.3211,
 			"lon": 139.55779,
 			"town": "小町三丁目",
@@ -97,7 +97,7 @@
 		},
 		{
 			"name": "滑川の下流（延命寺橋・大町）",
-			"photo": { "src": "photos/namerigawa-omachi.jpg", "caption": "鎌倉女学院の近くの滑川（下流）", "author": "ToshiJapon", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Namerigawa.JPG" },
+			"photo": { "src": "photos/namerigawa-omachi.webp", "caption": "鎌倉女学院の近くの滑川（下流）", "author": "ToshiJapon", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Namerigawa.JPG" },
 			"lat": 35.31564,
 			"lon": 139.55045,
 			"town": "御成町",
@@ -118,7 +118,7 @@
 		},
 		{
 			"name": "佐助川・鎌倉駅の西",
-			"photo": { "src": "photos/kamakura-west.jpg", "caption": "鎌倉駅の西口（江ノ電の駅舎の前）", "author": "VZP10224", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Kamakura_Station_west-side_20261018.jpg" },
+			"photo": { "src": "photos/kamakura-west.webp", "caption": "鎌倉駅の西口（江ノ電の駅舎の前）", "author": "VZP10224", "license": "CC BY-SA 4.0", "url": "https://commons.wikimedia.org/wiki/File:Kamakura_Station_west-side_20261018.jpg" },
 			"lat": 35.31726,
 			"lon": 139.54795,
 			"town": "御成町",
