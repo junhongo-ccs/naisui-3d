@@ -2,7 +2,7 @@
 // The map is drawn without text (src/plain-map.ts), since text inside a map image can't keep the
 // type scale's sizes; the names go up as labels instead. They come from OpenStreetMap, by way of
 // OpenFreeMap's tiles, within the city's AREA. `range` is how far away a name still shows, in
-// meters: the larger, the more it matters, so towns show from afar and schools only close up.
+// meters: the larger, the more it matters, so towns show from afar and public buildings only close up.
 // Each name gets its ground elevation (GSI DEM API, meters above the geoid).
 //
 //   node --use-system-ca scripts/build-names.mjs [city code]   (default 14204, Kamakura)
@@ -21,9 +21,12 @@ const ZOOM = 14; // the tiles' finest
 const AREA = { 14204: [ 139.530, 35.302, 139.572, 35.342 ] };
 
 const TOWN_RANGE = 6000, NATURE_RANGE = 3000, ROAD_RANGE = 1500, POI_RANGE = 1000; // m
-const POI_CLASSES = new Set( [ 'railway', 'town_hall', 'school', 'college', 'hospital', 'library', 'museum' ] );
-const SHRINE_NAME = /(寺|宮|神社|社)$/; // of the many places of worship: not the sub-temples (庵), halls, graves
-const NOT_POI = /幼稚園|保育|こども|子ども|眼科|歯科|医院|クリニック/;
+// Of the spots, only public buildings: the page looks at the town from the city's side, and more
+// than these crowd the map. The main temples and shrines are pins already (src/data/places/).
+const PUBLIC_KINDS = new Set( [ 'station', 'townhall', 'courthouse', 'public_building', 'community_centre', 'library', 'police', 'government' ] );
+const PUBLIC_SCHOOL = /市立|県立|国立|会館/;
+const PUBLIC_MUSEUM = /県立|鎌倉文学館|鎌倉歴史文化交流館|鎌倉国宝館|鏑木清方記念美術館|川喜多映画記念館|吉屋信子記念館/;
+const NOT_PUBLIC = /跡地|自治会館|町内会館|保育/;
 const ROAD_NAME = /.(通り|大路|小路|切通|線|街道|隧道|トンネル)$|^国道/;
 const NOT_WATER = /配水池/;
 const TOWN_CLASSES = new Set( [ 'suburb', 'quarter', 'neighbourhood', 'village', 'town' ] );
@@ -42,7 +45,18 @@ function nameOf( p ) {
 
 	// 小町一丁目 → 小町: one name per town.
 	const name = ( p[ 'name:ja' ] || p.name )?.replace( /[一二三四五六七八九十]+丁目$/, '' );
-	return name && /[^\x00-\x7f]/.test( name ) ? name : null;
+	if ( ! name || ! /[^\x00-\x7f]/.test( name ) ) return null;
+	return p.subclass === 'station' && ! name.endsWith( '駅' ) ? `${ name }駅` : name; // 鎌倉 is the town too
+
+}
+
+function isPublic( { class: kind, subclass }, name ) {
+
+	if ( NOT_PUBLIC.test( name ) ) return false;
+	if ( subclass === 'school' ) return PUBLIC_SCHOOL.test( name );
+	if ( subclass === 'fire_station' ) return name.endsWith( '消防署' );
+	if ( kind === 'museum' || kind === 'art_gallery' || subclass === 'public_building' && PUBLIC_MUSEUM.test( name ) ) return PUBLIC_MUSEUM.test( name );
+	return PUBLIC_KINDS.has( subclass );
 
 }
 
@@ -55,7 +69,7 @@ function rangeOf( layer, p, name ) {
 		case 'mountain_peak': case 'waterway': return NATURE_RANGE;
 		case 'water_name': return NOT_WATER.test( name ) ? 0 : NATURE_RANGE;
 		case 'transportation_name': return ROAD_NAME.test( name ) ? ROAD_RANGE : 0;
-		case 'poi': return ! NOT_POI.test( name ) && ( POI_CLASSES.has( p.class ) || ( p.class === 'place_of_worship' && SHRINE_NAME.test( name ) ) ) ? POI_RANGE : 0;
+		case 'poi': return isPublic( p, name ) ? POI_RANGE : 0;
 		default: return 0;
 
 	}
