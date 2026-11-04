@@ -445,9 +445,15 @@ function createBuildings() {
 
 }
 
+// /plateau shows what it's for first: the ground and the floods load on their own, and the
+// buildings, which are many and would hold up the queue all tilesets share, start after them.
+let buildingsWaiting = false; // for the ground and floods to load
+let buildingsArriving = false; // started, and none in view yet or still loading
+
 function loadCityTiles() {
 
-	buildings = createBuildings();
+	buildingsWaiting = PLATEAU_VIEW;
+	buildings = PLATEAU_VIEW ? [] : createBuildings();
 	floods = city.floods.map( floodTiles );
 
 }
@@ -1379,9 +1385,27 @@ renderer.setAnimationLoop( () => {
 	if ( flat ) pins.showStems( screenPins.update( camera, pins.heads() ) );
 	if ( useGoogle ) updateGoogleAttribution( dt );
 	loading.update( dt, busy, xr.isPresenting );
-	gateVRButton( loading.settled );
-	gateStreetButton( loading.settled );
-	if ( photosToLoad && loading.settled ) {
+	if ( buildingsWaiting && loading.settled ) {
+
+		buildingsWaiting = false;
+		buildingsArriving = true;
+		buildings = createBuildings();
+		$( '.loading-label' ).textContent = '建物を読み込み中';
+
+	}
+
+	// Everything is in: for /plateau, with the buildings (VR opens on them, not on a flat town).
+	const settled = loading.settled && ! buildingsWaiting && ( ! PLATEAU_VIEW || buildings.every( t => tileStats( t ).visible > 0 ) );
+	if ( buildingsArriving && settled ) {
+
+		buildingsArriving = false;
+		$( '.loading-label' ).textContent = '読み込み中';
+
+	}
+
+	gateVRButton( settled );
+	gateStreetButton( settled );
+	if ( photosToLoad && settled ) {
 
 		preloadPhotos( photosToLoad );
 		photosToLoad = null;

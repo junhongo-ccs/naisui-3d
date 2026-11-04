@@ -4,7 +4,7 @@ PLATEAU の内水浸水想定区域モデル（`ifld`）を、地面・建物の
 PC・スマホのブラウザと、Meta Quest（WebXR）で同じページを見る。
 兄弟プロジェクト: [naisui](https://github.com/junhongo-ccs/naisui)（品川区 中延・二葉の内水氾濫 PoC）。
 
-ページは 2 つ。`/` は Google 版（内容寄り）、`/plateau/` は PLATEAU 版（行政の目線で比べるため。PC と VR のみ、スマホは対象外）。同じ `main.ts` を、`plateau/index.html` の `<body data-view="plateau">` で切り替える（`PLATEAU_VIEW`）。PLATEAU 版は Google を読まず、テクスチャなしの LOD2（`PLAIN_BUILDINGS`）を灰色で出し、下に OpenStreetMap の地図を敷く。地面は 1 m の航空レーザー測量の DEM（`LASER_DEM`。Google を使わないときの `dem_png` は 10 m で、鎌倉の谷底で実際より 3〜5 m 高く平らなので、浸水想定が地面の下に埋まり、若宮大路の高架下のくぼみも出ない）。「まちの中から見る」は出さない（地上は灰色の壁に囲まれるだけで面白くないため。視点も屋根より上に保つ）。操作は地図と同じで、左ドラッグでつかんで移動、右ドラッグで回転、ホイールでズーム。W A S D は動き出しがなめらかで、離すと惰性で止まる（`PAN_EASE_IN`, `PAN_GLIDE`）。
+ページは 2 つ。`/` は Google 版（内容寄り）、`/plateau/` は PLATEAU 版（行政の目線で比べるため。PC と VR のみ、スマホは対象外）。同じ `main.ts` を、`plateau/index.html` の `<body data-view="plateau">` で切り替える（`PLATEAU_VIEW`）。PLATEAU 版は Google を読まず、テクスチャなしの LOD2（`PLAIN_BUILDINGS`）を灰色で出し、下に OpenStreetMap の地図を敷く。地面は 1 m の航空レーザー測量の DEM（`LASER_DEM`。Google を使わないときの `dem_png` は 10 m で、鎌倉の谷底で実際より 3〜5 m 高く平らなので、浸水想定が地面の下に埋まり、若宮大路の高架下のくぼみも出ない）。「まちの中から見る」は出さない（地上は灰色の壁に囲まれるだけで面白くないため。視点も屋根より上に保つ）。読み込みは地面と浸水が先で、終わってから建物を読み始める（本題の浸水を早く見せるため。タイルセットは読み込みの順番待ちを共有していて、数の多い建物が前を塞ぐ）。VR の入口は建物まで待つ。操作は地図と同じで、左ドラッグでつかんで移動、右ドラッグで回転、ホイールでズーム。W A S D は動き出しがなめらかで、離すと惰性で止まる（`PAN_EASE_IN`, `PAN_GLIDE`）。
 
 ## コマンド
 
