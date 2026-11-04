@@ -1171,6 +1171,7 @@ navigator.xr?.isSessionSupported( 'immersive-vr' ).then( ok => {
 
 	if ( ! ok ) return;
 	vrCapable = true;
+	if ( PLATEAU_VIEW ) document.body.classList.add( 'vr-device' );
 	allTiles().forEach( sizeCache ); // made before the browser said so
 	document.body.appendChild( vrButton );
 	$( '#vr-hint' ).hidden = false;

@@ -124,6 +124,9 @@ fieldset.field legend { padding: 0; margin-bottom: 4px; }
 .controls dd { margin: 0; }
 .controls-touch, body.touch-ui .controls-pc { display: none; }
 body.touch-ui .controls-touch { display: grid; }
+/* /plateau on a headset: how to move in VR, not with a mouse. */
+.controls-vr, body.vr-device .controls-pc { display: none; }
+body.vr-device .controls-vr { display: grid; }
 
 #app-close { margin: 0 0 12px; }
 #app-close[hidden] { display: none; }
@@ -148,6 +151,8 @@ body.touch-ui .controls-touch { display: grid; }
 	font-size: var(--fs-label);
 	line-height: var(--lh-label);
 }
+/* /plateau has no street button at the bottom right, and the panel can reach down the left side. */
+body[data-view="plateau"] #legend { left: auto; right: 12px; }
 #legend h2 { font-size: var(--fs-label); margin: 0 0 4px; }
 #legend ul { list-style: none; margin: 0; padding: 0; }
 #legend li { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
