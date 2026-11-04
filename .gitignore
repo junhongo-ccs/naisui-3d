@@ -6,3 +6,6 @@ dist/
 .env.*
 # Browser profiles left by tools that render pages (e.g. the share image)
 .chrome-*/
+# Teams posts: internal text and URLs, kept out of the public repo (teams-post skill)
+docs/teams-lead.md
+docs/teams-loop.md
